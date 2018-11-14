@@ -1,0 +1,23 @@
+apply plugin: 'java'
+apply plugin: 'application'
+
+mainClassName = 'aiven.Cli'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    compile 'com.datastax.cassandra:cassandra-driver-core:3.6.0'
+    compile 'commons-cli:commons-cli:1.4'
+    compile 'org.slf4j:slf4j-simple:1.6.1'
+}
+
+jar {
+    baseName = 'aiven-cassandra-java-example'
+    version =  '0.0.1'
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
