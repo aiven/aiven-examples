@@ -14,6 +14,7 @@ It is meant to be used as the technical content to support the [Aiven help artic
 * [Kafka](#kafka)
 * [PostgreSQL](#postgresql)
 * [Elasticsearch](#elasticsearch)
+* [InfluxDB](#influxdb)
 * [License](#license)
 * [Contact](#contact)
 
@@ -27,15 +28,23 @@ It is meant to be used as the technical content to support the [Aiven help artic
 
 ### PostgreSQL
 #### Go ####
-* [simple select example](postgresql/go/select.go)
+* [simple select example](postgresql/go/simple_select.go)
 #### Python ####
-* [simple select example](postgresql/python/select.py)
+* [simple select example](postgresql/python/simple_select.py)
 
 ### Elasticsearch
-### Go ###
+#### Go ####
 * [create and search index](elasticsearch/go/index.go)
-### Python ###
+#### Python ####
 * [create and search index](elasticsearch/python/index.py)
+
+### InfluxDB
+#### Go ####
+* [write entry](influxdb/go/write.go)
+* [read entry](influxdb/go/read.go)
+#### Python ####
+* [write entry](influxdb/python/write.py)
+* [read entry](influxdb/python/read.py)
 
 # License
 Aiven examples are licensed under the Apache License, Version 2.0. Full license text is available in the LICENSE file and at
