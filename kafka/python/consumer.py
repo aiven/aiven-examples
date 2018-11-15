@@ -1,4 +1,4 @@
-# This script receives messages from a Kafka topic
+# Copyright (c) 2018 Aiven, Helsinki, Finland. https://aiven.io/
 from kafka import KafkaConsumer
 
 consumer = KafkaConsumer(

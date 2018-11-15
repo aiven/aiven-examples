@@ -1,5 +1,4 @@
-# This script connects to Kafka and sends a few messages
-
+# Copyright (c) 2018 Aiven, Helsinki, Finland. https://aiven.io/
 from kafka import KafkaProducer
 
 producer = KafkaProducer(

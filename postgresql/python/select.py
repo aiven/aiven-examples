@@ -1,3 +1,4 @@
+# Copyright (c) 2018 Aiven, Helsinki, Finland. https://aiven.io/
 from psycopg2.extras import RealDictCursor
 import psycopg2
 
