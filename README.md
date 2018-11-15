@@ -13,6 +13,8 @@ It is meant to be used as the technical content to support the [Aiven help artic
 ## Table of Contents
 * [Kafka](#kafka)
 * [PostgreSQL](#postgresql)
+* [Elasticsearch](#elasticsearch)
+* [License](#license)
 * [Contact](#contact)
 
 ### Kafka
@@ -28,6 +30,16 @@ It is meant to be used as the technical content to support the [Aiven help artic
 * [simple select example](postgresql/go/select.go)
 #### Python ####
 * [simple select example](postgresql/python/select.py)
+
+### Elasticsearch
+### Go ###
+* [create and search index](elasticsearch/go/index.go)
+### Python ###
+* [create and search index](elasticsearch/python/index.py)
+
+# License
+Aiven examples are licensed under the Apache License, Version 2.0. Full license text is available in the LICENSE file and at
+http://www.apache.org/licenses/LICENSE-2.0.txt
 
 # Contact
 
