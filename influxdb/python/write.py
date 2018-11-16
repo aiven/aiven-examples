@@ -3,7 +3,7 @@ from influxdb import InfluxDBClient
 
 import datetime
 
-uri = "https+influxdb://avnadmin:nr0dfnswz36xs9pi@influx-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193/defaultdb"
+uri = "https+influxdb://avnadmin:<your password here>@influx-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193/defaultdb"
 client = InfluxDBClient.from_dsn(uri, timeout=3.0, ssl=True)
 
 json_body = [

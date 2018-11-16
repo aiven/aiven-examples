@@ -3,7 +3,7 @@ from elasticsearch import Elasticsearch
 
 import json
 
-service_uri = "https://avnadmin:nr0dfnswz36xs9pi@es-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193"
+service_uri = "https://avnadmin:<your password here>@es-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193"
 es = Elasticsearch(service_uri, verify_certs=True)
 
 person = {

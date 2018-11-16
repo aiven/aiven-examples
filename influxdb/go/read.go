@@ -11,7 +11,7 @@ import (
 const (
 	host     = "https://influx-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193"
 	username = "avnadmin"
-	password = "nr0dfnswz36xs9pi"
+	password = "<your password here>"
 	database = "defaultdb"
 )
 

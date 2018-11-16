@@ -24,7 +24,7 @@ type person struct {
 func main() {
 	client, err := elastic.NewClient(
 		elastic.SetURL("https://es-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193"),
-		elastic.SetBasicAuth("avnadmin", "nr0dfnswz36xs9pi"),
+		elastic.SetBasicAuth("avnadmin", "<your password here>"),
 		elastic.SetSniff(false),
 	)
 	if err != nil {

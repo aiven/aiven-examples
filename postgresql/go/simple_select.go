@@ -13,7 +13,7 @@ const (
 	host     = "pg-3b8d4ed6-myfirstcloudhub.aivencloud.com"
 	port     = 20985
 	user     = "avnadmin"
-	password = "nr0dfnswz36xs9pi"
+	password = "<your password here>"
 	dbname   = "defaultdb"
 )
 
