@@ -64,6 +64,17 @@ Python
 - `Write to Redis <redis/python/write.py>`_
 - `Read from Redis <redis/python/read.py>`_
 
+Cassandra
+=========
+Go
+--
+- `Write to Cassandra <cassandra/go/write.go>`_
+- `Read from Cassandra <cassandra/go/read.go>`_
+Python
+------
+- `Write to Cassandra <cassandra/python/write.py>`_
+- `Read from Cassandra <cassandra/python/read.py>`_
+
 License
 =======
 
