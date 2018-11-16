@@ -13,67 +13,29 @@ It is meant to be used as the technical content to support the `Aiven help artic
 
 .. _Aiven help articles: https://help.aiven.io/
 
-Kafka
-=====
-Go
---
-- `Consumer example <kafka/go/consumer.go>`_
-- `Poducer example <kafka/go/producer.go>`_
-Python
-------
-- `Consumer example <kafka/python/consumer.py>`_
-- `Producer example <kafka/python/producer.py>`_
-
-PostgreSQL
-==========
-Go
---
-- `Simple select example <postgresql/go/simple_select.go>`_
-Python
-------
-- `Simple select example <postgresql/python/simple_select.py>`_
-
-Elasticsearch
-=============
-Go
---
-- `Create and search index <elasticsearch/go/index.go>`_
-Python
-------
-- `Create and search index <elasticsearch/python/index.py>`_
-
-InfluxDB
-========
-Go
---
-- `Write an entry to InfluxDB <influxdb/go/write.go>`_
-- `Read entry from InfluxDB <influxdb/go/read.go>`_
-Python
-------
-- `Write an entry to InfluxDB <influxdb/python/write.py>`_
-- `Read entry from InfluxDB <influxdb/python/read.py>`_
-
-Redis
-=====
-Go
---
-- `Write to Redis <redis/go/write.go>`_
-- `Read from Redis <redis/go/read.go>`_
-Python
-------
-- `Write to Redis <redis/python/write.py>`_
-- `Read from Redis <redis/python/read.py>`_
-
-Cassandra
-=========
-Go
---
-- `Write to Cassandra <cassandra/go/write.go>`_
-- `Read from Cassandra <cassandra/go/read.go>`_
-Python
-------
-- `Write to Cassandra <cassandra/python/write.py>`_
-- `Read from Cassandra <cassandra/python/read.py>`_
++-------------------+------------------------+-----------------------------------+----------------------------------------------------------------+
+|  Service          |                             Go                             |       Python                                                   |
++===================+========================+===================================+================================================================+
+|  **Kafka**        | `Consumer example  <kafka/go/consumer.go>`_                | `Consumer example  <kafka/python/consumer.py>`_                |
+|                   +------------------------------------------------------------+----------------------------------------------------------------+
+|                   | `Producer example  <kafka/go/producer.go>`_                | `Producer example  <kafka/python/producer.py>`_                |
++-------------------+------------------------+-----------------------------------+----------------------------------------------------------------+
+| **PostgreSQL**    | `Simple select example  <postgresql/go/simple_select.go>`_ | `Simple select example  <postgresql/python/simple_select.py>`_ |
++-------------------+------------------------------------------------------------+----------------------------------------------------------------+
+| **Elasticsearch** | `Create and search index  <elasticsearch/go/index.go>`_    | `Create and search index  <elasticsearch/python/index.py>`_    |
++-------------------+------------------------------------------------------------+----------------------------------------------------------------+
+|  **InfluxDB**     | `Write to InfluxDB  <influxdb/go/write.go>`_               | `Write to InfluxDB  <infludb/python/write.py>`_                |
+|                   +------------------------------------------------------------+----------------------------------------------------------------+
+|                   | `Read from InfluxDB  <influxdb/go/read.go>`_               | `Read from InfluxDB  <influxdb/python/read.py>`_               |
++-------------------+------------------------+-----------------------------------+----------------------------------------------------------------+
+|  **Redis**        | `Write to Redis  <redis/go/write.go>`_                     | `Write to Redis  <redis/python/write.py>`_                     |
+|                   +------------------------------------------------------------+----------------------------------------------------------------+
+|                   | `Read from Redis  <redis/go/read.go>`_                     | `Read from Redis  <redis/python/read.py>`_                     |
++-------------------+------------------------+-----------------------------------+----------------------------------------------------------------+
+|  **Cassandra**    | `Write to Cassandra  <cassandra/go/write.go>`_             | `Write to Cassandra  <cassandra/python/write.py>`_             |
+|                   +------------------------------------------------------------+----------------------------------------------------------------+
+|                   | `Read from Cassandra  <cassandra/go/read.go>`_             | `Read from Casssandra  <cassandra/python/read.py>`_            |
++-------------------+------------------------+-----------------------------------+----------------------------------------------------------------+
 
 License
 =======
