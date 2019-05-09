@@ -1,0 +1,12 @@
+{
+    "name": "pg_connector_demo",
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "{hostname}",
+    "database.port": "{port}",
+    "database.user": "{user}",
+    "database.password": "{password}",
+    "database.dbname": "{dbname}",
+    "database.server.name": "{service_name}",
+    "plugin.name": "wal2json",
+    "database.sslmode": "require"
+}
