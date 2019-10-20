@@ -22,13 +22,13 @@ func redisExample(host string, port int, password string) {
 		log.Fatal(err)
 	}
 
-    // Write our key/value pair
+	// Write our key/value pair
 	err = client.Set("goRedisExample", "golang", 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-    // Read it out again
+	// Read it out again
 	val, err := client.Get("goRedisExample").Result()
 	if err != nil {
 		log.Fatal(err)

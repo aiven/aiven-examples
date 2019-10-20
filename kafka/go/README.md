@@ -19,7 +19,7 @@ Note: You can find the connection details in the "Overview" tab in the Aiven Con
 
 1. Use the [Aiven Client](https://github.com/aiven/aiven-client) to create a topic in your Kafka cluster:
     ```
-    avn service topic-create <kafka-service-name>  my_topic --partitions 3 --replication 3
+    avn service topic-create <kafka-service-name>  go_example_topic --partitions 3 --replication 3
     ```
 2. Open two shells. In the first, create a consumer:
     ```

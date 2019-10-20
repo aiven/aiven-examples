@@ -32,7 +32,7 @@ func elasticIndexExample(args Args) {
 		log.Fatal(err)
 	}
 
-    // Generate a random id for our document
+	// Generate a random id for our document
 	var id = strconv.Itoa(rand.Intn(5000))
 
 	// Add a document to the index
