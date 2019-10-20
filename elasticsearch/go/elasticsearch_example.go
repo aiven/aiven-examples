@@ -5,10 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"gopkg.in/olivere/elastic.v6"
 	"log"
 	"time"
-
-	"github.com/olivere/elastic"
 )
 
 type person struct {
@@ -21,10 +20,10 @@ type person struct {
 	Edited    time.Time `json:"edited"`
 }
 
-func main() {
+func elasticIndexExample(args Args) {
 	client, err := elastic.NewClient(
-		elastic.SetURL("https://es-3b8d4ed6-myfirstcloudhub.aivencloud.com:15193"),
-		elastic.SetBasicAuth("avnadmin", "<your password here>"),
+		elastic.SetURL(args.URL),
+		elastic.SetBasicAuth(args.Username, args.Password),
 		elastic.SetSniff(false),
 	)
 	if err != nil {
@@ -61,6 +60,7 @@ func main() {
 		Pretty(true).
 		Do(context.Background())
 	if err != nil {
+	    log.Fatal(err)
 		panic(err)
 	}
 	for _, item := range searchResult.Hits.Hits {
