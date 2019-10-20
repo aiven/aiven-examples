@@ -27,9 +27,9 @@ public class CassandraExample {
                     "CREATE KEYSPACE IF NOT EXISTS example_keyspace WITH REPLICATION = {'class': 'NetworkTopologyStrategy', 'aiven': 3}"
             );
             session.execute("USE example_keyspace");
-            session.execute("CREATE TABLE IF NOT EXISTS example_table (id int PRIMARY KEY, message text)");
-            session.execute("INSERT INTO example_table (id, message) VALUES (?, ?)", 123, "Hello world!");
-            ResultSet rs = session.execute("SELECT id, message FROM example_table");
+            session.execute("CREATE TABLE IF NOT EXISTS example_java (id int PRIMARY KEY, message text)");
+            session.execute("INSERT INTO example_java (id, message) VALUES (?, ?)", 123, "Hello from Java!");
+            ResultSet rs = session.execute("SELECT id, message FROM example_java");
             for (Row row : rs) {
                 System.out.println(String.format("Row: id = %d, message = %s", row.getInt("id"), row.getString("message")));
             }

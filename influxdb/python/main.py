@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import json
 
 from datetime import datetime
 from influxdb import InfluxDBClient
@@ -31,7 +32,7 @@ def main():
 
     # Read it back again
     result = client.query('select value from cpu_load_short;')
-    print(f"Result: {result}")
+    print(json.dumps(next(result.get_points())))
 
 
 if __name__ == '__main__':

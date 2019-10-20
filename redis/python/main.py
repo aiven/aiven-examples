@@ -2,6 +2,8 @@
 # Copyright (c) 2018 Aiven, Helsinki, Finland. https://aiven.io/
 
 import argparse
+import time
+
 import redis
 
 
@@ -19,10 +21,10 @@ def main():
         ssl=True
     )
     client.ping()
-    client.set('exampleKey', 'exampleValue')
+    client.set('pythonRedisExample', 'python')
 
-    value = client.get("exampleKey")
-    print("The value for 'exampleKey' is: ''%s'" % value)
+    value = client.get("pythonRedisExample")
+    print("The value for 'pythonRedisExample' is: '%s'" % value.decode('utf-8'))
 
 
 if __name__ == "__main__":

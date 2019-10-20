@@ -14,7 +14,7 @@ def producer_example(service_uri, ca_path, cert_path, key_path):
     for i in range(1, 4):
         message = "message number {}".format(i)
         print("Sending: {}".format(message))
-        producer.send("my_topic", message.encode("utf-8"))
+        producer.send("python_example_topic", message.encode("utf-8"))
 
     # Wait for all messages to be sent
     producer.flush()

@@ -18,6 +18,7 @@ func kafkaClient(args Args) (sarama.Client, error) {
 	config.Net.TLS.Enable = true
 	config.Net.TLS.Config = tlsCfg
 	config.Version = sarama.V0_10_2_0
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
 	client, err := sarama.NewClient([]string{args.ServiceURI}, config)
 	if err != nil {
 		fmt.Println(args.ServiceURI, config)

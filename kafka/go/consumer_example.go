@@ -23,7 +23,7 @@ func kafkaConsumerExample(args Args) {
 
 	ctx := context.Background()
 	for {
-		topics := []string{"my_topic"}
+		topics := []string{"go_example_topic"}
 		handler := exampleConsumerGroupHandler{}
 		err := group.Consume(ctx, topics, handler)
 		if err != nil {

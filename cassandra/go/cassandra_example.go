@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/gocql/gocql"
 	"log"
+	"time"
 )
 
 func cassandraExample(args Args) {
@@ -18,6 +19,7 @@ func cassandraExample(args Args) {
 
 func createSession(args Args) gocql.Session {
 	cluster := gocql.NewCluster(args.Host)
+	cluster.ConnectTimeout = 10 * time.Second
 	cluster.Port = args.Port
 	cluster.ProtoVersion = 4
 	cluster.Authenticator = gocql.PasswordAuthenticator{
@@ -43,7 +45,7 @@ func createSchema(session gocql.Session) {
 		log.Fatal(err)
 	}
 	if err := session.Query(
-		"CREATE TABLE IF NOT EXISTS example_keyspace.example_table (id int PRIMARY KEY, message text)",
+		"CREATE TABLE IF NOT EXISTS example_keyspace.example_go (id int PRIMARY KEY, message text)",
 	).Exec(); err != nil {
 		log.Fatal(err)
 	}
@@ -52,7 +54,7 @@ func createSchema(session gocql.Session) {
 func writeData(session gocql.Session) {
 	for i := 1; i <= 10; i++ {
 		if err := session.Query(
-			"INSERT INTO example_keyspace.example_table (id, message) VALUES (?, ?)", i, "Hello world!",
+			"INSERT INTO example_keyspace.example_go (id, message) VALUES (?, ?)", i, "Hello from golang!",
 		).Exec(); err != nil {
 			log.Fatal(err)
 		}
@@ -60,7 +62,7 @@ func writeData(session gocql.Session) {
 }
 
 func readData(session gocql.Session) {
-	iter := session.Query("SELECT id, message FROM example_keyspace.example_table").Iter()
+	iter := session.Query("SELECT id, message FROM example_keyspace.example_go").Iter()
 	var id int
 	var message string
 	for iter.Scan(&id, &message) {

@@ -13,7 +13,7 @@ def consumer_example(service_uri, ca_path, cert_path, key_path):
         consumer_timeout_ms=1000,
     )
 
-    consumer.subscribe(['my_topic'])
+    consumer.subscribe(['python_example_topic'])
     for message in consumer:
-        print(message.value)
+        print(message.value.decode('utf-8'))
     consumer.close()

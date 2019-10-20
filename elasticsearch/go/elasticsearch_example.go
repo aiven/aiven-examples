@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"gopkg.in/olivere/elastic.v6"
 	"log"
+	"math/rand"
+	"strconv"
 	"time"
 )
 
@@ -30,6 +32,9 @@ func elasticIndexExample(args Args) {
 		log.Fatal(err)
 	}
 
+    // Generate a random id for our document
+	var id = strconv.Itoa(rand.Intn(5000))
+
 	// Add a document to the index
 	p := person{
 		Name:      "John",
@@ -41,9 +46,9 @@ func elasticIndexExample(args Args) {
 		Edited:    time.Now(),
 	}
 	_, err = client.Index().
-		Index("people").
+		Index("go_example").
 		Type("people").
-		Id("1").
+		Id(id).
 		BodyJson(p).
 		Do(context.Background())
 	if err != nil {
@@ -51,23 +56,18 @@ func elasticIndexExample(args Args) {
 	}
 
 	// Print the document we just added
-	query := elastic.NewTermQuery("name", "john")
-	searchResult, err := client.Search().
-		Index("people").
-		Query(query).
-		Sort("name.keyword", true).
-		From(0).Size(10).
+	found, err := client.Get().
+		Index("go_example").
+		Id(id).
 		Pretty(true).
 		Do(context.Background())
 	if err != nil {
-	    log.Fatal(err)
+		log.Fatal(err)
 		panic(err)
 	}
-	for _, item := range searchResult.Hits.Hits {
-		j, err := json.MarshalIndent(item.Source, "", "    ")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(j))
+	j, err := json.MarshalIndent(found.Source, "", "  ")
+	if err != nil {
+		panic(err)
 	}
+	fmt.Println(string(j))
 }

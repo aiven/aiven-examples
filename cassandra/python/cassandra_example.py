@@ -21,7 +21,7 @@ def cassandra_example(args):
 
             # Create a table
             session.execute("""
-                CREATE TABLE IF NOT EXISTS example_keyspace.example_table (
+                CREATE TABLE IF NOT EXISTS example_keyspace.example_python (
                     id int PRIMARY KEY,
                     message text
                 )
@@ -30,10 +30,10 @@ def cassandra_example(args):
             # Insert some data
             for i in range(10):
                 session.execute("""
-                    INSERT INTO example_keyspace.example_table (id, message)
+                    INSERT INTO example_keyspace.example_python (id, message)
                     VALUES (%s, %s)
-                """, (i, "Hello world!"))
+                """, (i, "Hello from Python!"))
 
             # Read it back
-            for row in session.execute("SELECT id, message FROM example_keyspace.example_table"):
+            for row in session.execute("SELECT id, message FROM example_keyspace.example_python"):
                 print("Row: id = {}, message = {}".format(row.id, row.message))

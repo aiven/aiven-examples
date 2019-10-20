@@ -23,15 +23,15 @@ func redisExample(host string, port int, password string) {
 	}
 
     // Write our key/value pair
-	err = client.Set("exampleKey", "exampleValue", 0).Err()
+	err = client.Set("goRedisExample", "golang", 0).Err()
 	if err != nil {
 		log.Fatal(err)
 	}
 
     // Read it out again
-	val, err := client.Get("exampleKey").Result()
+	val, err := client.Get("goRedisExample").Result()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("The value for 'exampleKey' is: ''%s'\n", val)
+	fmt.Printf("The value for 'goRedisExample' is: '%s'\n", val)
 }
