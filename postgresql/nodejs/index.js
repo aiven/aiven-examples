@@ -3,10 +3,6 @@ const example = require('./example');
 
 const argv = yargs
     .option('host', {
-        description: 'Kafka host in the form host:port',
-        type: 'string',
-        required: true
-    }).option('host', {
         description: 'Postgres host',
         type: 'string',
         required: true
