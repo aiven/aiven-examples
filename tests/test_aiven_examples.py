@@ -28,6 +28,13 @@ class PostgresTest(AivenExampleTest):
         ServiceSpec(type="pg", version='latest', plan='hobbyist'),
     )
 
+    def test_node_example(self):
+        params = self.services['pg']['pg-latest-hobbyist']["service_uri_params"]
+        host, port, password = params['host'], params['port'], params['password']
+        result = self.execute(f"node postgresql/nodejs/index.js --host {host} --port {port} --password {password}",
+                              check=True)
+        assert "{ value: 'Hello world' }" in result.stdout
+
     def test_python_example(self):
         command = f"python postgresql/python/main.py --service-uri {self.service_uri()}"
         self.verify_postgres_example(command)
@@ -124,11 +131,29 @@ class InfluxDBTest(AivenExampleTest):
         assert "cpu_load_short map" in result.stdout
         assert "[time value]" in result.stdout
 
+    def test_nodejs_example(self):
+        params = self.services['influxdb']['influxdb-latest-hobbyist']["service_uri_params"]
+        host, port, password = params["host"], params["port"], params["password"]
+        result = self.execute(f"node influxdb/nodejs/index.js --host {host} --port {port} --password {password}",
+                              check=True)
+        assert "groupRows: [ { name: 'meas', rows: [Array], tags: {} } ]" in result.stdout
+
 
 class KafkaTest(AivenExampleTest):
     required_services = (
         ServiceSpec(type="kafka", version='latest', plan='startup-2'),
     )
+
+    def test_nodejs_example(self):
+        command = "node kafka/nodejs/index.js " \
+                  "--host {service_uri} " \
+                  "--ca-path {ca_path} " \
+                  "--key-path {access_key_path} " \
+                  "--cert-path {access_cert_path} " \
+            .format(**self.test_params)
+        result = self.execute(command, check=True)
+        assert "Message sent successfully" in result.stdout
+        assert "Got message: Hello world!" in result.stdout
 
     def test_python_example(self):
         command = "./kafka/python/main.py " \
@@ -164,7 +189,7 @@ class KafkaTest(AivenExampleTest):
 
     @pytest.fixture(autouse=True)
     def setup(self, tmpdir):
-        for topic in ("python_example_topic", "go_example_topic"):
+        for topic in ("python_example_topic", "go_example_topic", "nodejs_example_topic"):
             try:
                 self.client.create_service_topic(self.project,
                                                  service='kafka-latest-startup-2',
@@ -220,6 +245,13 @@ class RedisTest(AivenExampleTest):
         go_files = " ".join(glob.glob('redis/go/*.go'))
         expected = "The value for 'goRedisExample' is: 'golang'\n"
         self.verify_redis_example(f"go run {go_files} --host {host} --port {port} --password {password}",
+                                  expected=expected)
+
+    def test_nodejs_example(self):
+        params = self.services['redis']['redis-latest-hobbyist']['service_uri_params']
+        host, port, password = params['host'], params['port'], params['password']
+        expected = "The value for 'nodejsExample' is: node.js\n"
+        self.verify_redis_example(f"node redis/nodejs/index.js --host {host} --port {port} --password {password}",
                                   expected=expected)
 
     def verify_redis_example(self, command, expected):

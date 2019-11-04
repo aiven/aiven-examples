@@ -5,7 +5,7 @@ if (!Kafka.features.includes('ssl')) {
     process.exit(1)
 }
 
-TOPIC = 'nodejs-example';
+TOPIC = 'nodejs_example_topic';
 
 function kafkaExample(host, keyPath, certPath, caPath) {
     const producer = new Kafka.Producer({

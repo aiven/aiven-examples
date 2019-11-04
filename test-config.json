@@ -14,5 +14,11 @@
     "github.com/Shopify/sarama",
     "github.com/lib/pq",
     "github.com/go-redis/redis"
+  ],
+  "nodejs_dependencies": [
+    "kafka/nodejs/",
+    "influxdb/nodejs/",
+    "redis/nodejs",
+    "postgresql/nodejs"
   ]
 }
