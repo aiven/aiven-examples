@@ -94,7 +94,7 @@ class ServiceManager:
             if e.status != 404:
                 raise
             self.client.create_service(self.project, service_spec.name, service_spec.type,
-                                       'default', service_spec.plan, user_config=None)
+                                       'default', service_spec.plan, user_config=None, cloud='google-europe-west1')
 
 
 class AivenExampleTest(unittest.TestCase):
@@ -141,8 +141,9 @@ def teardown_module(*args, **kwargs):
 def install_dependencies(config):
     commands = list()
     commands.extend([f"go get {dependency}" for dependency in config["go_dependencies"]])
+    commands.extend([f"npm install --prefix {prefix}" for prefix in config["nodejs_dependencies"]])
     commands.extend(
-        [f"pip --disable-pip-version-check install {dependency}" for dependency in config["python_dependencies"]])
+        [f"python3 -m pip --disable-pip-version-check install {dependency}" for dependency in config["python_dependencies"]])
     with ThreadPool(processes=len(commands)) as pool:
         failures = list(filter(None, pool.map(execute, commands)))
 
@@ -152,7 +153,7 @@ def install_dependencies(config):
 
 def execute(command):
     try:
-        subprocess.check_output(shlex.split(command), universal_newlines=True)
+        subprocess.check_output(shlex.split(command), universal_newlines=True, stderr=subprocess.PIPE)
     except subprocess.CalledProcessError as e:
         return e
     except Exception as e:
