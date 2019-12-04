@@ -15,7 +15,7 @@ func main() {
 	flag.Parse()
 	if *serviceURI == "" {
 		flag.Usage()
-		log.Fatal("--service-uri is required")
+		log.Fatal("-service-uri is required")
 	}
 
 	// Connect to Postgres DB

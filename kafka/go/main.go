@@ -36,17 +36,17 @@ func parseArgs() Args {
 
 	flag.Parse()
 	if args.ServiceURI == "" {
-		fail("--service-uri is required")
+		fail("-service-uri is required")
 	} else if args.CaPath == "" {
-		fail("--ca-path is required")
+		fail("-ca-path is required")
 	} else if args.KeyPath == "" {
-		fail("--key-path is required")
+		fail("-key-path is required")
 	} else if args.CertPath == "" {
-		fail("--cert-path is required")
+		fail("-cert-path is required")
 	} else if args.Consumer && args.Producer {
-		fail("--consumer and --producer are mutually exclusive")
+		fail("-consumer and -producer are mutually exclusive")
 	} else if !args.Consumer && !args.Producer {
-		fail("--producer or --consumer must be specified")
+		fail("-producer or -consumer must be specified")
 	}
 	return args
 }
