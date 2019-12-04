@@ -23,9 +23,9 @@ Note: You can find the connection details in the "Overview" tab in the Aiven Con
     ```
 2. Open two shells. In the first, create a consumer:
     ```
-    ./main --service-uri <host>:<port> --ca-path <ca.pem path> --key-path <service.key path>  --cert-path <service.cert path>  --consumer
+    ./main -service-uri <host>:<port> -ca-path <ca.pem path> -key-path <service.key path>  -cert-path <service.cert path>  -consumer
     ```
 3. Once you see the message "Ready to consume messages", execute the producer in the second shell:
     ```
-    ./main --service-uri <host>:<port> --ca-path <ca.pem path> --key-path <service.key path>  --cert-path <service.cert path>  --producer
+    ./main -service-uri <host>:<port> -ca-path <ca.pem path> -key-path <service.key path>  -cert-path <service.cert path>  -producer
     ```

@@ -17,5 +17,5 @@ go build main.go redis_example.go
 #### Running The Example
 Note: You can retrieve the connection details from the Aiven Console overview tab.
 ```
-./main --host <redis host> --password <redis password> --port <redis port>
+./main -host <redis host> -password <redis password> -port <redis port>
 ```

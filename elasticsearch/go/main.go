@@ -25,9 +25,9 @@ func parseArgs() Args {
 	flag.Parse()
 
 	if args.URL == "" {
-		fail("--url is required")
+		fail("-url is required")
 	} else if args.Password == "" {
-		fail("--password is required")
+		fail("-password is required")
 	}
 	return args
 }

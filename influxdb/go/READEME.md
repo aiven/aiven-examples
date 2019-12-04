@@ -17,5 +17,5 @@ go build main.go influxdb_example.go
 #### Running The Example
 Note: You can find the connection details in the "Overview" tab in the Aiven Console.
 ```
-./main --host https://<host>:<port> --password <password>
+./main -host https://<host>:<port> -password <password>
 ```

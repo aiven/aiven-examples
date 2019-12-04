@@ -40,7 +40,7 @@ class PostgresTest(AivenExampleTest):
         self.verify_postgres_example(command)
 
     def test_go_example(self):
-        command = f"go run postgresql/go/main.go --service-uri {self.service_uri()}"
+        command = f"go run postgresql/go/main.go -service-uri {self.service_uri()}"
         self.verify_postgres_example(command)
 
     def verify_postgres_example(self, command):
@@ -64,7 +64,7 @@ class CassandraTest(AivenExampleTest):
 
     def test_go_example(self):
         go_files = " ".join(glob.glob('cassandra/go/*.go'))
-        command = f"go run {go_files}" + " --host {host} --port {port} --password {password} --ca-path {ca_path}"
+        command = f"go run {go_files}" + " -host {host} -port {port} -password {password} -ca-path {ca_path}"
         result = self.execute(command.format(**self.test_params), check=True)
         assert "Hello from golang!" in result.stdout
 
@@ -104,7 +104,7 @@ class ElasticsearchTest(AivenExampleTest):
         params = self.services["elasticsearch"]["elasticsearch-latest-hobbyist"]["service_uri_params"]
         host, port, password = params["host"], params["port"], params["password"]
         go_files = " ".join(glob.glob('elasticsearch/go/*.go'))
-        result = self.execute(f"go run {go_files} --url https://{host}:{port} --password {password}", check=True)
+        result = self.execute(f"go run {go_files} -url https://{host}:{port} -password {password}", check=True)
         result_json = json.loads(result.stdout)
         assert result_json['name'] == 'John'
         assert result_json['birth_year'] == 1980
@@ -127,7 +127,7 @@ class InfluxDBTest(AivenExampleTest):
         params = self.services['influxdb']['influxdb-latest-hobbyist']["service_uri_params"]
         host, port, password = params["host"], params["port"], params["password"]
         go_files = " ".join(glob.glob('influxdb/go/*.go'))
-        result = self.execute(f"go run {go_files} --host https://{host}:{port} --password {password}", check=True)
+        result = self.execute(f"go run {go_files} -host https://{host}:{port} -password {password}", check=True)
         assert "cpu_load_short map" in result.stdout
         assert "[time value]" in result.stdout
 
@@ -244,7 +244,7 @@ class RedisTest(AivenExampleTest):
         host, port, password = params['host'], params['port'], params['password']
         go_files = " ".join(glob.glob('redis/go/*.go'))
         expected = "The value for 'goRedisExample' is: 'golang'\n"
-        self.verify_redis_example(f"go run {go_files} --host {host} --port {port} --password {password}",
+        self.verify_redis_example(f"go run {go_files} -host {host} -port {port} -password {password}",
                                   expected=expected)
 
     def test_nodejs_example(self):

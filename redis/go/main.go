@@ -20,17 +20,17 @@ func main() {
 
 func parseArgs() Args {
 	var args Args
-	flag.StringVar(&args.Host, "host", "", "Cassandra host")
-	flag.IntVar(&args.Port, "port", -1, "Cassandra port")
-	flag.StringVar(&args.Password, "password", "", "Cassandra password")
+	flag.StringVar(&args.Host, "host", "", "Redis host")
+	flag.IntVar(&args.Port, "port", -1, "Redis port")
+	flag.StringVar(&args.Password, "password", "", "Redis password")
 	flag.Parse()
 
 	if args.Host == "" {
-		fail("--host is required")
+		fail("-host is required")
 	} else if args.Port == -1 {
-		fail("--port is required")
+		fail("-port is required")
 	} else if args.Password == "" {
-		fail("--password is required")
+		fail("-password is required")
 	}
 	return args
 }

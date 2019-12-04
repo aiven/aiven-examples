@@ -16,5 +16,5 @@ go build main.go elasticsearch_example.go
 #### Running The Example
 Note: You can find the connection details in the "Overview" tab in the Aiven Console.
 ```
-./main --url https://<host>:<port> --password <Elasticsearch password>
+./main -url https://<host>:<port> -password <Elasticsearch password>
 ```

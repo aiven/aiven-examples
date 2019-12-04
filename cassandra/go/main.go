@@ -30,11 +30,11 @@ func parseArgs() Args {
 	flag.Parse()
 
 	if args.Host == "" {
-		fail("--host is required")
+		fail("-host is required")
 	} else if args.Port == -1 {
-		fail("--port is required")
+		fail("-port is required")
 	} else if args.Password == "" {
-		fail("--password is required")
+		fail("-password is required")
 	}
 	return args
 }

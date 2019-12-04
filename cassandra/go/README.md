@@ -17,5 +17,5 @@ go build main.go cassandra_example.go
 #### Running The Example
 Note: You can find the connection details in the "Overview" tab in the Aiven Console.
 ```
-./main --host cassandra-project.aivencloud.com --port <cassandra port> --password <cassandra password> --ca-path <path to ca.pem>
+./main -host cassandra-project.aivencloud.com -port <cassandra port> -password <cassandra password> -ca-path <path to ca.pem>
 ```
