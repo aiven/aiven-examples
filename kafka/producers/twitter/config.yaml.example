@@ -1,0 +1,6 @@
+consumerKey: 
+consumerSecret: 
+accessToken: 
+accessSecret: 
+kafkaURI: 
+kafkaTopic: tweets
