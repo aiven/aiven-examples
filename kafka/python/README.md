@@ -21,5 +21,5 @@ Note: You can find the connection details in the "Overview" tab in the Aiven Con
     ```
 3. Consume some messages:
     ```
-    ./main.py --service-uri <host>:<port> --ca-path <ca.pem path> --key-path <service.key path>  --cert-path <service.cert path>  --producer
+    ./main.py --service-uri <host>:<port> --ca-path <ca.pem path> --key-path <service.key path>  --cert-path <service.cert path>  --consumer
     ```
