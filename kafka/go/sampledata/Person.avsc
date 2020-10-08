@@ -1,0 +1,19 @@
+{
+  "type": "record",
+  "name": "Person",
+  "namespace": "io.aiven.demos.kafka",
+  "fields": [
+    {
+      "name": "firstName",
+      "type": "string"
+    },
+    {
+      "name": "lastName",
+      "type": "string"
+    },
+    {
+      "name": "birthDate",
+      "type": "long"
+    }
+  ]
+}

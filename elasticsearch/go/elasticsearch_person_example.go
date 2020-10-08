@@ -5,14 +5,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"gopkg.in/olivere/elastic.v6"
+	"github.com/olivere/elastic/v7"
 	"log"
 	"math/rand"
 	"strconv"
 	"time"
 )
 
-type person struct {
+type Person struct {
 	Name      string    `json:"name"`
 	Height    int       `json:"height"`
 	Mass      int       `json:"mass"`
@@ -22,7 +22,7 @@ type person struct {
 	Edited    time.Time `json:"edited"`
 }
 
-func elasticIndexExample(args Args) {
+func PersonIndexExample(args Args) {
 	client, err := elastic.NewClient(
 		elastic.SetURL(args.URL),
 		elastic.SetBasicAuth(args.Username, args.Password),
@@ -36,7 +36,7 @@ func elasticIndexExample(args Args) {
 	var id = strconv.Itoa(rand.Intn(5000))
 
 	// Add a document to the index
-	p := person{
+	p := Person{
 		Name:      "John",
 		Height:    185,
 		Mass:      77,
