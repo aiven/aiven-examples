@@ -1,0 +1,6 @@
+name: macos_quickstart
+runtime:
+  name: python
+  options:
+    virtualenv: venv
+description: A minimal AWS Python Pulumi program
