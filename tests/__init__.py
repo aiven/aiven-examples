@@ -93,9 +93,14 @@ class ServiceManager:
         except Error as e:
             if e.status != 404:
                 raise
-            self.client.create_service(self.project, service_spec.name, service_spec.type,
-                                       'default', service_spec.plan, user_config=None, cloud='google-europe-west1')
-
+            self.client.create_service(
+                project=self.project,
+                service=service_spec.name,
+                service_type=service_spec.type,
+                plan=service_spec.plan,
+                cloud=os.environ.get("AIVEN_TEST_CLOUD", "google-europe-west1"),
+                user_config=None,
+            )
 
 class AivenExampleTest(unittest.TestCase):
     required_services = tuple()
