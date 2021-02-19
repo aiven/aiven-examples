@@ -112,11 +112,11 @@ class ElasticsearchTest(AivenExampleTest):
 
 class InfluxDBTest(AivenExampleTest):
     required_services = (
-        ServiceSpec(type="influxdb", version='latest', plan='hobbyist'),
+        ServiceSpec(type="influxdb", version='latest', plan='startup-4'),
     )
 
     def test_python_example(self):
-        service_uri = self.services['influxdb']['influxdb-latest-hobbyist']['service_uri']
+        service_uri = self.services['influxdb']['influxdb-latest-startup-4']['service_uri']
         result = self.execute(f"./influxdb/python/main.py --url {service_uri}", check=True)
         result_json = json.loads(result.stdout)
         assert "time" in result_json
@@ -124,7 +124,7 @@ class InfluxDBTest(AivenExampleTest):
         assert result_json["value"] == 0.95
 
     def test_go_example(self):
-        params = self.services['influxdb']['influxdb-latest-hobbyist']["service_uri_params"]
+        params = self.services['influxdb']['influxdb-latest-startup-4']["service_uri_params"]
         host, port, password = params["host"], params["port"], params["password"]
         go_files = " ".join(glob.glob('influxdb/go/*.go'))
         result = self.execute(f"go run {go_files} -host https://{host}:{port} -password {password}", check=True)
@@ -132,7 +132,7 @@ class InfluxDBTest(AivenExampleTest):
         assert "[time value]" in result.stdout
 
     def test_nodejs_example(self):
-        params = self.services['influxdb']['influxdb-latest-hobbyist']["service_uri_params"]
+        params = self.services['influxdb']['influxdb-latest-startup-4']["service_uri_params"]
         host, port, password = params["host"], params["port"], params["password"]
         result = self.execute(f"node influxdb/nodejs/index.js --host {host} --port {port} --password {password}",
                               check=True)
