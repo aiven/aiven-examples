@@ -257,3 +257,21 @@ class RedisTest(AivenExampleTest):
     def verify_redis_example(self, command, expected):
         result = self.execute(command)
         assert result.stdout == expected
+
+
+class MysqlTest(AivenExampleTest):
+    required_services = (
+        ServiceSpec(type="mysql", version='latest', plan='hobbyist'),
+    )
+
+    def test_python_example(self):
+        params = self.services['mysql']['mysql-latest-hobbyist']["service_uri_params"]
+        host, port, password = params['host'], params['port'], params['password']
+
+        command = f"python mysql/python/main.py --host {host} --port {port} --password {password}"
+        self.verify_mysql_example(command)
+
+    def verify_mysql_example(self, command):
+        result = self.execute(command)
+        assert result.returncode == 0
+        assert result.stdout == "{'DATABASE()': 'defaultdb'}\n"
