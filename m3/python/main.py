@@ -43,8 +43,9 @@ def main():
             )
         except AivenClientError as ex:
             message = ex.response.json()["message"]
-            log.warn(f"Error creating {integration} integration from {source} to {destination}")
-            if not (ex.status == 409 and message == "Service integration already exists"):
+            log.warning(f"Error creating {integration} integration from {source} to {destination}")
+            acceptable_errors = ("Service integration already exists", "Only 1 integration(s) of this type allowed per service")
+            if not (ex.status == 409 and message in acceptable_errors):
                 raise
 
     create_integration(source=args.m3db, destination=args.m3aggregator, integration="m3aggregator")
