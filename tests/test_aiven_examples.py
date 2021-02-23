@@ -275,3 +275,22 @@ class MysqlTest(AivenExampleTest):
         result = self.execute(command)
         assert result.returncode == 0
         assert result.stdout == "{'DATABASE()': 'defaultdb'}\n"
+
+
+class M3Test(AivenExampleTest):
+    supported_cloud_providers = ("aws", "google")
+
+    required_services = (
+        ServiceSpec(type="m3db", version="latest", plan="business-8"),
+        ServiceSpec(type="m3aggregator", version="latest", plan="business-8"),
+    )
+
+    def test_python_example(self):
+        if "m3db" not in self.services:
+            pytest.skip("Cannot test on this cloud")
+
+        params = self.services["m3db"]["m3db-latest-business-8"]["service_uri_params"]
+        host, port, password, user = params["host"], params["port"], params["password"], params["user"]
+        command = f"python m3/python/main.py --host {host} --port {port} --user {user} --password {password}"
+        result = self.execute(command)
+        assert result.stdout == "True\n"
