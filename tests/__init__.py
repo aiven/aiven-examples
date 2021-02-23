@@ -15,6 +15,8 @@ from aiven.client.client import Error
 
 log = logging.getLogger(__name__)
 
+DEFAULT_CLOUD = "google-europe-west1"
+
 
 class ServiceSpec:
     def __init__(self, type, version, plan):
@@ -66,6 +68,7 @@ class ServiceManager:
         subclasses = self._gather_subclasses(AivenExampleTest)
         service_specifications = set()
         for subclass in subclasses:
+            subclass.update_required_services()
             service_specifications.update(subclass.required_services)
         return service_specifications
 
@@ -98,14 +101,23 @@ class ServiceManager:
                 service=service_spec.name,
                 service_type=service_spec.type,
                 plan=service_spec.plan,
-                cloud=os.environ.get("AIVEN_TEST_CLOUD", "google-europe-west1"),
+                cloud=os.environ.get("AIVEN_TEST_CLOUD", DEFAULT_CLOUD),
                 user_config=None,
             )
 
 class AivenExampleTest(unittest.TestCase):
     required_services = tuple()
+    supported_cloud_providers = tuple()
     services = defaultdict(dict)
     _project_ca = None
+
+    @classmethod
+    def update_required_services(cls):
+        target_cloud = os.environ.get("AIVEN_TEST_CLOUD", DEFAULT_CLOUD)
+        cloud_provider = target_cloud.split("-")[0]
+        if cls.supported_cloud_providers and cloud_provider not in cls.supported_cloud_providers:
+            log.warning("Not launching service(s) for %s as cloud (%s) is not supported", cls.__name__, target_cloud)
+            cls.required_services = ()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
