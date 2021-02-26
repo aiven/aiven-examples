@@ -25,11 +25,11 @@ def chdir(path):
 
 class PostgresTest(AivenExampleTest):
     required_services = (
-        ServiceSpec(type="pg", version='latest', plan='hobbyist'),
+        ServiceSpec(type="pg", version='latest', plan='startup-4'),
     )
 
     def test_node_example(self):
-        params = self.services['pg']['pg-latest-hobbyist']["service_uri_params"]
+        params = self.services['pg']['pg-latest-startup-4']["service_uri_params"]
         host, port, password = params['host'], params['port'], params['password']
         result = self.execute(f"node postgresql/nodejs/index.js --host {host} --port {port} --password {password}",
                               check=True)
@@ -49,7 +49,7 @@ class PostgresTest(AivenExampleTest):
         assert result.stdout == "Successfully connected to: defaultdb\n"
 
     def service_uri(self):
-        return self.services['pg']['pg-latest-hobbyist']["connection_info"]["pg"][0]
+        return self.services['pg']['pg-latest-startup-4']["connection_info"]["pg"][0]
 
 
 class CassandraTest(AivenExampleTest):
@@ -90,18 +90,18 @@ class CassandraTest(AivenExampleTest):
 
 class ElasticsearchTest(AivenExampleTest):
     required_services = (
-        ServiceSpec(type="elasticsearch", version='latest', plan='hobbyist'),
+        ServiceSpec(type="elasticsearch", version='latest', plan='startup-4'),
     )
 
     def test_python_example(self):
-        service_uri = self.services["elasticsearch"]["elasticsearch-latest-hobbyist"]["service_uri"]
+        service_uri = self.services["elasticsearch"]["elasticsearch-latest-startup-4"]["service_uri"]
         result = self.execute(f"./elasticsearch/python/main.py --url {service_uri}", check=True)
         result_json = json.loads(result.stdout)
         assert result_json['_source']['name'] == 'John'
         assert result_json['_source']['birth_year'] == 1980
 
     def test_go_example(self):
-        params = self.services["elasticsearch"]["elasticsearch-latest-hobbyist"]["service_uri_params"]
+        params = self.services["elasticsearch"]["elasticsearch-latest-startup-4"]["service_uri_params"]
         host, port, password = params["host"], params["port"], params["password"]
         go_files = " ".join(glob.glob('elasticsearch/go/*.go'))
         result = self.execute(f"go run {go_files} -url https://{host}:{port} -password {password}", check=True)
@@ -229,18 +229,18 @@ class KafkaTest(AivenExampleTest):
 
 class RedisTest(AivenExampleTest):
     required_services = (
-        ServiceSpec(type="redis", version='latest', plan='hobbyist'),
+        ServiceSpec(type="redis", version='latest', plan='startup-4'),
     )
 
     def test_python_example(self):
-        params = self.services['redis']['redis-latest-hobbyist']['service_uri_params']
+        params = self.services['redis']['redis-latest-startup-4']['service_uri_params']
         host, port, password = params['host'], params['port'], params['password']
         expected = "The value for 'pythonRedisExample' is: 'python'\n"
         self.verify_redis_example(f"./redis/python/main.py --host {host} --port {port} --password {password}",
                                   expected=expected)
 
     def test_go_example(self):
-        params = self.services['redis']['redis-latest-hobbyist']['service_uri_params']
+        params = self.services['redis']['redis-latest-startup-4']['service_uri_params']
         host, port, password = params['host'], params['port'], params['password']
         go_files = " ".join(glob.glob('redis/go/*.go'))
         expected = "The value for 'goRedisExample' is: 'golang'\n"
@@ -248,7 +248,7 @@ class RedisTest(AivenExampleTest):
                                   expected=expected)
 
     def test_nodejs_example(self):
-        params = self.services['redis']['redis-latest-hobbyist']['service_uri_params']
+        params = self.services['redis']['redis-latest-startup-4']['service_uri_params']
         host, port, password = params['host'], params['port'], params['password']
         expected = "The value for 'nodejsExample' is: node.js\n"
         self.verify_redis_example(f"node redis/nodejs/index.js --host {host} --port {port} --password {password}",
@@ -261,11 +261,11 @@ class RedisTest(AivenExampleTest):
 
 class MysqlTest(AivenExampleTest):
     required_services = (
-        ServiceSpec(type="mysql", version='latest', plan='hobbyist'),
+        ServiceSpec(type="mysql", version='latest', plan='startup-4'),
     )
 
     def test_python_example(self):
-        params = self.services['mysql']['mysql-latest-hobbyist']["service_uri_params"]
+        params = self.services['mysql']['mysql-latest-startup-4']["service_uri_params"]
         host, port, password = params['host'], params['port'], params['password']
 
         command = f"python mysql/python/main.py --host {host} --port {port} --password {password}"
