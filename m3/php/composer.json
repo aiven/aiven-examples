@@ -1,0 +1,12 @@
+{
+    "name": "aiven/m3",
+    "authors": [
+        {
+            "name": "Lorna Mitchell",
+            "email": "lornajane@aiven.io"
+        }
+    ],
+    "require": {
+        "influxdb/influxdb-php": "^1.15"
+    }
+}
