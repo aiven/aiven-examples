@@ -64,7 +64,7 @@ def main():
             "tags": {
                 "host": "testnode",
             },
-            "time": datetime.now().isoformat(),
+            "time": datetime.utcnow().isoformat(),
             "fields": {
                 "value": 0.95
             }
