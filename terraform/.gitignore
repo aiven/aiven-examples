@@ -1,0 +1,5 @@
+.terraform/
+terraform.d/
+terraform.tfstate*
+default.auto.tfvars
+*.tfplan

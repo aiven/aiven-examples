@@ -1,0 +1,17 @@
+{
+    "type": "record",
+    "name": "translations.entity",
+    "namespace": "translation/json",
+    "fields": [
+        {
+            "name": "key",
+            "type": "string",
+            "doc": "translation key"
+        },
+        {
+            "name": "text",
+            "type": "string",
+            "doc": "translation value"
+        }
+    ]
+}
