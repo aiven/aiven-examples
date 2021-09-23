@@ -14,14 +14,14 @@ then
     printf '************************************************\n* Make sure to log in with an account with at least Application administrator role, or else step 7 will fail!\n************************************************\n'
     az login
     # pick subscription
-    stdouttmp=$(az account list https://help.aiven.io/en/articles/3435096-azure-virtual-network-peering| jq length)
+    stdouttmp=$(az account list -all| jq length)
     if [ $stdouttmp == "0" ]
     then
         echo "No subscriptions" >&2; exit 1
     elif [ $stdouttmp != "1" ]
     then
         echo 'Subscriptions:'
-        az account list | jq -r '.[] | .id + "   " + .name + "   " + .user .name'
+        az account list --all | jq -r '.[] | .id + "   " + .name + "   " + .user .name'
         read -p "Enter subscription ID you want to use: " account_subscription_id
         echo "$account_subscription_id"
         az account set --subscription "$account_subscription_id"
