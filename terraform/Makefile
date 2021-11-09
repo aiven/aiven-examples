@@ -10,7 +10,7 @@ check-deps:
 init: check-deps
 	@echo "✨ Setting up terraform... 🛠"
 	@terraform fmt -recursive .
-	@terraform init
+	@terraform init -upgrade
 
 plan: init
 	@echo "✨ Starting terraform magic... 🧙"

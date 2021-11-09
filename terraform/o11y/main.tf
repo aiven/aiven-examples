@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aiven = {
+      source  = "aiven/aiven"
+      version = ">= 2.2.1, < 3.0.0"
+    }
+  }
+}
+
 variable "aiven_project_name" {
 }
 variable "cloud_name" {
@@ -14,12 +23,12 @@ locals {
 resource "aiven_service_integration" "grafana_dashboards" {
   project                  = var.aiven_project_name
   integration_type         = "dashboard"
-  source_service_name      = aiven_service.grafana.service_name
-  destination_service_name = aiven_service.influx.service_name
+  source_service_name      = aiven_grafana.grafana.service_name
+  destination_service_name = aiven_influxdb.influx.service_name
 
   depends_on = [
-    aiven_service.grafana,
-    aiven_service.influx,
+    aiven_grafana.grafana,
+    aiven_influxdb.influx,
   ]
 }
 
@@ -30,7 +39,7 @@ resource "aiven_service_integration" "os_metrics" {
   destination_service_name = local.influx_service_name
 
   depends_on = [
-    aiven_service.opensearch,
-    aiven_service.influx,
+    aiven_opensearch.opensearch,
+    aiven_influxdb.influx,
   ]
 }

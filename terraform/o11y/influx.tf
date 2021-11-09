@@ -1,5 +1,4 @@
-resource "aiven_service" "influx" {
-  service_type            = "influxdb"
+resource "aiven_influxdb" "influx" {
   project                 = var.aiven_project_name
   cloud_name              = var.cloud_name
   service_name            = local.influx_service_name
@@ -14,9 +13,9 @@ resource "aiven_service" "influx" {
 }
 
 output "influx_service_uri" {
-  value = aiven_service.influx.service_uri
+  value = aiven_influxdb.influx.service_uri
 }
 
 output "influx_service_name" {
-  value = aiven_service.influx.service_name
+  value = aiven_influxdb.influx.service_name
 }

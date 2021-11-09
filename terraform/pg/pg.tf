@@ -1,3 +1,16 @@
+terraform {
+  required_providers {
+    aiven = {
+      source  = "aiven/aiven"
+      version = ">= 2.2.1, < 3.0.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.1"
+    }
+  }
+}
+
 variable "aiven_project_name" {
 }
 variable "cloud_name" {
@@ -11,8 +24,7 @@ locals {
   avn_pg_poolname = "pgpool"
 }
 
-resource "aiven_service" "pg" {
-  service_type            = "pg"
+resource "aiven_pg" "pg" {
   project                 = var.aiven_project_name
   cloud_name              = var.cloud_name
   service_name            = var.service_name
@@ -28,8 +40,8 @@ resource "aiven_service" "pg" {
       idle_in_transaction_session_timeout = 900
     }
     pgbouncer {
-      #autodb_max_db_connections = 200
-      #min_pool_size = 50
+      autodb_max_db_connections = 200
+      min_pool_size             = 50
       server_reset_query_always = false
     }
   }
@@ -37,19 +49,19 @@ resource "aiven_service" "pg" {
 
 resource "aiven_database" "pg_db" {
   project       = var.aiven_project_name
-  service_name  = aiven_service.pg.service_name
+  service_name  = aiven_pg.pg.service_name
   database_name = local.avn_pg_dbname
 }
 
 resource "aiven_service_user" "pg_user" {
   project      = var.aiven_project_name
-  service_name = aiven_service.pg.service_name
+  service_name = aiven_pg.pg.service_name
   username     = local.anv_pg_username
 }
 
 resource "aiven_connection_pool" "pg_conn_pool" {
   project       = var.aiven_project_name
-  service_name  = aiven_service.pg.service_name
+  service_name  = aiven_pg.pg.service_name
   database_name = aiven_database.pg_db.database_name
   pool_name     = local.avn_pg_poolname
   username      = aiven_service_user.pg_user.username
@@ -60,7 +72,7 @@ resource "aiven_connection_pool" "pg_conn_pool" {
 }
 
 output "service_uri" {
-  value     = aiven_service.pg.service_uri
+  value     = aiven_pg.pg.service_uri
   sensitive = true
 }
 

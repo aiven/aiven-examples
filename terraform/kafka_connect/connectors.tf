@@ -3,36 +3,24 @@ locals {
   redis_sink_name  = "redis-export"
 }
 
-data "aiven_service" "pg" {
+data "aiven_pg" "pg" {
   project      = var.aiven_project_name
   service_name = var.source_name
-
-  depends_on = [
-    time_sleep.hack_tf012_module_depends_on,
-  ]
 }
 
-data "aiven_service" "redis" {
+data "aiven_redis" "redis" {
   project      = var.aiven_project_name
   service_name = var.sink_name
-
-  depends_on = [
-    time_sleep.hack_tf012_module_depends_on,
-  ]
-}
-
-resource "time_sleep" "hack_tf012_module_depends_on" {
-  create_duration = "90s"
 }
 
 resource "time_sleep" "wait_for_kafka_connect" {
-  # it seems like with current config it takes 4-5m to get kafka + connect up and running
+  # it seems like with current config it takes 2-5m to get kafka + connect up and running
   # and be ready to setup connectors
-  create_duration  = "300s"
+  create_duration  = "180s"
   destroy_duration = "30s"
 
   depends_on = [
-    aiven_service.kafka_connect,
+    aiven_kafka_connect.kafka_connect,
   ]
 }
 
@@ -45,12 +33,12 @@ resource "aiven_kafka_connector" "kafka-pg-debezium-source-connector" {
     "name"                        = local.pg_debezium_name
     "connector.class"             = "io.debezium.connector.postgresql.PostgresConnector"
     "database.server.name"        = "avn_pg_db"
-    "database.hostname"           = data.aiven_service.pg.service_host
-    "database.port"               = data.aiven_service.pg.service_port
-    "database.user"               = data.aiven_service.pg.service_username
-    "database.password"           = data.aiven_service.pg.service_password
+    "database.hostname"           = data.aiven_pg.pg.service_host
+    "database.port"               = data.aiven_pg.pg.service_port
+    "database.user"               = data.aiven_pg.pg.service_username
+    "database.password"           = data.aiven_pg.pg.service_password
     "database.dbname"             = var.source_db
-    "database.sslmode"            = "require" #data.aiven_service.pg.pg[0].sslmode
+    "database.sslmode"            = "require" #data.aiven_pg.pg.pg[0].sslmode
     "plugin.name"                 = "pgoutput"
     "publication.name"            = "dbz_publication"
     "publication.autocreate.mode" = "ALL_TABLES"
@@ -73,9 +61,9 @@ resource "aiven_kafka_connector" "kafka-redis-sink-connector" {
     "topics"                                          = "translations" # TODO look it up from topics.tf somehow
     "errors.deadletterqueue.topic.name"               = "dead_translations"
     "errors.deadletterqueue.topic.replication.factor" = "2"
-    "connect.redis.host"                              = data.aiven_service.redis.service_host
-    "connect.redis.port"                              = data.aiven_service.redis.service_port
-    "connect.redis.password"                          = data.aiven_service.redis.service_password
+    "connect.redis.host"                              = data.aiven_redis.redis.service_host
+    "connect.redis.port"                              = data.aiven_redis.redis.service_port
+    "connect.redis.password"                          = data.aiven_redis.redis.service_password
     "connect.redis.ssl.enabled"                       = "true"
     "connect.redis.kcql"                              = "INSERT INTO TRANS- SELECT * from translations PK key"
     "connect.redis.error.policy"                      = "RETRY"

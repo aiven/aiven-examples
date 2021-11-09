@@ -1,3 +1,12 @@
+terraform {
+  required_providers {
+    aiven = {
+      source  = "aiven/aiven"
+      version = ">= 2.2.1, < 3.0.0"
+    }
+  }
+}
+
 variable "aiven_project_name" {
 }
 variable "cloud_name" {
@@ -5,8 +14,7 @@ variable "cloud_name" {
 variable "service_name" {
 }
 
-resource "aiven_service" "redis" {
-  service_type            = "redis"
+resource "aiven_redis" "redis" {
   project                 = var.aiven_project_name
   cloud_name              = var.cloud_name
   service_name            = var.service_name
@@ -17,16 +25,29 @@ resource "aiven_service" "redis" {
 
   redis_user_config {
     ip_filter = ["0.0.0.0/0"]
+
+    redis_maxmemory_policy = "allkeys-random"
+    public_access {
+      redis = true
+    }
   }
 }
 
 resource "aiven_service_user" "redis_user" {
   project      = var.aiven_project_name
-  service_name = aiven_service.redis.service_name
+  service_name = aiven_redis.redis.service_name
   username     = "rd_user"
+
+  lifecycle {
+    ignore_changes = [
+      redis_acl_categories,
+      redis_acl_commands,
+      redis_acl_keys,
+    ]
+  }
 }
 
 output "service_uri" {
-  value     = aiven_service.redis.service_uri
+  value     = aiven_redis.redis.service_uri
   sensitive = true
 }

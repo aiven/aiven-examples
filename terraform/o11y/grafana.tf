@@ -1,5 +1,4 @@
-resource "aiven_service" "grafana" {
-  service_type           = "grafana"
+resource "aiven_grafana" "grafana" {
   project                = var.aiven_project_name
   cloud_name             = var.cloud_name
   service_name           = local.grafana_service_name
@@ -12,18 +11,18 @@ resource "aiven_service" "grafana" {
 }
 
 output "grafana_service_name" {
-  value = aiven_service.grafana.service_name
+  value = aiven_grafana.grafana.service_name
 }
 
 output "grafana_service_uri" {
-  value = aiven_service.grafana.service_uri
+  value = aiven_grafana.grafana.service_uri
 }
 
 output "grafana_service_username" {
-  value = aiven_service.grafana.service_username
+  value = aiven_grafana.grafana.service_username
 }
 
 output "grafana_service_password" {
-  value     = aiven_service.grafana.service_password
+  value     = aiven_grafana.grafana.service_password
   sensitive = true
 }

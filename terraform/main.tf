@@ -3,18 +3,11 @@
 ########
 
 terraform {
-  # go install github.com/aiven/terraform-provider-aiven@v1.3.5
-  # mkdir -p $PWD/terraform.d/plugins/linux_amd64/
-  # cp $GOPATH/bin/terraform-provider-aiven $PWD/terraform.d/plugins/linux_amd64/terraform-provider-aiven_v1.3.5
   required_providers {
-    aiven = "1.3.5"
-    null  = "~> 3.1"
-    time  = "0.7.2"
-    #postgresql = "1.7.2"
-    # sql = {
-    #   source  = "paultyng/sql"
-    #   version = "0.4.0"
-    # }
+    aiven = {
+      source  = "aiven/aiven"
+      version = ">= 2.2.1, < 3.0.0"
+    }
   }
 }
 provider "aiven" {
@@ -29,8 +22,7 @@ data "aiven_project" "avn_proj" {
   project = var.aiven_project_name
 }
 output "aiven_project_balance" {
-  #value = data.aiven_project.avn_proj.estimated_balance
-  value = "n/a"
+  value = data.aiven_project.avn_proj.estimated_balance
 }
 
 ########
@@ -44,7 +36,8 @@ module "aiven_for_o11y" {
 }
 
 output "aiven_for_o11y_dashboard_uri" {
-  value = module.aiven_for_o11y.grafana_service_uri
+  value     = module.aiven_for_o11y.grafana_service_uri
+  sensitive = true
 }
 
 output "aiven_for_o11y_logs_uri" {
@@ -103,16 +96,16 @@ module "aiven_for_kafka_connect" {
   source_db          = module.aiven_for_postgresql.service_db
   sink_name          = var.redis_service_name
 
-  # not supported in 0.12
-  # depends_on = [
-  #   module.aiven_for_kafka,
-  #   module.aiven_for_postgresql,
-  #   module.aiven_for_redis,
-  # ]
+  depends_on = [
+    module.aiven_for_kafka,
+    module.aiven_for_postgresql,
+    module.aiven_for_redis,
+  ]
 }
 
 output "aiven_for_kafka_service_uri" {
-  value = module.aiven_for_kafka.service_uri
+  value     = module.aiven_for_kafka.service_uri
+  sensitive = true
 }
 
 ################
@@ -133,13 +126,16 @@ resource "aiven_service_integration" "kafka_logs" {
   integration_type         = "logs"
   source_service_name      = var.kafka_service_name
   destination_service_name = module.aiven_for_o11y.opensearch_service_name
-  # It was added as "default" after creation and it tries to set these values
-  # to "null" on a second run
-  # this causes 400 error, so I am adding it here *shrug*
+
   logs_user_config {
-    elasticsearch_index_days_max = "3"
-    elasticsearch_index_prefix   = "logs"
+    elasticsearch_index_days_max = 3
+    elasticsearch_index_prefix   = "kfk_logs"
   }
+  kafka_logs_user_config {}
+
+  depends_on = [
+    module.aiven_for_kafka,
+  ]
 }
 
 resource "aiven_service_integration" "kafka_connect_metrics" {
@@ -154,10 +150,14 @@ resource "aiven_service_integration" "kafka_connect_logs" {
   integration_type         = "logs"
   source_service_name      = module.aiven_for_kafka_connect.service_name
   destination_service_name = module.aiven_for_o11y.opensearch_service_name
+
   logs_user_config {
-    elasticsearch_index_days_max = "3"
-    elasticsearch_index_prefix   = "logs"
+    elasticsearch_index_days_max = 1
   }
+
+  depends_on = [
+    module.aiven_for_kafka_connect,
+  ]
 }
 
 ## --- Postgres --- ##
@@ -167,6 +167,10 @@ resource "aiven_service_integration" "pg_metrics" {
   integration_type         = "metrics"
   source_service_name      = var.db_service_name
   destination_service_name = module.aiven_for_o11y.influx_service_name
+
+  depends_on = [
+    module.aiven_for_postgresql,
+  ]
 }
 
 resource "aiven_service_integration" "pg_logs" {
@@ -174,10 +178,22 @@ resource "aiven_service_integration" "pg_logs" {
   integration_type         = "logs"
   source_service_name      = var.db_service_name
   destination_service_name = module.aiven_for_o11y.opensearch_service_name
+
   logs_user_config {
-    elasticsearch_index_days_max = "3"
+    elasticsearch_index_days_max = 7
     elasticsearch_index_prefix   = "logs"
   }
+
+  lifecycle {
+    ignore_changes = [
+      logs_user_config["elasticsearch_index_days_max"],
+      logs_user_config["elasticsearch_index_prefix"],
+    ]
+  }
+
+  depends_on = [
+    module.aiven_for_postgresql,
+  ]
 }
 
 resource "aiven_service_integration" "pg_replica_metrics" {
@@ -192,10 +208,20 @@ resource "aiven_service_integration" "pg_replica_logs" {
   integration_type         = "logs"
   source_service_name      = module.aiven_for_postgresql.replica_service_name
   destination_service_name = module.aiven_for_o11y.opensearch_service_name
+
   logs_user_config {
-    elasticsearch_index_days_max = "3"
-    elasticsearch_index_prefix   = "logs"
+    elasticsearch_index_days_max = 2
   }
+
+  lifecycle {
+    ignore_changes = [
+      logs_user_config,
+    ]
+  }
+
+  depends_on = [
+    module.aiven_for_postgresql,
+  ]
 }
 
 ## --- Redis --- ##
@@ -212,8 +238,13 @@ resource "aiven_service_integration" "redis_logs" {
   integration_type         = "logs"
   source_service_name      = var.redis_service_name
   destination_service_name = module.aiven_for_o11y.opensearch_service_name
+
   logs_user_config {
-    elasticsearch_index_days_max = "3"
-    elasticsearch_index_prefix   = "logs"
+    elasticsearch_index_days_max = 5
+    elasticsearch_index_prefix   = "rd_logs"
   }
+
+  depends_on = [
+    module.aiven_for_redis,
+  ]
 }
