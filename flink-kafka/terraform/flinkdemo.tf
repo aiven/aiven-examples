@@ -39,15 +39,14 @@ resource "aiven_flink_table" "source" {
   project        = aiven_flink.flink.project
   service_name   = aiven_flink.flink.service_name
   integration_id = aiven_service_integration.flink_to_kafka.integration_id
-  table_name     = "source_table"
+  table_name     = "stock_exchange"
   kafka_topic    = aiven_kafka_topic.source.topic_name
-  partitioned_by = "node"
   schema_sql     = <<EOF
-      `cpu` INT, 
-      `node` INT, 
-      `occurred_at` TIMESTAMP(3) METADATA FROM 'timestamp', 
-      `cpu_in_mb` AS `cpu` * 4 * 1024, 
-      WATERMARK FOR `occurred_at` AS `occurred_at` - INTERVAL '5' SECOND
+    `symbol` VARCHAR,
+    `bid_price` DECIMAL(10,2),
+    `ask_price` DECIMAL(10,2),
+    `time_stamp` TIMESTAMP(3),
+     WATERMARK FOR `time_stamp` AS `time_stamp` - INTERVAL '5' SECOND 
     EOF
 }
 
@@ -55,27 +54,42 @@ resource "aiven_flink_table" "sink" {
   project        = aiven_flink.flink.project
   service_name   = aiven_flink.flink.service_name
   integration_id = aiven_service_integration.flink_to_kafka.integration_id
-  table_name     = "sink_table"
+  table_name     = "stock_data"
   kafka_topic    = aiven_kafka_topic.sink.topic_name
   schema_sql     = <<EOF
-      `cpu` INT, 
-      `node` INT, 
-      `occurred_at` TIMESTAMP(3), 
-      `cpu_in_mb` FLOAT
+    `symbol` VARCHAR,
+    `change_bid_price` DECIMAL(10,2),
+    `change_ask_price` DECIMAL(10,2),
+    `min_bid_price` DECIMAL(10,2),
+    `max_bid_price` DECIMAL(10,2),
+    `min_ask_price` DECIMAL(10,2),
+    `max_ask_price` DECIMAL(10,2),
+    `time_interval` BIGINT,
+    `time_stamp` TIMESTAMP(3)
     EOF
 }
 
 resource "aiven_flink_job" "flink_job" {
   project      = aiven_flink.flink.project
   service_name = aiven_flink.flink.service_name
-  job_name     = "flink_demo_job"
+  job_name     = "stock_demo_job"
   table_id = [
     aiven_flink_table.source.table_id,
     aiven_flink_table.sink.table_id,
   ]
   statement = <<EOF
-      INSERT INTO ${aiven_flink_table.sink.table_name} 
-      SELECT * FROM ${aiven_flink_table.source.table_name} 
-      WHERE `cpu` > 70
+    INSERT INTO ${aiven_flink_table.sink.table_name} 
+    SELECT
+      symbol,
+      max(bid_price)-min(bid_price),
+      max(ask_price)-min(ask_price),
+      min(bid_price),
+      max(bid_price),
+      min(ask_price),
+      max(ask_price),
+      HOUR(TUMBLE_START(time_stamp, INTERVAL '1' HOUR)),
+      CURRENT_TIMESTAMP
+    FROM ${aiven_flink_table.source.table_name}
+    GROUP BY symbol, TUMBLE(time_stamp, INTERVAL '1' HOUR)
     EOF
 }
