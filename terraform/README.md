@@ -109,7 +109,7 @@ To handle the various versions of Terraform, we will be using the great tool: [t
 
 `cp $GOPATH/bin/terraform-provider-aiven $PWD/terraform.d/plugins/linux_amd64/terraform-provider-aiven_v1.3.5`
 
-Download one of the example scripts and add your variables (or enter them in the Command Line prompt). For example from [here](https://github.com/aiven/terraform-v1-v2-migration-example/tree/aiven-terraform-v1.3.5) or use the following example from the blog post of the v2 release:
+Download one of the example scripts and add your variables (or enter them in the Command Line prompt). For example from [here](https://github.com/aiven/aiven-examples/tree/aiven-terraform-v1.3.5) or use the following example from the blog post of the v2 release:
 
 ```hcl
 terraform {
