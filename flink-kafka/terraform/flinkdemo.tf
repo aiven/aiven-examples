@@ -10,6 +10,9 @@ resource "aiven_kafka" "kafka" {
   cloud_name   = var.cloud_name
   plan         = var.kafka_plan
   service_name = "flinkdemo-kafka"
+  kafka_user_config {
+    kafka_rest      = "true"
+  }
 }
 
 resource "aiven_service_integration" "flink_to_kafka" {
@@ -45,8 +48,9 @@ resource "aiven_flink_table" "source" {
     `symbol` VARCHAR,
     `bid_price` DECIMAL(10,2),
     `ask_price` DECIMAL(10,2),
-    `time_stamp` TIMESTAMP(3),
-     WATERMARK FOR `time_stamp` AS `time_stamp` - INTERVAL '5' SECOND 
+    `time_stamp` BIGINT,
+    `ts_ltz` AS TO_TIMESTAMP_LTZ(time_stamp, 3),
+    WATERMARK FOR `ts_ltz` AS `ts_ltz` - INTERVAL '3' SECOND 
     EOF
 }
 
@@ -55,6 +59,7 @@ resource "aiven_flink_table" "sink" {
   service_name   = aiven_flink.flink.service_name
   integration_id = aiven_service_integration.flink_to_kafka.integration_id
   table_name     = "stock_data"
+  # kafka_connector_type = "upsert-kafka"  
   kafka_topic    = aiven_kafka_topic.sink.topic_name
   schema_sql     = <<EOF
     `symbol` VARCHAR,
@@ -87,9 +92,9 @@ resource "aiven_flink_job" "flink_job" {
       max(bid_price),
       min(ask_price),
       max(ask_price),
-      HOUR(TUMBLE_START(time_stamp, INTERVAL '1' HOUR)),
+      TIMESTAMPDIFF(SECOND, min(ts_ltz),max(ts_ltz)),
       CURRENT_TIMESTAMP
     FROM ${aiven_flink_table.source.table_name}
-    GROUP BY symbol, TUMBLE(time_stamp, INTERVAL '1' HOUR)
+    GROUP BY symbol, TUMBLE(ts_ltz, INTERVAL '9' SECOND)
     EOF
 }
