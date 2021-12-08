@@ -1,0 +1,50 @@
+plugins {
+	id 'org.springframework.boot' version '2.5.4'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'com.github.davidmc24.gradle.plugin.avro' version '1.2.1'
+}
+
+group = 'io.aiven'
+version = '0.4.4-SNAPSHOT'
+sourceCompatibility = '14'
+
+sourceSets {
+  main {
+    java.srcDirs += 'src/main/java'
+    java.srcDirs += 'build/generated/sources'
+  }
+}
+
+repositories {
+	jcenter()
+	mavenCentral()
+	maven {
+        url "https://packages.confluent.io/maven/"
+	}
+}
+
+dependencies {	
+	implementation 'org.apache.avro:avro'
+	implementation 'org.apache.commons:commons-text:1.9'
+	implementation 'org.apache.commons:commons-math3:3.6.1'
+	implementation 'org.springframework.kafka:spring-kafka:2.7.6'
+	implementation 'org.springframework.boot:spring-boot-starter'
+	implementation 'org.apache.kafka:kafka-clients:2.8.0'
+	implementation 'org.apache.kafka:kafka-streams:2.8.0'
+	implementation 'io.confluent:kafka-streams-avro-serde:6.2.0'
+	implementation 'ch.hsr:geohash:1.4.0'
+	testImplementation 'org.mockito:mockito-core'
+	testImplementation 'org.mockito:mockito-junit-jupiter'
+	testImplementation 'org.hamcrest:hamcrest'
+	testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	testImplementation 'org.apache.kafka:kafka-streams-test-utils:2.8.0'
+}
+
+test {
+	useJUnitPlatform()
+}

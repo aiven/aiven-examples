@@ -1,0 +1,70 @@
+HELP.md
+.gradle
+build/
+**/bin/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+**/.DS_Store
+
+**/.metals
+**/.bloop
+**/.bsp
+spark/project
+spark/target
+
+observability/prometheus/manifests
+observability/prometheus/vendor
+observability/prometheus/jsonnetfile.*
+
+**/.ipynb_checkpoints
+**/.python-version
+
+### Secrets ###
+k8s/secrets/aiven/*
+**/pgpassfile
+**/*.p12
+**/*.jks
+**/*.pem
+**/token
+**/secrets.tfvars
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### Terraform ###
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+**/*.tfstate
+**/*.tfstate.*
+**/.terraform.lock.hcl
+
+# Crash log files
+crash.log
