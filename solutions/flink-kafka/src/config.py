@@ -1,0 +1,11 @@
+KAFKA_URI = "flinkdemo-kafka-myproject.aivencloud.com:24949"
+KAFKA_TOPIC_SOURCE = "source_topic"
+KAFKA_TOPIC_SINK = "sink_topic"
+KAFKA_CONSUMER_CLIENT_ID = "flint-demo-client"
+KAFKA_CONSUMER_GROUP_ID = "flint-demo-group"
+KAFKA_SSL_CA = "ca.pem"
+KAFKA_SSL_CERT = "service.cert"
+KAFKA_SSL_KEY = "service.key"
+KAFKA_SECURITY_PROTOCOL = "SSL"
+KAFKA_TIMEOUT = 1000
+WAIT_TIME = 5
