@@ -1,13 +1,17 @@
+const fs = require('fs');
 const pg = require('pg');
 
 function postgresExample(host, password, port, user) {
     const config = {
         database: "defaultdb",
         host: host,
-        password: password,
         port: port,
-        ssl: "require",
         user: user,
+        password: password,
+        ssl: {
+            rejectUnauthorized: true,
+            ca: fs.readFileSync('./ca.pem').toString(),
+        },
     };
 
     const client = new pg.Client(config);
