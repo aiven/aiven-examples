@@ -7,7 +7,7 @@ Aiven Solutions
 
 This repository provides complete solution examples uses one or more Aiven services.
 
-.. _Aiven help articles: https://help.aiven.io/
+.. _Aiven's devportal: https://developer.aiven.io/
 
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 | **scripts**                      | common scripts for Aiven services.                                                                                                     | 
@@ -19,14 +19,12 @@ This repository provides complete solution examples uses one or more Aiven servi
 | **kafka-mm2-heartbeat-consumer** | example code demonstrates how to read messages from the heartbeats topic produced by Kafka MirrorMaker 2.                              |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 
-License
-=======
-
-Aiven examples are licensed under the Apache License, Version 2.0. Full license text is available in the LICENSE file and at
-http://www.apache.org/licenses/LICENSE-2.0.txt
-
 Contact
-=======
-
+-------
 Bug reports, patches and own submissions are very welcome, please post them as GitHub issues
-and pull requests at https://github.com/aiven/aiven-examples
+and pull requests at `Aiven examples repository <https://github.com/aiven/aiven-examples>`_.
+
+License
+-------
+This work is licensed under a
+`Apache License, Version 2.0 <http://www.apache.org/licenses/LICENSE-2.0.txt>`_.
