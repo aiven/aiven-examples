@@ -1,4 +1,5 @@
-# Contribute to Aiven Examples
+Contribute to Aiven Examples
+============================
 
 We would love to have your additions to our examples! Please feel free to open an issue to discuss what you have in mind, or just send over a pull request with a clear description of what you are adding and why.
 
