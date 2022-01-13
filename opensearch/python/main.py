@@ -4,16 +4,20 @@ import datetime
 import json
 import time
 from random import randint, random
+from typing import Dict
 
 from opensearchpy import NotFoundError, OpenSearch
 
-INDEX = "python_example"
-DOC_TYPE = "people"
 
-
-def get_document(opensearch, doc_id):
+def get_document(
+    opensearch: OpenSearch,
+    doc_id: int,
+    index_name: str,
+    doc_name: str,
+) -> Dict:
+    """Returns OpenSearch document as a dict."""
     try:
-        return opensearch.get(index=INDEX, doc_type=DOC_TYPE, id=doc_id)
+        return opensearch.get(index=index_name, doc_type=doc_name, id=doc_id)
     except NotFoundError:
         pass
 
@@ -29,6 +33,10 @@ def main():
     args = parser.parse_args()
 
     opensearch = OpenSearch(args.url, use_ssl=True)
+    doc_name = str(input("Enter doc type or `to _doc` (default): ") or "_doc")
+    index_name = str(
+        input("Enter index name or `py_example` (default): ") or "py_example"
+    )
 
     person = {
         "name": "John",
@@ -41,16 +49,17 @@ def main():
     }
 
     doc_id = randint(1, 5000)
+
     # Create a document
-    opensearch.index(index=INDEX, doc_type=DOC_TYPE, id=doc_id, body=person)
+    opensearch.index(index=index_name, doc_type=doc_name, id=doc_id, body=person)
 
     start = time.monotonic()
 
     # Retrieve document
-    result = get_document(opensearch, doc_id)
+    result = get_document(opensearch, doc_id, index_name, doc_name)
     while not result and time.monotonic() - start < 60:
         time.sleep(1)
-        result = get_document(opensearch, doc_id)
+        result = get_document(opensearch, doc_id, index_name)
 
     # Display document
     print(json.dumps(result, indent=2, sort_keys=True))
