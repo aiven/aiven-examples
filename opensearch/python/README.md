@@ -13,3 +13,5 @@ Note: You can find the connection details in the "Overview" tab in the Aiven Con
 ```
 ./main.py --url https://<user>:<password>@<host>:<port>
 ```
+
+The document can be customized with the index name and doc type from the user input.
