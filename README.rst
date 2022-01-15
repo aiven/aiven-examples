@@ -28,7 +28,9 @@ It is meant to be used as the technical content to support the `Aiven's devporta
     * - **Kafka**
       - `Go <kafka/go/README.md>`__, `Python <kafka/python/README.md>`__  
     * - **PostgreSQL**
-      - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__  
+      - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__
+    * - **OpenSearch**
+      - `Python <opensearch/python/README.md>`__  
     * - **Elasticsearch**
       - `Go <elasticsearch/go/README.md>`__, `Python <elasticsearch/python/README.md>`__  
     * - **InfluxDB**
