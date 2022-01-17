@@ -1,0 +1,4 @@
+#!/bin/bash
+
+BINPATH=$(dirname $0)
+exec java -cp "$BINPATH/../producer-consumer/target/*" io.aiven.avroexample.SampleKafkaProducer "$@"

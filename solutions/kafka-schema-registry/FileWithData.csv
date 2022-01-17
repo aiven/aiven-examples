@@ -1,0 +1,4 @@
+Any line without semicolon is considered as a comment
+SESSION  CHANNEL   BROWSER   CAMPAIGN     REFERRER   IP
+session1;channel1;mozilla;campaign2;referrer1;32.18.1.1
+session2;channel2;chrome;campaign1;referrer3;72.168.1.1
