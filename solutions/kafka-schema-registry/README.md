@@ -1,12 +1,12 @@
 The project demonstrates how to read send/receive messages serialized/deserialized with Avro to/from Kafka
 
 ### Requirements
-Installed JDK 1.8+
-Configured JAVA_HOME
+* Installed JDK 1.8+
+* Configured JAVA_HOME
 
 ### Preparation
-In case of Linux/Mac `./mvnw clean verify`
-In case of Windows `mvnw clean verify`
+* In case of Linux/Mac `./mvnw clean verify`
+* In case of Windows `mvnw clean verify`
 
 ### Get credentials
 Follow the instructions at https://developer.aiven.io/docs/products/kafka/howto/keystore-truststore 
