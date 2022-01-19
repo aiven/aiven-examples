@@ -166,3 +166,4 @@ terraform.rc
 *.hcl
 
 generated-sources/
+maven-wrapper.jar
