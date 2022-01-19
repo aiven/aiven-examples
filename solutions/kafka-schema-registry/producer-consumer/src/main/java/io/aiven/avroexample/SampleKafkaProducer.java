@@ -17,8 +17,8 @@ import static io.aiven.avroexample.PropertiesInitialiser.initKafkaProperties;
 import static io.aiven.avroexample.PropertiesInitialiser.readArg;
 
 public final class SampleKafkaProducer {
+    private final static String DEFAULT_FILENAME = "FileWithData.csv";
     public static void main(String[] args) {
-        private final static DEFAULT_FILENAME = "FileWithData.csv";
         final Properties props = initKafkaProducerProperties(args);
         String filename = readArg(args, "-f");
         Path filepath = filename == null ? Path.of(DEFAULT_FILENAME) : Path.of(filename);

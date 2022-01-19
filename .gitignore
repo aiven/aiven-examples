@@ -164,3 +164,5 @@ override.tf.json
 .terraformrc
 terraform.rc
 *.hcl
+
+generated-sources/
