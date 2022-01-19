@@ -25,7 +25,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
 
     * - Service
       - Example
-    * - **Kafka**
+    * - **Apache Kafka®**
       - `Go <kafka/go/README.md>`__, `Python <kafka/python/README.md>`__  
     * - **PostgreSQL**
       - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__
@@ -37,7 +37,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
       - `Go <influxdb/go/README.md>`__ , `Python <influxdb/python/README.md>`__ 
     * - **Redis**
       - `Go <redis/go/README.md>`__, `Python <redis/python/README.md>`__
-    * - **Cassandra**
+    * - **Apache Cassandra®**
       - `Go <cassandra/go/README.md>`__, `Python <cassandra/python/README.md>`__, `Java <cassandra/java/README.md>`__, `NodeJS <cassandra/nodejs/README.md>`__
     * - **M3**
       - `Python <m3/python/README.md>`__  
@@ -53,6 +53,10 @@ Contact
 -------
 Bug reports, patches and own submissions are very welcome, please post them as GitHub issues
 and pull requests at `Aiven examples repository <https://github.com/aiven/aiven-examples>`_.
+
+Trademark
+---------
+Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries.
 
 License
 -------
