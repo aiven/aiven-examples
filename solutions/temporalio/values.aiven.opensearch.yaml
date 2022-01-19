@@ -1,0 +1,11 @@
+elasticsearch:
+  enabled: false
+  external: true
+  host: "<host>"
+  port: 12345
+  version: "v7"
+  scheme: https
+  logLevel: "debug"
+  username: "avnadmin"
+  password: "<password>"
+  visibilityIndex: "temporal_visibility_v1_dev"

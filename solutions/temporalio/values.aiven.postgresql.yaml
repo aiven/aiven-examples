@@ -1,0 +1,48 @@
+server:
+  config:
+    persistence:
+      default:
+        driver: "sql"
+
+        sql:
+          driver: "postgres"
+          host: <host>
+          port: 12345
+          database: temporal
+          user: avnadmin
+          password: <password>
+          maxConns: 20
+          maxConnLifetime: "1h"
+          tls:
+            caData: <location_to_base64_encoded_postgres_ca_certificate_file>
+            enabled: true
+      visibility:
+        driver: "sql"
+
+        sql:
+          driver: "postgres"
+          host: <host>
+          port: 12345
+          database: temporal_visibility
+          user: avnadmin
+          password: <password>
+          maxConns: 20
+          maxConnLifetime: "1h"
+          tls:
+            caData: <location_to_base64_encoded_postgres_ca_certificate_file>
+            enabled: true
+
+cassandra:
+  enabled: false
+
+mysql:
+  enabled: false
+
+postgresql:
+  enabled: true
+
+schema:
+  setup:
+    enabled: false
+  update:
+    enabled: false

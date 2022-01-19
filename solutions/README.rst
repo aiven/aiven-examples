@@ -5,18 +5,20 @@ Aiven Solutions
 ===============
 
 
-This repository provides complete solution examples uses one or more Aiven services.
+This repository provides complete solution examples using one or more Aiven services.
 
 .. _Aiven's devportal: https://developer.aiven.io/
 
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
-| **scripts**                      | common scripts for Aiven services.                                                                                                     | 
+| **scripts**                      | Common scripts for Aiven services.                                                                                                     |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 | **azure-vnet-peering**           | Azure virtual network peering automation.                                                                                              | 
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
-| **flink-kafka**                  | example code uses aiven flink and kafka to simulate processing stock data.                                                             |
+| **flink-kafka**                  | Example code uses Aiven Flink and Kafka to simulate processing stock ticker data.                                                      |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
-| **kafka-mm2-heartbeat-consumer** | example code demonstrates how to read messages from the heartbeats topic produced by Kafka MirrorMaker 2.                              |
+| **kafka-mm2-heartbeat-consumer** | Example code demonstrates how to read messages from the heartbeats topic produced by Kafka MirrorMaker 2.                              |
++----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
+| **temporalio**                   | Example code for how to integrate `Temporal.io <https://temporal.io/>`_ with Aiven MySQL, Postgres, Opensearch, Cassandra.             |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 
 Contact
