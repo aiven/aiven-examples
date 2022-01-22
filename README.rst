@@ -47,8 +47,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
 Contributing
 ------------
 
-Check the `CONTRIBUTING guide <CONTRIBUTING.rst>`_ for details on how to create content for Aiven Developer. You will find the style guide, pull request process and templates for the various content types there.
-
+Check the `CONTRIBUTING guide <CONTRIBUTING.rst>`_ for details on how to contrbute to this repository.
 Contact
 -------
 Bug reports, patches and own submissions are very welcome, please post them as GitHub issues
