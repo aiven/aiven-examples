@@ -55,7 +55,7 @@ and pull requests at `Aiven examples repository <https://github.com/aiven/aiven-
 
 Trademark
 ---------
-Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries.
+Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries. M3, OpenSearch, Elasticsearch, PostgreSQL, Redis, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
 
 License
 -------
