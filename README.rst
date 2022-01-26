@@ -31,7 +31,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
       - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__
     * - **OpenSearch**
       - `Python <opensearch/python/README.md>`__  
-    * - **ElasticSearch**
+    * - **Elasticsearch**
       - `Go <elasticsearch/go/README.md>`__, `Python <elasticsearch/python/README.md>`__  
     * - **InfluxDB**
       - `Go <influxdb/go/README.md>`__ , `Python <influxdb/python/README.md>`__ 
@@ -55,7 +55,7 @@ and pull requests at `Aiven examples repository <https://github.com/aiven/aiven-
 
 Trademark
 ---------
-Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries. M3, OpenSearch, ElasticSearch, PostgreSQL, Redis, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
+Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries. M3, OpenSearch, Elasticsearch, PostgreSQL, Redis, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
 
 License
 -------
