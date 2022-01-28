@@ -1,6 +1,9 @@
 <img src="./images/aiven_logo.png" alt="drawing" width="300"/>
 &nbsp;&nbsp;
 <img src="./images/temporal.png" alt="drawing" width="300"/>
+  
+
+[Link](https://aiven.io/blog/just-plug-it-in-aiven-and-temporal) to associated Aiven Blog Post.
 
 # Aiven Configuration for Temporal.io Integration
 
