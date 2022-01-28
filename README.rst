@@ -27,15 +27,15 @@ It is meant to be used as the technical content to support the `Aiven's devporta
       - Example
     * - **Apache Kafka®**
       - `Go <kafka/go/README.md>`__, `Python <kafka/python/README.md>`__  
-    * - **PostgreSQL**
+    * - **PostgreSQL®**
       - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__
-    * - **OpenSearch**
+    * - **OpenSearch®**
       - `Python <opensearch/python/README.md>`__  
-    * - **Elasticsearch**
+    * - **Elasticsearch®**
       - `Go <elasticsearch/go/README.md>`__, `Python <elasticsearch/python/README.md>`__  
-    * - **InfluxDB**
+    * - **InfluxDB®**
       - `Go <influxdb/go/README.md>`__ , `Python <influxdb/python/README.md>`__ 
-    * - **Redis**
+    * - **Redis™***
       - `Go <redis/go/README.md>`__, `Python <redis/python/README.md>`__
     * - **Apache Cassandra®**
       - `Go <cassandra/go/README.md>`__, `Python <cassandra/python/README.md>`__, `Java <cassandra/java/README.md>`__, `NodeJS <cassandra/nodejs/README.md>`__
@@ -55,7 +55,11 @@ and pull requests at `Aiven examples repository <https://github.com/aiven/aiven-
 
 Trademark
 ---------
-Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries. M3, OpenSearch, Elasticsearch, PostgreSQL, Redis, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
+Apache Kafka and Apache Cassandra are either registered trademarks or trademarks of the Apache Software Foundation in the United States and/or other countries.
+
+\* Redis is a trademark of Redis Ltd. Any rights therein are reserved to Redis Ltd. Any use by Aiven Oy is for referential purposes only and does not indicate any sponsorship, endorsement or affiliation between Redis and Aiven Oy.
+
+M3, OpenSearch, Elasticsearch, PostgreSQL, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
 
 License
 -------
