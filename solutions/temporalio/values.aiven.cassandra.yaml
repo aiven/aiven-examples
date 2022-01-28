@@ -1,0 +1,59 @@
+server:
+  config:
+    logLevel: "debug,info"
+
+    numHistoryShards: 512
+
+    persistence:
+      default:
+        driver: "cassandra"
+
+        cassandra:
+          hosts: ["<host>"]
+          port: 12345
+          keyspace: temporal
+          user: "avnadmin"
+          password: "<password>"
+          existingSecret: ""
+          replicationFactor: 1
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
+          tls:
+            caData: <location_to_base64_encoded_cassandra_ca_certificate_file>
+            enabled: true
+
+      visibility:
+        driver: "cassandra"
+
+        cassandra:
+          hosts: ["<host>"]
+          port: 12345
+          keyspace: temporal_visibility
+          user: "avnadmin"
+          password: "<password>"
+          existingSecret: ""
+          replicationFactor: 1
+          consistency:
+            default:
+              consistency: "local_quorum"
+              serialConsistency: "local_serial"
+          tls:
+            caData: <location_to_base64_encoded_cassandra_ca_certificate_file>
+            enabled: true
+
+cassandra:
+  enabled: false
+
+mysql:
+  enabled: false
+
+postgresql:
+  enabled: false
+
+schema:
+  setup:
+    enabled: false
+  update:
+    enabled: false
