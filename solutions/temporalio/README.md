@@ -1,17 +1,21 @@
+<img src="./images/aiven_logo.png" alt="drawing" width="300"/>
+&nbsp;&nbsp;
+<img src="./images/temporal-logo.svg" alt="drawing" width="300"/>
+
 # Aiven Configuration for Temporal.io Integration
 
-[Aiven](https://aiven.io/) is a fully managed, open source cloud data platform that works for you.  
-Aiven makes setting up cloud databases so simple anyone can do it. Our set-it-and-forget-it solutions 
-take the pain out of cloud data infrastructure. 
+[Aiven](https://aiven.io/) is a fully managed, open source cloud data platform that works for you. Aiven makes 
+setting up cloud databases so simple anyone can do it. Our set-it-and-forget-it solutions take the pain out of 
+cloud data infrastructure. 
 
 Temporal is a distributed, scalable, durable, and highly available orchestration engine designed to 
 execute asynchronous long-running business logic in a resilient way.
 
-This repo contains the configuration for connecting Temporal Server to several of Aiven's database
+This repository contains the configuration for connecting Temporal Server to several of Aiven's database
 offerings including Postgres, MySQL, Cassandra and Opensearch.
 
 Use this repository with configuration examples in conjunction with the Temporal [helm-chart](https://github.com/temporalio/helm-charts)
-examples to get a fully functioning system with HA persistence setup up and running in minutes! 
+examples to get a fully functioning system with HA persistence up and running in minutes! 
 
 # High level logical steps to get up and running
 These are the logical steps to complete to get a functioning prototype.
@@ -42,7 +46,7 @@ for durable persistence.
 
 # Update Temporal config file with Aiven service info
 Once the Aiven service is up and running, you will need to gather information from the overview page.  
-As an example, the following screen shows the overview tab for an Aiven Postgres server. 
+The following screenshot shows an example of the overview tab for an Aiven Postgres server. 
 Gather the following information and update the correct `values.aiven.<service>.yaml` file in all appropriate places.
 
 * Host --> Update all <host> values in `values.aiven.<service>.yaml`.
@@ -67,8 +71,8 @@ From the Temporal [helm-chart](https://github.com/temporalio/helm-charts) reposi
 2. Download Helm Chart Dependencies
 
 The Temporal doc describes how to "Bring Your Own" service to plug into Temporal Server.  We are going to substitute 
-Aiven services and the following sections of this document describe how to start Temporal Server configured to point
-at an Aiven service that is running.
+Aiven services. the following sections of this document describe how to start Temporal Server configured to point
+at a running Aiven service.
 
 ## Bring your own Aiven Postgres
 To point Temporal at the Aiven Postgres database, we will need to create and configure temporal
@@ -227,9 +231,10 @@ temporaltest-worker-7c9d68f4cf-8tzfw           1/1     Running   2          11m
 ## Port Forwarding
 Ensure that port forwarding is setup for both the `frontend` and `web` pods to allow access for the CLI and for a browser.
 
-* Port Forward `frontend` [steps](https://github.com/temporalio/helm-charts#forwarding-your-machines-local-port-to-temporal-frontend)
-  allowing for [Temporal CLI](https://docs.temporal.io/docs/devtools/tctl/) access.
-* Port Forward `web` [steps](https://github.com/temporalio/helm-charts#forwarding-your-machines-local-port-to-temporal-web-ui) and then access [http://127.0.0.1:8088](http://127.0.0.1:8088).
+* Follow these [steps](https://github.com/temporalio/helm-charts#forwarding-your-machines-local-port-to-temporal-frontend)
+  to Port Forward `frontend` allowing for [Temporal CLI](https://docs.temporal.io/docs/devtools/tctl/) access on port 7233.
+* Follow these [steps](https://github.com/temporalio/helm-charts#forwarding-your-machines-local-port-to-temporal-web-ui)
+  to Port Forward `web` and then access [http://127.0.0.1:8088](http://127.0.0.1:8088).
 
 ## Setup `Default` Namespace using Temporal CLI From the Admin Tools Container
 
@@ -242,8 +247,12 @@ tctl namespace list
 
 # Testing and Verification
 
-Follow the Temporal [run-your-first-app-tutorial](https://docs.temporal.io/docs/java/run-your-first-app-tutorial) to test and validate
-that your Temporal Server is properly working and successfully integrated with Aiven services.
+Follow the Temporal [run-your-first-app-tutorial](https://docs.temporal.io/docs/java/run-your-first-app-tutorial) 
+to test and validate that your Temporal Server is properly working and successfully integrated with Aiven services.
+
+Hopefully you have Success!
+
+![Jumping Crab](./images/jumping_rapu.gif)
 
 ## Uninstalling
 
