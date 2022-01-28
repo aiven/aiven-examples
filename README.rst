@@ -31,7 +31,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
       - `Go <postgresql/go/README.md>`__, `Python <postgresql/python/README.md>`__
     * - **OpenSearch®**
       - `Python <opensearch/python/README.md>`__  
-    * - **Elasticsearch®**
+    * - **Elasticsearch**
       - `Go <elasticsearch/go/README.md>`__, `Python <elasticsearch/python/README.md>`__  
     * - **InfluxDB®**
       - `Go <influxdb/go/README.md>`__ , `Python <influxdb/python/README.md>`__ 
@@ -59,7 +59,7 @@ Apache Kafka and Apache Cassandra are either registered trademarks or trademarks
 
 \* Redis is a trademark of Redis Ltd. Any rights therein are reserved to Redis Ltd. Any use by Aiven Oy is for referential purposes only and does not indicate any sponsorship, endorsement or affiliation between Redis and Aiven Oy.
 
-M3, OpenSearch, Elasticsearch, PostgreSQL, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. 
+M3, OpenSearch, PostgreSQL, InfluxDB, Grafana are trademarks and property of their respective owners. All product and service names used in this website are for identification purposes only and do not imply endorsement. Elasticsearch is a trademark of Elasticsearch BV, registered in the U.S. and in other countries.
 
 License
 -------
