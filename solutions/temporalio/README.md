@@ -1,6 +1,6 @@
 <img src="./images/aiven_logo.png" alt="drawing" width="300"/>
 &nbsp;&nbsp;
-<img src="./images/temporal-logo.svg" alt="drawing" width="300"/>
+<img src="./images/temporal.png" alt="drawing" width="300"/>
 
 # Aiven Configuration for Temporal.io Integration
 
@@ -250,7 +250,7 @@ tctl namespace list
 Follow the Temporal [run-your-first-app-tutorial](https://docs.temporal.io/docs/java/run-your-first-app-tutorial) 
 to test and validate that your Temporal Server is properly working and successfully integrated with Aiven services.
 
-Hopefully you have Success!
+Hopefully you have Success!  If not feel free to reach out for help!
 
 ![Jumping Crab](./images/jumping_rapu.gif)
 
