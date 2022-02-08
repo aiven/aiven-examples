@@ -20,6 +20,8 @@ This repository provides complete solution examples using one or more Aiven serv
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 | **temporalio**                   | Example code for how to integrate `Temporal.io <https://temporal.io/>`_ with Aiven MySQL, Postgres, Opensearch, Cassandra.             |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
+| **node-replacement-monitoring**  | Script for monitoring service node replacements.                                                                                       | 
++----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 
 Contact
 -------
