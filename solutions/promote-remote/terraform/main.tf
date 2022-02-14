@@ -33,7 +33,7 @@ resource "aiven_pg" "pg-primary" {
  }
  
 }
- 
+# remote replica
 resource "aiven_pg" "pg_remote" {
  project                 = data.aiven_project.sample.project
  cloud_name              = var.remote_cloud
@@ -47,16 +47,11 @@ resource "aiven_pg" "pg_remote" {
    integration_type    = "read_replica"
    source_service_name = aiven_pg.pg-jakarta.service_name
  }
- 
- pg_user_config {
-   service_to_fork_from = aiven_pg.pg-jakarta.service_name
- }
- 
  depends_on = [
    aiven_pg.pg-jakarta,
  ]
 }
-
+# service integration with primary
 resource "aiven_service_integration" "pg_readreplica" {
  project = data.aiven_project.sample.project
  integration_type = "read_replica"
@@ -64,7 +59,7 @@ resource "aiven_service_integration" "pg_readreplica" {
  destination_service_name = aiven_pg.pg-aws.service_name
 }
  
-
+# grafana service
 resource "aiven_grafana" "grafana" {
  project      = data.aiven_project.sample.project
  cloud_name   = "google-asia-southeast1"
@@ -74,7 +69,7 @@ resource "aiven_grafana" "grafana" {
    ip_filter = ["0.0.0.0/0"]
  }
 }
-
+# gcp module 
 module "gcp" {
   source = "./gcp"
 
@@ -86,4 +81,37 @@ module "gcp" {
   depends_on = [
     aiven_opensearch.es
   ]
+}
+# m3 service
+resource "aiven_m3db" "m3-jakarta" {
+    project = data.aiven_project.sample.project
+    cloud_name = "google-asia-southeast1"
+    plan = "business-8"
+    service_name = "m3-jakarta"
+
+    m3db_user_config {
+      m3db_version = 1.2
+    }
+}
+
+# service integration from M3 to Grafana
+resource "aiven_service_integration" "grafana-jakarta" {
+  project                  = data.aiven_project.sample.project
+  integration_type         = "dashboard"
+  source_service_name      = aiven_grafana.grafana-jakarta.service_name
+  destination_service_name = aiven_m3db.m3-jakarta.service_name
+}
+# service integration from primary to m3 
+resource "aiven_service_integration" "int-m3db-pg-primary" {
+  project                  = data.aiven_project.sample.project
+  integration_type         = "metrics"
+  source_service_name      = aiven_pg.pg-jakarta.service_name
+  destination_service_name = aiven_m3db.m3-jakarta.service_name
+}
+# service integration from replica to m3
+resource "aiven_service_integration" "int-m3db-pg-replica" {
+  project                  = data.aiven_project.sample.project
+  integration_type         = "metrics"
+  source_service_name      = aiven_pg.pg-aws.service_name
+  destination_service_name = aiven_m3db.m3-jakarta.service_name
 }
