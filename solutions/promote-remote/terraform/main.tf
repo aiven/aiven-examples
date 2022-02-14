@@ -35,7 +35,7 @@ resource "aiven_pg" "pg-primary" {
 }
 # remote replica
 resource "aiven_pg" "pg_remote" {
- project                 = data.aiven_project.sample.project
+ project                 = var.project
  cloud_name              = var.remote_cloud
  service_name            = "pg-remote"
  plan                    = "startup-4"
@@ -45,23 +45,23 @@ resource "aiven_pg" "pg_remote" {
  
  service_integrations {
    integration_type    = "read_replica"
-   source_service_name = aiven_pg.pg-jakarta.service_name
+   source_service_name = aiven_pg.pg-primary.service_name
  }
  depends_on = [
-   aiven_pg.pg-jakarta,
+   aiven_pg.pg-primary,
  ]
 }
 # service integration with primary
 resource "aiven_service_integration" "pg_readreplica" {
- project = data.aiven_project.sample.project
+ project = var.project
  integration_type = "read_replica"
- source_service_name = aiven_pg.pg-jakarta.service_name
- destination_service_name = aiven_pg.pg-aws.service_name
+ source_service_name =  aiven_pg.pg-primary.service_name
+ destination_service_name =  aiven_pg.pg_remote.service_name
 }
  
 # grafana service
 resource "aiven_grafana" "grafana" {
- project      = data.aiven_project.sample.project
+ project      = var.project
  cloud_name   = "google-asia-southeast1"
  plan         = "startup-4"
  service_name = "grafana-jakarta"
@@ -69,22 +69,22 @@ resource "aiven_grafana" "grafana" {
    ip_filter = ["0.0.0.0/0"]
  }
 }
-# gcp module 
-module "gcp" {
-  source = "./gcp"
+# # gcp module 
+# module "gcp" {
+#   source = "./gcp"
 
-  project = var.project
-  aiven_api_token = var.aiven_api_token
-  integration_id = aiven_service_integration.pg_readreplica.id
-  gcs_bucket = var.gcs_bucket
+#   project = var.project
+#   aiven_api_token = var.aiven_api_token
+#   integration_id = aiven_service_integration.pg_readreplica.id
+#   gcs_bucket = var.gcs_bucket
 
-  depends_on = [
-    aiven_opensearch.es
-  ]
-}
+#   depends_on = [
+#     aiven_opensearch.es
+#   ]
+# }
 # m3 service
 resource "aiven_m3db" "m3-jakarta" {
-    project = data.aiven_project.sample.project
+    project = var.project
     cloud_name = "google-asia-southeast1"
     plan = "business-8"
     service_name = "m3-jakarta"
@@ -96,22 +96,22 @@ resource "aiven_m3db" "m3-jakarta" {
 
 # service integration from M3 to Grafana
 resource "aiven_service_integration" "grafana-jakarta" {
-  project                  = data.aiven_project.sample.project
+  project                  = var.project
   integration_type         = "dashboard"
-  source_service_name      = aiven_grafana.grafana-jakarta.service_name
+  source_service_name      = aiven_grafana.grafana.service_name
   destination_service_name = aiven_m3db.m3-jakarta.service_name
 }
 # service integration from primary to m3 
 resource "aiven_service_integration" "int-m3db-pg-primary" {
-  project                  = data.aiven_project.sample.project
+  project                  = var.project
   integration_type         = "metrics"
-  source_service_name      = aiven_pg.pg-jakarta.service_name
+  source_service_name      =  aiven_pg.pg-primary.service_name
   destination_service_name = aiven_m3db.m3-jakarta.service_name
 }
 # service integration from replica to m3
 resource "aiven_service_integration" "int-m3db-pg-replica" {
-  project                  = data.aiven_project.sample.project
+  project                  = var.project
   integration_type         = "metrics"
-  source_service_name      = aiven_pg.pg-aws.service_name
+  source_service_name      =  aiven_pg.pg_remote.service_name
   destination_service_name = aiven_m3db.m3-jakarta.service_name
 }
