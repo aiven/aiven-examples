@@ -2,18 +2,14 @@ variable "gcs_bucket" {
 	type = string
 }
 
-variable "os_host" {
+variable "aiven_api_token" {
   type = string
 }
 
-variable "os_user" {
+variable "integration_id" {
   type = string
 }
 
-variable "os_pass" {
+variable "project" {
   type = string
-}
-
-variable "os_port" {
-  type = number
 }

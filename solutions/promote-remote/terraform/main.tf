@@ -70,18 +70,18 @@ resource "aiven_grafana" "grafana" {
  }
 }
 # # gcp module 
-# module "gcp" {
-#   source = "./gcp"
+module "gcp" {
+  source = "./gcp"
 
-#   project = var.project
-#   aiven_api_token = var.aiven_api_token
-#   integration_id = aiven_service_integration.pg_readreplica.id
-#   gcs_bucket = var.gcs_bucket
+  project = var.project
+  aiven_api_token = var.aiven_api_token
+  integration_id = aiven_service_integration.pg_readreplica.id
+  gcs_bucket = var.gcs_bucket
 
-#   depends_on = [
-#     aiven_opensearch.es
-#   ]
-# }
+  depends_on = [
+    aiven_service_integration.pg_readreplica
+  ]
+}
 # m3 service
 resource "aiven_m3db" "m3-jakarta" {
     project = var.project

@@ -33,7 +33,7 @@ resource "google_cloudfunctions_function" "function" {
 
   environment_variables = {
     PROJ = var.project
-    INTEGRATION_ID = var.remote.id
+    INTEGRATION_ID = var.integration_id
     AVN_TOKEN = var.aiven_api_token
   }
 
