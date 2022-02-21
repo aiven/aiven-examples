@@ -1,9 +1,14 @@
 ### Redis Ruby Example
 
-This example uses the [redis](https://pypi.org/project/redis/) library to connect to Redis, write a key/value pair, and read it out again.
+This example uses the [redis](https://rubygems.org/gems/redis) gem to connect to Redis, write a key/value pair, and read it out again.
 
 #### Installing Dependencies  
-Use [bundler]() to install the dependencies in the example `Gemfile`:
+If you don't already have [bundler](https://bundler.io/), install it:
+```
+gem install bundler
+```
+
+Use bundler to install the dependencies in the example `Gemfile`:
 ```
 bundle install
 ```

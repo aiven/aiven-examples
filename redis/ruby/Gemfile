@@ -1,5 +1,4 @@
 source 'https://www.rubygems.org'
 
-gem 'json', '>=2.6'
 gem 'redis', '>=4.6'
 gem 'optparse', '>=0.2'
