@@ -167,3 +167,7 @@ terraform.rc
 
 generated-sources/
 maven-wrapper.jar
+
+# certs
+*.pem
+*.cert
