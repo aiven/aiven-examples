@@ -99,17 +99,6 @@ def make_ssl_context(cafile_path: str, certfile_path: str, keyfile_path: str) ->
     )
 
 
-# def create_update_statement(table_name: str, before: Dict, after: Dict) -> str:
-#     table = Table(table_name)
-#     q = Query.update(table)
-#     keys = ROW_IDENTIFIER if ROW_IDENTIFIER else before.keys()
-#     for i, k in enumerate(after.keys(), start=1):
-#         q = q.set(k, Parameter(f'${i}'))
-#     for i, k in enumerate(keys, start=len(before) + 1):
-#         q = q.where(table.__getattr__(k) == Parameter(f'${i}'))
-#     return q.get_sql()
-
-
 def create_update_statement(table_name: str, before: Dict, after: Dict) -> str:
     table = Table(table_name)
     q = Query.update(table)
@@ -127,12 +116,6 @@ def create_insert_statement(table_name: str, after: Dict) -> str:
     q = Query.into(table).columns(*keys).insert(*[Parameter('%s') for _ in range(1, len(values) + 1)])
     return q.get_sql()
 
-# def create_insert_statement(table_name: str, after: Dict) -> str:
-#     keys, values = after.keys(), after.values()
-#     table = Table(table_name)
-#     q = Query.into(table).columns(*keys).insert(*[Parameter(f'${i}') for i in range(1, len(values) + 1)])
-#     return q.get_sql()
-
 
 def create_delete_statement(table_name: str, before: Dict) -> str:
     table = Table(table_name)
@@ -142,11 +125,3 @@ def create_delete_statement(table_name: str, before: Dict) -> str:
         q = q.where(table.__getattr__(k) == Parameter('%s'))
     return q.delete().get_sql()
 
-
-# def create_delete_statement(table_name: str, before: Dict) -> str:
-#     table = Table(table_name)
-#     q = Query.from_(table)
-#     keys = ROW_IDENTIFIER if ROW_IDENTIFIER else before.keys()
-#     for i, k in enumerate(keys, start=1):
-#         q = q.where(table.__getattr__(k) == Parameter(f'${i}'))
-#     return q.delete().get_sql()
