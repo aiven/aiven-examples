@@ -22,9 +22,9 @@ pip3 install -r requirements.txt
 
 copy kafka certificates
 ```bash
-cd cdc/src/certs
+cd pg-sync/src/certs
 project=<project-name>
-avn service user-creds-download --project $project --username avnadmin cdc-demo-kafka
+avn service user-creds-download --project $project --username avnadmin replicator-kafka
 ```
 
 Create the PG table using `pg-sync/sql/pg.sql`
@@ -34,16 +34,6 @@ To monitor table changes properly the replica identity should be set to FULL.
 ALTER TABLE <table-name> REPLICA IDENTITY FULL;
 ```
 
-Run the App to push changes in Kafka to PG
-```bash
-cd cdc/src
-
-PG_HOST=<pg-host>
-PG_PORT=<pg-port>
-PG_PW=<pg-pw>
-PG_USER=<pg-user>
-python3 main.py
-```
 
 For `UPDATE` and `DELETE` if some of the columns cannot be identified precisely, for example
 `FLOAT` a combination of columns that can identify a unique row (e.g. primary key) can be 
@@ -74,3 +64,15 @@ export SET_FIELDS=set_column
 export BINARY_FIELDS=blob_column
 export TIMESTAMP_FIELDS=datetime_column,timestamp_column
 ```
+
+Run the App to push changes in Kafka to PG
+```bash
+cd cdc/src
+
+PG_HOST=<pg-host>
+PG_PORT=<pg-port>
+PG_PW=<pg-pw>
+PG_USER=<pg-user>
+python3 main.py
+```
+
