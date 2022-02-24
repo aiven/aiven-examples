@@ -4,7 +4,7 @@ import datetime
 
 KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
 try:
-    CDC_TOPIC_NAME = os.environ['CDC_TOPIC_NAME']
+    CDC_TOPIC_NAME = os.environ['CDC_TOPIC_NAME'].split(',')
 except KeyError:
     print("set the CDC_TOPIC_NAME environment variable")
     sys.exit(1)
@@ -27,4 +27,5 @@ PG_PW = os.environ.get('PG_PW', '')
 PG_DB = os.environ.get('PG_DB', 'defaultdb')
 PG_SSL = os.environ.get('PG_SSL', 'require')
 
-EPOCH_TIMESTAMP = datetime.date(1970, 1, 1)
+EPOCH_DATE = datetime.date(1970, 1, 1)
+EPOCH_DATETIME = datetime.datetime(1970, 1, 1, 0, 0, 0)

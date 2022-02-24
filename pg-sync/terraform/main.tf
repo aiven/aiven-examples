@@ -110,8 +110,9 @@ resource "aiven_kafka_connector" "cdc-kc-connector" {
     "database.ssl.mode" = "require"
     "include.schema.changes" = true
     "include.query" = true
-    "table.include.list" = "public.test"
+    "table.include.list" = "public.all_datatypes"
     "plugin.name" = "wal2json"
+    "decimal.handling.mode" = "double"
   }
 }
 

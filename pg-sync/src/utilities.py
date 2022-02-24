@@ -1,18 +1,19 @@
+import base64
 import datetime
 from ssl import SSLContext
 from typing import Dict, List, Optional, Iterable
 
 from aiokafka.helpers import create_ssl_context
 from kafka import KafkaConsumer
-from pypika import Table, Query, Parameter, Criterion
+from pypika import Table, Query, Parameter
 
 from env import DATE_FIELDS, TIME_FIELDS, DATETIME_MILLI_FIELDS, DATETIME_MICRO_FIELDS, TIMESTAMP_FIELDS, \
-    BINARY_FIELDS, SET_FIELDS, EPOCH_TIMESTAMP, BINARY_ENCODING, ROW_IDENTIFIER
+    BINARY_FIELDS, SET_FIELDS, EPOCH_DATE, ROW_IDENTIFIER, EPOCH_DATETIME
 
 
-def create_consumer(topic: str, bootstrap_servers: List[str], ssl_context: Optional[SSLContext],
+def create_consumer(topics: List[str], bootstrap_servers: List[str], ssl_context: Optional[SSLContext],
                     **kwargs) -> KafkaConsumer:
-    consumer = KafkaConsumer(topic,
+    consumer = KafkaConsumer(*topics,
                              bootstrap_servers=bootstrap_servers,
                              security_protocol="SSL",
                              ssl_context=ssl_context,
@@ -21,35 +22,35 @@ def create_consumer(topic: str, bootstrap_servers: List[str], ssl_context: Optio
 
 
 def int_to_date(days_since_epoch: int) -> datetime.date:
-    return EPOCH_TIMESTAMP + datetime.timedelta(days=days_since_epoch)
+    return EPOCH_DATE + datetime.timedelta(days=days_since_epoch)
 
 
-def micro_time(microseconds: int) -> datetime.time:
-    hour_conv = (3600 * 1000 * 1000)
-    min_conv = (60 * 1000 * 1000)
-    sec_conv = (1000 * 1000)
+def milli_time(milliseconds: int) -> datetime.time:
+    hour_conv = (3600 * 1000)
+    min_conv = (60 * 1000)
+    sec_conv = 1000
 
-    hours = microseconds // hour_conv
-    microseconds -= hours * hour_conv
+    hours = milliseconds // hour_conv
+    milliseconds -= hours * hour_conv
 
-    minutes = microseconds // min_conv
-    microseconds -= minutes * min_conv
+    minutes = milliseconds // min_conv
+    milliseconds -= minutes * min_conv
 
-    seconds = microseconds // sec_conv
-    microseconds -= microseconds * sec_conv
+    seconds = milliseconds // sec_conv
+    milliseconds -= milliseconds * sec_conv
 
-    if microseconds < 0:
-        microseconds = 0
+    if milliseconds < 0:
+        milliseconds = 0
 
-    return datetime.time(hour=hours, minute=minutes, second=seconds, microsecond=microseconds)
+    return datetime.time(hour=hours, minute=minutes, second=seconds)
 
 
 def milli_to_datetime(milliseconds: int) -> datetime.datetime:
-    return EPOCH_TIMESTAMP + datetime.timedelta(microseconds=milliseconds * 1000)
+    return EPOCH_DATETIME + datetime.timedelta(microseconds=milliseconds * 1000)
 
 
 def micro_to_datetime(microseconds: int) -> datetime.datetime:
-    return EPOCH_TIMESTAMP + datetime.timedelta(microseconds=microseconds)
+    return EPOCH_DATETIME + datetime.timedelta(microseconds=microseconds)
 
 
 def timestamp_str_to_obj(date_str: str) -> datetime.datetime:
@@ -60,7 +61,7 @@ def timestamp_str_to_obj(date_str: str) -> datetime.datetime:
 
 
 def binary_value(s: str) -> bytes:
-    return s.encode(encoding=BINARY_ENCODING)
+    return base64.b64decode(s)
 
 
 def str_to_set_type(s: Optional[str]) -> Optional[List[str]]:
@@ -75,17 +76,18 @@ def cast_values(keys: Iterable[str], values: Iterable) -> List:
         if k in DATE_FIELDS:
             cast_vals.append(int_to_date(v))
         elif k in TIME_FIELDS:
-            cast_vals.append(micro_time(v))
+            print(v)
+            cast_vals.append(milli_time(v))
         elif k in DATETIME_MILLI_FIELDS:
             cast_vals.append(milli_to_datetime(v))
         elif k in DATETIME_MICRO_FIELDS:
             cast_vals.append(micro_to_datetime(v))
         elif k in TIMESTAMP_FIELDS:
-            cast_vals.append(timestamp_str_to_obj(v))
+            cast_vals.append(milli_to_datetime(v))
         elif k in BINARY_FIELDS:
             cast_vals.append(binary_value(v))
         elif k in SET_FIELDS:
-            cast_vals.append(str_to_set_type(v))
+            cast_vals.append(v)
         else:
             cast_vals.append(v)
     return cast_vals
