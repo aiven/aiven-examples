@@ -67,7 +67,7 @@ export TIMESTAMP_FIELDS=datetime_column,timestamp_column
 
 Run the App to push changes in Kafka to PG
 ```bash
-cd cdc/src
+cd pg-sync/src
 
 PG_HOST=<pg-host>
 PG_PORT=<pg-port>
