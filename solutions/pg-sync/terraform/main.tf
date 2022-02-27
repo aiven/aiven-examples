@@ -113,26 +113,8 @@ resource "aiven_kafka_connector" "cdc-kc-connector" {
     "table.include.list" = "public.all_datatypes"
     "plugin.name" = "wal2json"
     "decimal.handling.mode" = "double"
+    "_aiven.restart.on.failure" = "true"
   }
 }
 
-//resource "aiven_service_integration" "kafka-1-metrics" {
-//  project = var.aiven_project_name
-//  integration_type = "metrics"
-//  source_service_name = aiven_kafka.kafka-1.service_name
-//  destination_service_name = aiven_influxdb.metrics-db.service_name
-//}
-//
-//resource "aiven_service_integration" "kafka-2-metrics" {
-//  project = var.aiven_project_name
-//  integration_type = "metrics"
-//  source_service_name = aiven_kafka.kafka-2.service_name
-//  destination_service_name = aiven_influxdb.metrics-db.service_name
-//}
-//
-//resource "aiven_service_integration" "metrics-dashboard" {
-//  project = var.aiven_project_name
-//  integration_type = "dashboard"
-//  destination_service_name = aiven_influxdb.metrics-db.service_name
-//  source_service_name = aiven_grafana.dashboard.service_name
-//}
+
