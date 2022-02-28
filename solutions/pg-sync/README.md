@@ -34,35 +34,54 @@ To monitor table changes properly the replica identity should be set to FULL.
 ALTER TABLE <table-name> REPLICA IDENTITY FULL;
 ```
 
+Use the configuration file (`config/config.json`) to specify which tables (specified as keys)
+should be replicated and necessary information about these tables to assist with the
+replication. All keys must be present for each table entry. 
 
-For `UPDATE` and `DELETE` if some of the columns cannot be identified precisely, for example
-`FLOAT` a combination of columns that can identify a unique row (e.g. primary key) can be 
-specified. Multiple columns can be specified as comma separated. Regardless, the
-recommended setting is to use the primary key if there is one.
+Specify the config file path using the environment variable `CONFIG_FILE`.
+
+For `UPDATE` and `DELETE` if some columns cannot be identified precisely, for example,
+`FLOAT`, a combination of columns that can identify a unique row (e.g. primary key) can be 
+specified. Multiple columns can be specified as well. Regardless, the
+recommended setting is to use the primary key if there is one. Set this value for row_identifier.
+
+The app can also process fields in a specific way based upon their type, and these can be 
+identified in the configuration file as well.
+* utilize the key, `date_fields` for `DATE` fields 
+* utilize the key, `datetime_milli_fields` for `DATETIME` fields with precision 0-3
+* utilize the key, `datetime_micro_fields` for `DATETIME` fields with precision 4-6
+* utilize the key, `timestamp_fields` for `TIMESTAMP` fields 
+* utilize the key, `binary_fields` for `BLOB, TINYBLOB, MEDIUMBLOB, LONGBLOB, BINARY, VARBINARY` fields
+* utilize the key, `set_fields` for `SET` fields
+
+Below is an example configuration for the table defined in `pg.sql`
 ```bash
-export ROW_IDENTIFIER=id
-```
+{
+  "all_datatypes": {
+    "topic": "replicator.public.all_datatypes",
+    "date_fields": [
+      "date_column"
+    ],
+    "time_fields": [
+      "time_column"
+    ],
+    "datetime_milli_fields": [],
+    "datetime_micro_fields": [],
+    "timestamp_fields": [
+      "datetime_column",
+      "timestamp_column"
+    ],
+    "set_fields": [
+      "set_column"
+    ],
+    "binary_fields": [
+      "blob_column"
+    ],
+    "binary_encoding": "utf-8",
+    "row_identifier": ["id"]
+  }
+}
 
-The app can be started with special environment variables to handle non-standard data types.
-
-Set the `DATE_FIELDS` env var to handle `DATE` fields:
-
-Set the `DATETIME_MILLI_FIELDS` env var to handle `DATETIME` fields with precision 0-3:
-
-Set the `DATETIME_MICRO_FIELDS` env var to handle `DATETIME` fields with precision 4-6:
-
-Set the `TIMESTAMP_FIELDS` env var to handle `TIMESTAMP` fields:
-
-Set the `BINARY_FIELDS` env var to handle `BLOB, TINYBLOB, MEDIUMBLOB, LONGBLOB, BINARY, VARBINARY` fields:
-
-Set the `SET_FIELDS` env var to handle `SET` fields:
-
-```bash
-export DATE_FIELDS=date_column
-export TIME_FIELDS=time_column
-export SET_FIELDS=set_column
-export BINARY_FIELDS=blob_column
-export TIMESTAMP_FIELDS=datetime_column,timestamp_column
 ```
 
 Run the App to push changes in Kafka to PG

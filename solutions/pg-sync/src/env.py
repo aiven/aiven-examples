@@ -1,24 +1,27 @@
+import json
+from json import JSONDecodeError
 import os
 import sys
 import datetime
 
+from loguru import logger
+
+
 KAFKA_BROKER = os.environ.get('KAFKA_BROKER', 'localhost:9092')
+
 try:
-    CDC_TOPIC_NAME = os.environ['CDC_TOPIC_NAME'].split(',')
+    config_file = os.environ['CONFIG_FILE']
+    with open(config_file, 'r') as f:
+        CONFIG = json.load(f)
 except KeyError:
-    print("set the CDC_TOPIC_NAME environment variable")
+    logger.error("set the CDC_TOPIC_NAME environment variable")
     sys.exit(1)
-
-DATE_FIELDS = set(_ for _ in (os.environ.get('DATE_FIELDS', '')).split(',') if _)
-TIME_FIELDS = set(_ for _ in (os.environ.get('TIME_FIELDS', '')).split(',') if _)
-DATETIME_MILLI_FIELDS = set(_ for _ in (os.environ.get('DATETIME_MILLI_FIELDS', '')).split(',') if _)
-DATETIME_MICRO_FIELDS = set(_ for _ in (os.environ.get('DATETIME_MICRO_FIELDS', '')).split(',') if _)
-TIMESTAMP_FIELDS = set(_ for _ in (os.environ.get('TIMESTAMP_FIELDS', '')).split(',') if _)
-SET_FIELDS = set(_ for _ in (os.environ.get('SET_FIELDS', '')).split(',') if _)
-BINARY_FIELDS = set(_ for _ in (os.environ.get('BINARY_FIELDS', '')).split(',') if _)
-BINARY_ENCODING = os.environ.get('BINARY_ENCODING', 'utf-8')
-
-ROW_IDENTIFIER = set(_ for _ in (os.environ.get('ROW_IDENTIFIER', '')).split(',') if _)
+except OSError:
+    logger.error("Could not open configuration file")
+    sys.exit(1)
+except JSONDecodeError:
+    logger.error("Could not parse configuration file. Invalid JSON")
+    sys.exit(1)
 
 PG_HOST = os.environ.get('PG_HOST', 'localhost')
 PG_PORT = os.environ.get('PG_PORT', '5432')

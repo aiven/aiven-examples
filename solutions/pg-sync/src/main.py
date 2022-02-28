@@ -3,8 +3,8 @@ import time
 from loguru import logger
 
 from utilities import make_ssl_context, create_insert_statement, create_update_statement, create_delete_statement, \
-    cast_values, create_consumer
-from env import KAFKA_BROKER, CDC_TOPIC_NAME, ROW_IDENTIFIER
+    cast_values, create_consumer, find_row_identifier
+from env import KAFKA_BROKER, CONFIG
 from db import create_db_pool
 
 retry = 2
@@ -12,7 +12,9 @@ ssl_context = make_ssl_context(cafile_path='certs/ca.pem',
                                certfile_path='certs/service.cert',
                                keyfile_path='certs/service.key')
 
-consumer = create_consumer(CDC_TOPIC_NAME,
+topics = [v["topic"] for v in CONFIG.values()]
+
+consumer = create_consumer(topics,
                            [KAFKA_BROKER],
                            ssl_context,
                            group_id='cdc',
@@ -40,17 +42,19 @@ for msg in consumer:
                 # Update
                 a_keys, a_values = after.keys(), after.values()
                 b_keys, b_values = before.keys(), before.values()
+                schema, table_name = change['source']['schema'], change['source']['table']
                 try:
                     with db_pool.connection() as conn:
-                        query = create_update_statement(change['source']['table'], before, after)
-                        a_casted_values = cast_values(a_keys, a_values)
-                        if ROW_IDENTIFIER:
-                            keys = ROW_IDENTIFIER
+                        query = create_update_statement(schema, table_name, before, after)
+                        a_casted_values = cast_values(a_keys, a_values, table_name)
+                        row_identifier = find_row_identifier(table_name)
+                        if row_identifier:
+                            keys = row_identifier
                             values = [before[k] for k in keys]
                         else:
                             keys = b_keys
                             values = b_values
-                        b_casted_values = cast_values(keys, values)
+                        b_casted_values = cast_values(keys, values, table_name)
                         casted_values = a_casted_values + b_casted_values
                         logger.info(query)
                         logger.info(casted_values)
@@ -61,10 +65,11 @@ for msg in consumer:
             elif before is None:
                 # Insert
                 keys, values = after.keys(), after.values()
+                schema, table_name = change['source']['schema'], change['source']['table']
                 try:
                     with db_pool.connection() as conn:
-                        query = create_insert_statement(change['source']['table'], after)
-                        casted_values = cast_values(keys, values)
+                        query = create_insert_statement(schema, table_name, after)
+                        casted_values = cast_values(keys, values, table_name)
                         logger.info(query)
                         logger.info(casted_values)
                         conn.execute(query, params=casted_values)
@@ -74,13 +79,15 @@ for msg in consumer:
             else:
                 # Delete
                 keys, values = before.keys(), before.values()
+                schema, table_name = change['source']['schema'], change['source']['table']
                 try:
                     with db_pool.connection() as conn:
-                        query = create_delete_statement(change['source']['table'], before)
-                        if ROW_IDENTIFIER:
-                            keys = ROW_IDENTIFIER
+                        query = create_delete_statement(schema, table_name, before)
+                        row_identifier = find_row_identifier(table_name)
+                        if row_identifier:
+                            keys = row_identifier
                             values = [before[k] for k in keys]
-                        casted_values = cast_values(keys, values)
+                        casted_values = cast_values(keys, values, table_name)
                         logger.info(query)
                         logger.info(casted_values)
                         conn.execute(query, params=casted_values)

@@ -5,10 +5,9 @@ from typing import Dict, List, Optional, Iterable
 
 from aiokafka.helpers import create_ssl_context
 from kafka import KafkaConsumer
-from pypika import Table, Query, Parameter
+from pypika import Table, Query, Parameter, Schema
 
-from env import DATE_FIELDS, TIME_FIELDS, DATETIME_MILLI_FIELDS, DATETIME_MICRO_FIELDS, TIMESTAMP_FIELDS, \
-    BINARY_FIELDS, SET_FIELDS, EPOCH_DATE, ROW_IDENTIFIER, EPOCH_DATETIME
+from env import CONFIG, EPOCH_DATE, EPOCH_DATETIME
 
 
 def create_consumer(topics: List[str], bootstrap_servers: List[str], ssl_context: Optional[SSLContext],
@@ -70,23 +69,31 @@ def str_to_set_type(s: Optional[str]) -> Optional[List[str]]:
     return s.split(',')
 
 
-def cast_values(keys: Iterable[str], values: Iterable) -> List:
+def find_row_identifier(table_name: str) -> Optional[str]:
+    ri = CONFIG[table_name].get("row_identifier")
+    if ri:
+        return ri
+    return None
+
+
+def cast_values(keys: Iterable[str], values: Iterable, table_name) -> List:
+    cast_keys = CONFIG[table_name]
     cast_vals = []
     for k, v in zip(keys, values):
-        if k in DATE_FIELDS:
+        if k in cast_keys["date_fields"]:
             cast_vals.append(int_to_date(v))
-        elif k in TIME_FIELDS:
+        elif k in cast_keys["time_fields"]:
             print(v)
             cast_vals.append(milli_time(v))
-        elif k in DATETIME_MILLI_FIELDS:
+        elif k in cast_keys["datetime_milli_fields"]:
             cast_vals.append(milli_to_datetime(v))
-        elif k in DATETIME_MICRO_FIELDS:
+        elif k in cast_keys["datetime_micro_fields"]:
             cast_vals.append(micro_to_datetime(v))
-        elif k in TIMESTAMP_FIELDS:
+        elif k in cast_keys["timestamp_fields"]:
             cast_vals.append(milli_to_datetime(v))
-        elif k in BINARY_FIELDS:
+        elif k in cast_keys["binary_fields"]:
             cast_vals.append(binary_value(v))
-        elif k in SET_FIELDS:
+        elif k in cast_keys["set_fields"]:
             cast_vals.append(v)
         else:
             cast_vals.append(v)
@@ -101,10 +108,12 @@ def make_ssl_context(cafile_path: str, certfile_path: str, keyfile_path: str) ->
     )
 
 
-def create_update_statement(table_name: str, before: Dict, after: Dict) -> str:
+def create_update_statement(schema_name: str, table_name: str, before: Dict, after: Dict) -> str:
+    schema = Schema(schema_name)
     table = Table(table_name)
-    q = Query.update(table)
-    keys = ROW_IDENTIFIER if ROW_IDENTIFIER else before.keys()
+    q = Query.update(schema.__getattr__(table_name))
+    row_identifier = find_row_identifier(table_name)
+    keys = row_identifier if row_identifier else before.keys()
     for i, k in enumerate(after.keys(), start=1):
         q = q.set(k, Parameter('%s'))
     for i, k in enumerate(keys, start=len(before) + 1):
@@ -112,18 +121,19 @@ def create_update_statement(table_name: str, before: Dict, after: Dict) -> str:
     return q.get_sql()
 
 
-def create_insert_statement(table_name: str, after: Dict) -> str:
+def create_insert_statement(schema_name: str, table_name: str, after: Dict) -> str:
     keys, values = after.keys(), after.values()
-    table = Table(table_name)
-    q = Query.into(table).columns(*keys).insert(*[Parameter('%s') for _ in range(1, len(values) + 1)])
+    schema = Schema(schema_name)
+    q = Query.into(schema.__getattr__(table_name)).columns(*keys).insert(*[Parameter('%s') for _ in range(1, len(values) + 1)])
     return q.get_sql()
 
 
-def create_delete_statement(table_name: str, before: Dict) -> str:
+def create_delete_statement(schema_name: str, table_name: str, before: Dict) -> str:
+    schema = Schema(schema_name)
     table = Table(table_name)
-    q = Query.from_(table)
-    keys = ROW_IDENTIFIER if ROW_IDENTIFIER else before.keys()
+    q = Query.from_(schema.__getattr__(table_name))
+    row_identifier = find_row_identifier(table_name)
+    keys = row_identifier if row_identifier else before.keys()
     for i, k in enumerate(keys, start=1):
         q = q.where(table.__getattr__(k) == Parameter('%s'))
     return q.delete().get_sql()
-
