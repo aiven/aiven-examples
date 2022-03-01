@@ -28,6 +28,8 @@ avn service user-creds-download --project $project --username avnadmin replicato
 ```
 
 Create the PG table using `pg-sync/sql/pg.sql`
+The heartbeat table should be created for all installations as it prevents replication lag
+from growing too large, especially in the cases of databases with infrequent writes.
 
 To monitor table changes properly the replica identity should be set to FULL.
 ```bash

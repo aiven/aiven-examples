@@ -1,3 +1,7 @@
+CREATE TABLE heartbeat (
+    status SMALLINT
+);
+
 CREATE SEQUENCE all_datatypes_seq;
 CREATE TYPE enum_column_type AS ENUM ('1', '2', '3');
 

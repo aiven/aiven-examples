@@ -114,6 +114,8 @@ resource "aiven_kafka_connector" "cdc-kc-connector" {
     "plugin.name" = "wal2json"
     "decimal.handling.mode" = "double"
     "_aiven.restart.on.failure" = "true"
+    "heartbeat.interval.ms" = 30000
+    "heartbeat.action.query" = "INSERT INTO heartbeat (status) VALUES (1)"
   }
 }
 
