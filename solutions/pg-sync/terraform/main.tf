@@ -126,7 +126,10 @@ resource "aiven_kafka_connector" "cdc-kc-connector" {
   }
 }
 <<<<<<< HEAD:solutions/pg-sync/terraform/main.tf
+<<<<<<< HEAD:solutions/pg-sync/terraform/main.tf
 
 
+=======
+>>>>>>> 9010d9c (add avro support):pg-sync/terraform/main.tf
 =======
 >>>>>>> 9010d9c (add avro support):pg-sync/terraform/main.tf
