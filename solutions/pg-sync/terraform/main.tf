@@ -8,6 +8,7 @@ resource "aiven_kafka" "kafka" {
   kafka_user_config {
     kafka_connect = true
     kafka_rest = true
+    schema_registry = true
     kafka_version = "3.0"
     kafka {
       group_min_session_timeout_ms = 5000
@@ -116,7 +117,16 @@ resource "aiven_kafka_connector" "cdc-kc-connector" {
     "_aiven.restart.on.failure" = "true"
     "heartbeat.interval.ms" = 30000
     "heartbeat.action.query" = "INSERT INTO heartbeat (status) VALUES (1)"
+    "key.converter" = "io.confluent.connect.avro.AvroConverter"
+    "key.converter.schema.registry.url" = aiven_kafka.kafka.kafka[0].schema_registry_uri
+    "key.converter.basic.auth.credentials.source" = "URL"
+    "value.converter" = "io.confluent.connect.avro.AvroConverter"
+    "value.converter.schema.registry.url" = aiven_kafka.kafka.kafka[0].schema_registry_uri
+    "value.converter.basic.auth.credentials.source" = "URL"
   }
 }
+<<<<<<< HEAD:solutions/pg-sync/terraform/main.tf
 
 
+=======
+>>>>>>> 9010d9c (add avro support):pg-sync/terraform/main.tf

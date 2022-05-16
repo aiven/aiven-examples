@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Iterable
 
 from aiokafka.helpers import create_ssl_context
 from kafka import KafkaConsumer
+from confluent_kafka.avro import AvroConsumer
 from pypika import Table, Query, Parameter, Schema
 
 from env import CONFIG, EPOCH_DATE, EPOCH_DATETIME
@@ -17,6 +18,19 @@ def create_consumer(topics: List[str], bootstrap_servers: List[str], ssl_context
                              security_protocol="SSL",
                              ssl_context=ssl_context,
                              **kwargs)
+    return consumer
+
+
+def create_avro_consumer(bootstrap_servers: List[str], schema_registry_url: str, ssl_key_loc: str,
+                         ssl_cert_loc: str, ssl_ca_loc: str) -> AvroConsumer:
+    consumer = AvroConsumer({'security.protocol': "SSL",
+                             'bootstrap.servers': bootstrap_servers[0],
+                             'schema.registry.url': schema_registry_url,
+                             'group.id': 'test',
+                             'ssl.key.location': ssl_key_loc,
+                             'ssl.certificate.location': ssl_cert_loc,
+                             'ssl.ca.location': ssl_ca_loc
+                             })
     return consumer
 
 
@@ -124,7 +138,8 @@ def create_update_statement(schema_name: str, table_name: str, before: Dict, aft
 def create_insert_statement(schema_name: str, table_name: str, after: Dict) -> str:
     keys, values = after.keys(), after.values()
     schema = Schema(schema_name)
-    q = Query.into(schema.__getattr__(table_name)).columns(*keys).insert(*[Parameter('%s') for _ in range(1, len(values) + 1)])
+    q = Query.into(schema.__getattr__(table_name)).columns(*keys).insert(
+        *[Parameter('%s') for _ in range(1, len(values) + 1)])
     return q.get_sql()
 
 
