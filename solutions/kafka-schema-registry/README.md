@@ -9,7 +9,12 @@ The project demonstrates how to read send/receive messages serialized/deserializ
 * In case of Windows `mvnw clean verify`
 
 ### Get credentials
-Follow the instructions at https://developer.aiven.io/docs/products/kafka/howto/keystore-truststore 
+Download service `access_key`, `access_certificate` and `ca_certificate`.
+```
+openssl pkcs12 -export -inkey service.key -in service.cert -out client.keystore.p12 -name service_key -passout pass:mySSLKeyP@ssw0rd
+keytool -import -file ca.pem -alias CA -keystore client.truststore.jks -storepass myTrustSt0reP@ssw0rd -noprompt
+```
+For detailed follow the instructions at https://developer.aiven.io/docs/products/kafka/howto/keystore-truststore 
 
 ### List of available flags
 
@@ -32,14 +37,14 @@ List of arguments
 An example of message producing (for Windows use producer.bat)
 ```
 bin/producer -bs kafka-1690a57d-senu-dev-sandbox.aivencloud.com:12693 \
-             -ksp myKeySt0reP@ssw0rd \
              -srurl https://kafka-1690a57d-senu-dev-sandbox.aivencloud.com:12696 \
              -ts /path/to/client.truststore.jks \
              -tsp myTrustSt0reP@ssw0rd \
              -ks /path/to/client.keystore.p12 \
+             -ksp myKeySt0reP@ssw0rd \
+             -sslp myKeySt0reP@ssw0rd \
              -srp MySchem@RegistryP@ssw0rd \
              -sru avnadmin \
-             -sslp mySSLKeyP@ssw0rd \
              -f FileWithData.csv \
              -t clickrecordTopic
 ```
@@ -48,13 +53,13 @@ bin/producer -bs kafka-1690a57d-senu-dev-sandbox.aivencloud.com:12693 \
 An example of message consumption (for Windows use consumer.bat)
 ```
 bin/consumer -bs kafka-1690a57d-senu-dev-sandbox.aivencloud.com:12693 \
-             -ksp myKeySt0reP@ssw0rd \
              -srurl https://kafka-1690a57d-senu-dev-sandbox.aivencloud.com:12696 \
              -ts /path/to/client.truststore.jks \
              -tsp myTrustSt0reP@ssw0rd \
              -ks /path/to/client.keystore.p12 \
+             -ksp myKeySt0reP@ssw0rd \
+             -sslp myKeySt0reP@ssw0rd \
              -srp MySchem@RegistryP@ssw0rd \
              -sru avnadmin \
-             -sslp mySSLKeyP@ssw0rd \
              -t clickrecordTopic
 ```
