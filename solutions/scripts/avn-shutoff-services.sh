@@ -2,7 +2,26 @@
 
 # before running your avn cli needs to be authenticated
 # and the environment should have jq installed https://stedolan.github.io/jq/
-PROJECT=<YOUR_AVN_PROJECT>
+
+USAGE="usage: --project <YOUR_AIVEN_PROJECT>"
+if (( $# == 0 ))
+then
+        print $USAGE
+        exit 1
+fi
+
+while [ $# -gt 0 ]; do
+    case $1 in
+    --project)
+        shift && PROJECT="$1"
+        ;;
+    *)
+        echo "unknown argument $1"
+        exit 1
+        ;;
+    esac
+    shift
+done 
 
 echo 'Shutting down Aiven services for ' $PROJECT
 
@@ -23,7 +42,3 @@ jq -c '.[]' <<<$services | while read s; do
         echo "$service_name is $state"
     fi
 done
-
-
-
-
