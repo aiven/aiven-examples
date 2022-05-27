@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 # before running your avn cli needs to be authenticated
 # and the environment should have jq installed https://stedolan.github.io/jq/
@@ -6,7 +6,7 @@
 USAGE="usage: --project <YOUR_AIVEN_PROJECT>"
 if (( $# == 0 ))
 then
-        print $USAGE
+        echo $USAGE
         exit 1
 fi
 
@@ -23,12 +23,13 @@ while [ $# -gt 0 ]; do
     shift
 done 
 
-echo 'Shutting down Aiven services for ' $PROJECT
+echo "Shutting down Aiven services for $PROJECT"
 
 #get list of services
 services=$(avn service list --project $PROJECT --json | jq )
 
-function stop_service() {   
+function stop_service() {
+    echo "Shutting down service [$1]"
     output=$(avn service update --power-off $1) 
     echo $output
 }
