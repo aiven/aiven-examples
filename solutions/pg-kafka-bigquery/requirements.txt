@@ -1,0 +1,2 @@
+kafka-python
+psycopg2

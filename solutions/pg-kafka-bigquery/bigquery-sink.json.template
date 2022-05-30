@@ -1,0 +1,14 @@
+{
+    "name":"$KAFKA_CONNECT_BIGQUERY_TASK_NAME",
+    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+    "topics": "$KAFKA_TOPIC_NAME",
+    "project": "$GCP_PROJECT_NAME",
+    "defaultDataset": "$BIGQUERY_DATASET_NAME",
+    "schemaRetriever": "com.wepay.kafka.connect.bigquery.retrieve.IdentitySchemaRetriever",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "autoUpdateSchemas": "true",
+    "autoCreateTables": "true",
+    "keySource": "JSON",
+    "keyfile": "$ESCAPED_KEY"
+}
