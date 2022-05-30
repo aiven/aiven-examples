@@ -257,7 +257,7 @@ gcloud iam service-accounts keys create \
    bquser.json
 
 bq show --format=prettyjson $BIGQUERY_DATASET_NAME > $BIGQUERY_DATASET_NAME.json
-jq '.access += [{ "role": "WRITER",  "userByEmail": "jbdemouser@aiven-demo.iam.gserviceaccount.com"}]' $BIGQUERY_DATASET_NAME.json > $BIGQUERY_DATASET_NAME-new.json
+jq ".access += [{ \"role\": \"WRITER\", \"userByEmail\": \"$BIGQUERY_USER_NAME@$GCP_PROJECT_NAME.iam.gserviceaccount.com\"}]" $BIGQUERY_DATASET_NAME.json > $BIGQUERY_DATASET_NAME-new.json
 bq update --source $BIGQUERY_DATASET_NAME-new.json $BIGQUERY_DATASET_NAME
 ```
 
@@ -348,7 +348,7 @@ avn service terminate \
    $KAFKA_SERVICE_NAME
 ```
 
-Google Cloud ressources:
+Google Cloud resources:
 
 ```bash
 bq rm -f -r $BIGQUERY_DATASET_NAME
