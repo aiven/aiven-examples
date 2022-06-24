@@ -14,7 +14,7 @@ try:
     with open(config_file, 'r') as f:
         CONFIG = json.load(f)
 except KeyError:
-    logger.error("set the CDC_TOPIC_NAME environment variable")
+    logger.error("set the CONFIG_FILE environment variable")
     sys.exit(1)
 except OSError:
     logger.error("Could not open configuration file")

@@ -1,0 +1,14 @@
+{
+  "all_datatypes": {
+    "topic": "replicator.public.all_datatypes",
+    "date_fields": [],
+    "time_fields": [],
+    "datetime_milli_fields": [],
+    "datetime_micro_fields": [],
+    "timestamp_fields": [],
+    "set_fields": [],
+    "binary_fields": [],
+    "binary_encoding": "utf-8",
+    "row_identifier": ["id"]
+  }
+}
