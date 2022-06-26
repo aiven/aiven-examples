@@ -1,6 +1,6 @@
-### Redis node.js Example
+### Redis® node.js Example
 
-This example uses the [ioredis](https://www.npmjs.com/package/ioredis) library to connect to Redis, write a key/value and read it out again.
+This example uses the [ioredis](https://www.npmjs.com/package/ioredis) library to connect to Redis®, write a key/value and read it out again.
 
 #### Installing Dependencies  
 ```

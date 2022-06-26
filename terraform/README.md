@@ -29,7 +29,7 @@ It is used to demonstrate migration path from TF 0.12 with Aiven provider 1.3.5 
       │      │                           │     │     │                │         │
       │      │                         ┌─┘     │     │                │      ┌──┴──────┐
       │      │                         │       │     │                │      │         │
-      │      │                         │       │     └────Metrics─────┼──────┤  Redis  │
+      │      │                         │       │     └────Metrics─────┼──────┤  Redis®  │
       │      │                         │       │                      │      │         │
       │      │                         │       │                      │      └──────▲──┘
 ┌─────┴──────┴─┐  ┌────────────────┐   │       │                      │             │
@@ -56,7 +56,7 @@ It is used to demonstrate migration path from TF 0.12 with Aiven provider 1.3.5 
       │                        ┌───────────┼──────┐        ┌───┼───────────┐        │
       │                        │           │xxxxxx│        │xxx│           │        │
       │                        │           └──────┼────────┼───┘           │        │
-      └────────────────────────┤     Debezium     │        │  Redis Sink   ├────────┘
+      └────────────────────────┤     Debezium     │        │  Redis® Sink   ├────────┘
                                │                  │        │               │
                                │                  │        │               │
                                └──────────────────┘        └───────────────┘
@@ -345,7 +345,7 @@ resource "aiven_database" "pg_db" {
 
 ```
 
-**Redis**
+**Redis®**
 
 We follow the same principle here as described above.
 

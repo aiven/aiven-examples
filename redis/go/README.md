@@ -1,6 +1,6 @@
-### Redis Go Example
+### Redis® Go Example
 
-This example uses the [redis](https://github.com/go-redis/redis) library to connect to Redis, write a key/value pair, and read it out again.
+This example uses the [redis](https://github.com/go-redis/redis) library to connect to Redis®, write a key/value pair, and read it out again.
 
 #### Installing Dependencies  
 
