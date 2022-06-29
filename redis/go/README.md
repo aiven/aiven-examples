@@ -19,3 +19,6 @@ Note: You can retrieve the connection details from the Aiven Console overview ta
 ```
 ./main -host <redis host> -password <redis password> -port <redis port>
 ```
+
+#### Trademark
+\* Redis is a registered trademark of Redis Ltd. Any rights therein are reserved to Redis Ltd. Any use by Aiven Oy is for referential purposes only and does not indicate any sponsorship, endorsement or affiliation between Redis and Aiven Oy.

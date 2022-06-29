@@ -570,3 +570,6 @@ More detailed description of `terraform import` could be found at official docum
 If you have any issues, please contact us at [support@aiven.io](mailto:support@aiven.io?subject=Terraform%20Provider%20v2&body=👋)
 
 🙇
+
+#### Trademark
+\* Redis is a registered trademark of Redis Ltd. Any rights therein are reserved to Redis Ltd. Any use by Aiven Oy is for referential purposes only and does not indicate any sponsorship, endorsement or affiliation between Redis and Aiven Oy.
