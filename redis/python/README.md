@@ -1,6 +1,6 @@
-### Redis® Python Example
+### Redis®* Python Example
 
-This example uses the [redis](https://pypi.org/project/redis/) library to connect to Redis®, write a key/value pair, and read it out again.
+This example uses the [redis](https://pypi.org/project/redis/) library to connect to Redis®*, write a key/value pair, and read it out again.
 
 #### Installing Dependencies  
 

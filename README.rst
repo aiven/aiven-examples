@@ -35,7 +35,7 @@ It is meant to be used as the technical content to support the `Aiven's devporta
       - `Go <elasticsearch/go/README.md>`__, `Python <elasticsearch/python/README.md>`__  
     * - **InfluxDB®**
       - `Go <influxdb/go/README.md>`__ , `Python <influxdb/python/README.md>`__ 
-    * - **Redis®™***
+    * - **Redis®***
       - `Go <redis/go/README.md>`__, `Python <redis/python/README.md>`__
     * - **Apache Cassandra®**
       - `Go <cassandra/go/README.md>`__, `Python <cassandra/python/README.md>`__, `Java <cassandra/java/README.md>`__, `NodeJS <cassandra/nodejs/README.md>`__
