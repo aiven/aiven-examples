@@ -56,7 +56,7 @@ It is used to demonstrate migration path from TF 0.12 with Aiven provider 1.3.5 
       │                        ┌───────────┼──────┐        ┌───┼───────────┐        │
       │                        │           │xxxxxx│        │xxx│           │        │
       │                        │           └──────┼────────┼───┘           │        │
-      └────────────────────────┤     Debezium     │        │  Redis Sink   ├────────┘
+      └────────────────────────┤     Debezium     │        │  Redis  Sink  ├────────┘
                                │                  │        │               │
                                │                  │        │               │
                                └──────────────────┘        └───────────────┘
@@ -345,7 +345,7 @@ resource "aiven_database" "pg_db" {
 
 ```
 
-**Redis**
+**Redis®***
 
 We follow the same principle here as described above.
 
@@ -570,3 +570,6 @@ More detailed description of `terraform import` could be found at official docum
 If you have any issues, please contact us at [support@aiven.io](mailto:support@aiven.io?subject=Terraform%20Provider%20v2&body=👋)
 
 🙇
+
+#### Trademark
+\* Redis is a registered trademark of Redis Ltd. Any rights therein are reserved to Redis Ltd. Any use by Aiven Oy is for referential purposes only and does not indicate any sponsorship, endorsement or affiliation between Redis and Aiven Oy.
