@@ -2,6 +2,7 @@
 # Copyright (c) 2018 Aiven, Helsinki, Finland. https://aiven.io/
 
 import argparse
+import multiprocessing
 import os
 import sys
 
@@ -26,7 +27,12 @@ def main():
 
     kwargs = {k: v for k, v in vars(args).items() if k not in ("producer", "consumer")}
     if args.producer:
-        producer_example(**kwargs)
+        pool = multiprocessing.Pool(multiprocessing.cpu_count()-2)
+        for i in range(multiprocessing.cpu_count()-2):
+            res = pool.apply_async(producer_example, kwds=kwargs)
+
+        res.get()
+
     elif args.consumer:
         consumer_example(**kwargs)
 
