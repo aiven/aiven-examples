@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.example;
+package io.aiven.example.flinkcapitalizer;
 
 import org.apache.flink.api.common.functions.MapFunction;
 
