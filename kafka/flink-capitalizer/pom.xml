@@ -31,10 +31,11 @@ under the License.
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<flink.version>1.15.1</flink.version>
 		<target.java.version>1.8</target.java.version>
-		<scala.binary.version>2.12</scala.binary.version>
 		<maven.compiler.source>${target.java.version}</maven.compiler.source>
 		<maven.compiler.target>${target.java.version}</maven.compiler.target>
-		<log4j.version>2.17.1</log4j.version>
+		<log4j.version>2.17.2</log4j.version>
+		<maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
+		<maven-shade-plugin.version>3.3.0</maven-shade-plugin.version>
 	</properties>
 
 	<repositories>
@@ -104,7 +105,7 @@ under the License.
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
+				<version>${maven-compiler-plugin.version}</version>
 				<configuration>
 					<source>${target.java.version}</source>
 					<target>${target.java.version}</target>
@@ -116,7 +117,7 @@ under the License.
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.1.1</version>
+				<version>${maven-shade-plugin.version}</version>
 				<executions>
 					<!-- Run shade goal on package phase -->
 					<execution>
@@ -125,6 +126,7 @@ under the License.
 							<goal>shade</goal>
 						</goals>
 						<configuration>
+							<dependencyReducedPomLocation>${project.basedir}/target/dependency-reduced-pom.xml</dependencyReducedPomLocation>
 							<artifactSet>
 								<excludes>
 									<exclude>org.apache.flink:flink-shaded-force-shading</exclude>
