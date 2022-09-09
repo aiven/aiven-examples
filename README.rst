@@ -44,6 +44,26 @@ It is meant to be used as the technical content to support the `Aiven's devporta
     * - **Solutions** 
       - `Multiple Services Solutions <solutions/README.rst>`__ 
 
+
+Multi Solution Demos
+--------------------
+.. list-table::
+    :header-rows: 1
+
+    * - Services
+      - Example
+    * - **Apache Kafka®** + **Apache Flink®**
+      - `flink-kafka <solutions/flink-kafka/README.md>`__
+
+    * - **Apache Kafka®** + **Apache MirrorMaker 2®**
+      - `kafka-mm2-heartbeat-consumer <solutions/kafka-mm2-heartbeat-consumer/README.md>`__  
+
+    * - **Apache Kafka®** + **Debezium** + **PostgreSQL** + **Big Query**
+      - `pg-kafka-bigquery <solutions/pg-kafka-bigquery/README.md>`__  
+      
+
+
+
 Contributing
 ------------
 
