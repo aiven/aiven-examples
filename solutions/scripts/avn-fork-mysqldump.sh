@@ -1,19 +1,19 @@
 #!/bin/bash
 
 usage() {
-    printf "avn-mysqldump create a fork of mysql to take a mysqldump then terminates the fork.\nUsage: ./avn-fork-mysqldump.sh mysqlservice hostname port username password aiven_project mysql_fork_name\n" 1>&2;
+    printf "avn-mysqldump create a fork of mysql to take a mysqldump then terminates the fork.\nUsage: ./avn-fork-mysqldump.sh mysqlservice hostname port username password aiven_project mysql_fork_name databasename-to-backup\n" 1>&2;
     exit 1;
 }
 #which mysqldump
 
-if [ "$#" -ne 7 ]; then
+if [ "$#" -ne 8 ]; then
     usage;
 fi
 
 AVN_SERVICE=$1
 AVN_HOST=$2
 AVN_PORT=$3
-AVN_DB=$4
+AVN_DB=$8
 AVN_PROJECT=$6
 AVN_SERVICE_PLAN=startup-4
 AVN_MYSQL_FORK_NAME=$7
@@ -27,9 +27,9 @@ if [ "$?" -ne 0 ]; then
 fi
 avn service wait $AVN_MYSQL_FORK_NAME
 sleep 60
-mysqldump --host=$AVN_HOST --port=$AVN_PORT -u $4 -p $5 --all-databases > $AVN_MYSQL_FORK_NAME-backup-$(date +'%Y%m%d%H%M%S').sql
+mysqldump --host=$AVN_HOST --port=$AVN_PORT -u $4 -password=$5 -B $AVN_DB > $AVN_MYSQL_FORK_NAME-backup-$(date +'%Y%m%d%H%M%S').sql
 
 ## Compressed version
-##mysqldump --host=$AVN_HOST --port=$AVN_PORT -u $4 -p $5 --all-databases | gzip -9 > $AVN_MYSQL_FORK_NAME-backup-$(date +'%Y%m%d%H%M%S').gz
+##mysqldump --host=$AVN_HOST --port=$AVN_PORT -u $4 -p -password=$5 -B $AVN_DB | gzip -9 > $AVN_MYSQL_FORK_NAME-backup-$(date +'%Y%m%d%H%M%S').gz
 
 echo $AVN_AVN_MYSQL_FORK_NAME | avn service terminate --project $AVN_PROJECT -f $AVN_MYSQL_FORK_NAME
