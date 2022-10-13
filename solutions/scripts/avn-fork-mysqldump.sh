@@ -4,7 +4,7 @@ usage() {
     printf "avn-mysqldump create a fork of mysql to take a mysqldump then terminates the fork.\nUsage: ./avn-fork-mysqldump.sh mysqlservice hostname port username password aiven_project mysql_fork_name\n" 1>&2;
     exit 1;
 }
-which mysqldump
+#which mysqldump
 
 if [ "$#" -ne 7 ]; then
     usage;
@@ -18,7 +18,7 @@ AVN_PROJECT=$6
 AVN_SERVICE_PLAN=startup-4
 AVN_MYSQL_FORK_NAME=$7
 
-avn service list
+#avn service list
 avn service create $AVN_MYSQL_FORK_NAME -t mysql --plan $AVN_SERVICE_PLAN --project $AVN_PROJECT -c service_to_fork_from=$AVN_SERVICE
 
 if [ "$?" -ne 0 ]; then
