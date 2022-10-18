@@ -16,7 +16,7 @@ AVN_PASS=$4
 AVN_PROJECT=$5
 AVN_SERVICE_PLAN=startup-4
 AVN_MYSQL_FORK_NAME=$6
-AVN_FORK_HOST=$AVN_MYSQL_FORK_NAME-$AVN_PROJECT.aivencloud.com
+AVN_FORK_HOST="${AVN_MYSQL_FORK_NAME}-${AVN_PROJECT}.aivencloud.com"
 
 avn service create $AVN_MYSQL_FORK_NAME -t mysql --plan $AVN_SERVICE_PLAN --project $AVN_PROJECT -c service_to_fork_from=$AVN_SERVICE
 
@@ -31,9 +31,9 @@ sleep 180
 AVN_DBS=$(echo "show databases" | mysql --host=$AVN_FORK_HOST --port=$AVN_PORT -u $AVN_USER --password=$AVN_PASS | grep -Ev "^(Database|mysql|performance_schema|information_schema|sys)$")
 
 AVN_BACKUP=$AVN_MYSQL_FORK_NAME-backup-$(date +'%Y%m%d%H%M%S').gz
-echo "Backup databases: ["$AVN_DBS"]" to $AVN_BACKUP
+printf "Backup the following databases from [${AVN_MYSQL_FORK_HOST}] to [${AVN_BACKUP}]: \n${AVN_DBS}\n"
 
-## Compressed version
+# backup with mysqldump into a compressed gz file.
 mysqldump --host=$AVN_FORK_HOST --port=$AVN_PORT -u $4 -p --password=$5 -B $AVN_DBS | gzip -9 > $AVN_BACKUP
 
 echo $AVN_AVN_MYSQL_FORK_NAME | avn service terminate --project $AVN_PROJECT -f $AVN_MYSQL_FORK_NAME
