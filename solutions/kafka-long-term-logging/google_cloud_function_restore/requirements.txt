@@ -1,2 +1,0 @@
-google-cloud-storage>=1.43.0
-opensearch-py>=1.0.0

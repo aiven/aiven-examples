@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aiven = {
       source  = "aiven/aiven"
-      version = "2.5.0"
+      version = "3.0.0"
     }
   }
 }
@@ -32,7 +32,7 @@ resource "aiven_kafka" "kf" {
   kafka_user_config {
     kafka_connect   = true
     kafka_rest      = true
-    kafka_version   = "3.0"
+    kafka_version   = "3.2"
     schema_registry = true
 
     kafka {
@@ -43,11 +43,11 @@ resource "aiven_kafka" "kf" {
   }
 }
 
-resource "aiven_opensearch" "es" {
+resource "aiven_opensearch" "os" {
   project                 = var.project
   cloud_name              = var.cloud
   plan                    = "hobbyist"
-  service_name            = var.es_svc
+  service_name            = var.os_svc
   maintenance_window_dow  = "monday"
   maintenance_window_time = "10:00:00"
 
@@ -61,22 +61,22 @@ resource "aiven_opensearch" "es" {
   }
 }
 
-resource "aiven_kafka_connector" "kf-es-conn" {
+resource "aiven_kafka_connector" "kf-os-conn" {
   project      = var.project
   service_name = aiven_kafka.kf.service_name
   depends_on = [
-    aiven_opensearch.es,
+    aiven_opensearch.os,
     aiven_kafka.kf
   ]
   connector_name = "kf-es-conn"
 
   config = {
-    "name"                                = "kf-es-conn",
+    "name"                                = "kf-os-conn",
     "connector.class"                     = "io.aiven.connect.elasticsearch.ElasticsearchSinkConnector",
     "transforms"                          = "routeTS",
     "topics"                              = "logger",
-    "errors.deadletterqueue.topic.name"   = "es-logger-errors",
-    "connection.url"                      = "${aiven_opensearch.es.service_uri}",
+    "errors.deadletterqueue.topic.name"   = "os-logger-errors",
+    "connection.url"                      = "${aiven_opensearch.os.service_uri}",
     "batch.size"                          = "10",
     "type.name"                           = "_doc",
     "key.ignore"                          = "true",
@@ -130,13 +130,13 @@ resource "aiven_service_integration" "logging" {
 module "gcp" {
   source = "./gcp"
 
-  os_host = aiven_opensearch.es.service_host
-  os_user = aiven_opensearch.es.service_username
-  os_pass = aiven_opensearch.es.service_password
-  os_port = aiven_opensearch.es.service_port
+  os_host = aiven_opensearch.os.service_host
+  os_user = aiven_opensearch.os.service_username
+  os_pass = aiven_opensearch.os.service_password
+  os_port = aiven_opensearch.os.service_port
   gcs_bucket = var.gcs_bucket
 
   depends_on = [
-    aiven_opensearch.es
+    aiven_opensearch.os
   ]
 }

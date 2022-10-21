@@ -32,6 +32,7 @@ We will be using the following services:
 
 You will need:
 - The credentials for your Google Cloud Storage account saved (as `gcreds.json`) inside the `terraform` folder
+- The Google Cloud Function API enabled in your project
 - Use the `secrets.tfvars.example` to create `secrets.tfvars` with your Aiven API token, project and service names
 
 ## Running
@@ -45,7 +46,7 @@ You will need:
 
 ### Google Cloud Functions
 
-1. Zip the `google_cloud_function_restore` directory
+1. Zip the `google_cloud_function_restore` directory (`zip -r restore.zip .`)
 2. Navigate to `Functions` at [console.cloud.google.com](https://console.cloud.google.com)
-3. Create a new function, set HTTP as the trigger and provide the zip file as the source
-4. Use the `testing` tab to send an example request
+3. Select the function that was created by Terraform
+4. Use the `Testing` tab to send an example request
