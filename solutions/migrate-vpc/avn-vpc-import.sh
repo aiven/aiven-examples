@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage() {
-    printf "avn-import-vpc imports vpc in a project to terraform state.\nUsage: ./avn-import-vpc.sh project_name\n" 1>&2;
+    printf "avn-vpc-import imports vpc in a project to terraform state.\nUsage: ./avn-vpc-import.sh project_name\n" 1>&2;
     exit 1;
 }
 
@@ -15,5 +15,3 @@ do
   terraform import aiven_project_vpc.vpc$i $1/$vpc
   i=$((i+1))
 done
-
-#terraform import aiven_project_vpc.vpc0 fwu-demo/3926b47b-8d30-4832-bc72-c4659cf131a3

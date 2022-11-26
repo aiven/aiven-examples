@@ -11,7 +11,7 @@ resource "aiven_project_vpc" "vpc0" {
 resource "aiven_project_vpc" "vpc1" {
   project      = var.aiven_project
   cloud_name   = var.cloud_name
-  network_cidr = "10.1.0.0/20"
+  network_cidr = "10.168.0.0/20"
 
   timeouts {
     create = "5m"
@@ -22,7 +22,9 @@ resource "aiven_kafka" "kafka" {
   project      = var.aiven_project
   cloud_name   = var.cloud_name
   plan         = var.kafka_plan
-  project_vpc_id = aiven_project_vpc.vpc1.id
+  project_vpc_id = resource.aiven_project_vpc.vpc1.id
+  # use data.aiven_project_vpc below to define vpc if using data-source.tf
+  # project_vpc_id = data.aiven_project_vpc.vpc2.id
   service_name = "kafka-vpc-tf"
   kafka_user_config {
     kafka_rest = "true"
