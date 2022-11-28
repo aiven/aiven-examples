@@ -193,6 +193,10 @@ public class KafkaMusicExample {
 
   private static final String KEY_STORE_PASSWORD ="YOUR_LOCAL_KEY_STORE_PASSWORD";
 
+  private static final String SSL_TRUSTSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.truststore.jks";
+
+  private static final String SSL_KEYSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.keystore.p12";
+
 
   public static void main(final String[] args) throws Exception {
     if (args.length == 0 || args.length > 4) {
@@ -281,10 +285,10 @@ public class KafkaMusicExample {
      * TODO -with the values set when creating the keystore and truststore.
      */
     streamsConfiguration.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    streamsConfiguration.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, "PATH_TO_YOUR/client.truststore.jks");
+    streamsConfiguration.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SSL_TRUSTSTORE_LOCATION_CONFIG);
     streamsConfiguration.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, TRUST_STORE_PASSWORD);
     streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
-    streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, "PATH_TO_YOUR/client.keystore.p12");
+    streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SSL_KEYSTORE_LOCATION_CONFIG);
     streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, KEY_STORE_PASSWORD);
     streamsConfiguration.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, KEY_STORE_PASSWORD);
 
