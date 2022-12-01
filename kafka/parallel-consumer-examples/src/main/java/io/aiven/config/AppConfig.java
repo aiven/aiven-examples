@@ -16,9 +16,15 @@ public class AppConfig {
     public static String SCHEMA_REGISTRY_URL        = "";
     public static String CREDENTIALS_SOURCE         = "USER_INFO";
     public static String AUTH_USER_INFO             = "";
-    public static String MULTIPLE_PARTITIONS_TOPIC  = "test.parallel.partitioned";
+    public static String TEST_TOPIC                 = "test.parallel.partitioned";
     public static String CREDENTIALS_PATH           = ROOT_PATH + "/Documents/temp/credentials";
 
+
+    public static int totalConsumerThreads  = 3;
+    public static int messagesPerSecond     = 16;
+    public static int totalMessagesToSent   = 10000;
+    public static int keyspaceSizeUpper     = 100;
+    public static int payloadSize           = 400;
 
     public static Properties getProducerProps() {
         var properties = new Properties();
@@ -33,7 +39,7 @@ public class AppConfig {
         var properties = new Properties();
         properties.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,  AppConfig.BOOTSTRAP_SERVERS);
         properties.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG,  StringDeserializer.class.getCanonicalName());
-        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,  BytesDeserializer.class.getCanonicalName());
+        properties.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,  KafkaAvroDeserializer.class.getCanonicalName());
         properties.put(ConsumerConfig.GROUP_ID_CONFIG, "parallel-group-0");
         properties.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         properties.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");

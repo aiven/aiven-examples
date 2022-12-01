@@ -19,7 +19,7 @@ public class SampleDataProducer {
             = LoggerFactory.getLogger(SampleDataProducer.class);
 
     private static final Random random = new Random();
-    private static int keyspaceSize = 100;
+    private static int keyspaceSize = AppConfig.keyspaceSizeUpper;
 
     public static void main(String[] args) throws InterruptedException {
         var properties = AppConfig.getProducerProps();
@@ -29,18 +29,16 @@ public class SampleDataProducer {
             System.out.printf("\t%s: %s%n", key, value);
         });
 
-        KafkaProducer<String, Payload> producer = new KafkaProducer<>(properties);
+        KafkaProducer<String, Payload> producer = new KafkaProducer(properties);
 
         var messagesSoFar = 1;
-        var messagesPerSecond = 16;
-        var totalMessagesToSent = 10000;
 
         var t0 = System.currentTimeMillis();
-        for (int i = 0; i < totalMessagesToSent; i++) {
+        for (int i = 0; i < AppConfig.totalMessagesToSent; i++) {
             var t1 = System.currentTimeMillis();
             List<ProducerRecord<String, Payload>> records =
                     IntStream
-                            .range(0, messagesPerSecond)
+                            .range(0, AppConfig.messagesPerSecond)
                             .mapToObj(SampleDataProducer::createRecord)
                             .toList();
 
@@ -48,20 +46,20 @@ public class SampleDataProducer {
                 producer.send(record);
                 messagesSoFar += 1;
                 if (messagesSoFar % 500 == 0) {
-                    if (keyspaceSize == 100) {
-                        keyspaceSize = 1;
+                    if (keyspaceSize == AppConfig.keyspaceSizeUpper) {
+                        keyspaceSize = random.nextInt(5) + 1;
                     } else {
-                        keyspaceSize = 100;
+                        keyspaceSize = AppConfig.keyspaceSizeUpper;
                     }
                     logger.info("Keyspace now is: '{}'.", keyspaceSize);
                 }
             }
             var t2 = System.currentTimeMillis();
-            logger.info("Sending '{}' messages/s - '{}'Kb/s", messagesPerSecond, (400 * messagesPerSecond) / 1000);
+            logger.info("Sending '{}' messages/s - '{}'Kb/s", AppConfig.messagesPerSecond, (400 * AppConfig.messagesPerSecond) / 1000);
             logger.info("Total so far: {}", messagesSoFar);
             Thread.sleep(1000 - (t2 - t1));
         }
-        logger.info("Total messages sent '{}' in {} seconds.", totalMessagesToSent, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - t0));
+        logger.info("Total messages sent '{}' in {} seconds.", AppConfig.totalMessagesToSent, TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - t0));
         logger.info("Closing resources ...");
         producer.close();
     }
@@ -69,8 +67,8 @@ public class SampleDataProducer {
     private static ProducerRecord<String, Payload> createRecord(int index) {
         String key = String.valueOf(random.nextInt(keyspaceSize));
         // Create a 400bytes message
-        byte[] payload = new byte[400];
-        return new ProducerRecord<String, Payload>(AppConfig.MULTIPLE_PARTITIONS_TOPIC, key, new Payload(new String(payload)));
+        byte[] payload = new byte[AppConfig.payloadSize];
+        return new ProducerRecord<String, Payload>(AppConfig.TEST_TOPIC, key, new Payload(new String(payload)));
     }
 
     private static Callback producerCallback(ProducerRecord<String, Payload> record) {

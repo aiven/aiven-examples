@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class ConsumerThread extends Thread {
     private final Logger logger
@@ -44,7 +43,7 @@ public class ConsumerThread extends Thread {
         var eosStreamProcessor = ParallelStreamProcessor
                 .createEosStreamProcessor(consumerOptions);
 
-        eosStreamProcessor.subscribe(Collections.singletonList(AppConfig.MULTIPLE_PARTITIONS_TOPIC));
+        eosStreamProcessor.subscribe(Collections.singletonList(AppConfig.TEST_TOPIC));
         Random rnd = new Random();
 
 
