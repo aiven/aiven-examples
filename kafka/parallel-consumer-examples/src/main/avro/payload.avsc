@@ -1,0 +1,8 @@
+{
+  "name": "Payload",
+  "namespace": "io.aiven.models",
+  "type": "record",
+  "fields" : [
+    {"name": "value", "type": "string"}
+  ]
+}

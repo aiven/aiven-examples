@@ -171,3 +171,5 @@ maven-wrapper.jar
 # certs
 *.pem
 *.cert
+
+**.gradle/

@@ -1,0 +1,14 @@
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%yellow(%d{HH:mm:ss.SSS}) %highlight(%-5level) %green([%thread]) %cyan(%-5logger{50}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+        <logger name="io.aiven" level="info"/>
+        <logger name="org.apache.kafka" level="info"/>
+        <logger name="org.apache.kafka.common.metrics" level="info"/>
+    <root level="info">
+        <appender-ref ref="STDOUT" />
+    </root>
+</configuration>
