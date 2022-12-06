@@ -21,6 +21,7 @@ import io.confluent.examples.streams.avro.SongPlayCount;
 import io.confluent.kafka.serializers.AbstractKafkaSchemaSerDeConfig;
 import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerde;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.Deserializer;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
@@ -44,6 +45,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -181,38 +184,20 @@ public class KafkaMusicExample {
   static final String TOP_FIVE_KEY = "all";
 
   private static final String DEFAULT_REST_ENDPOINT_HOSTNAME = "localhost";
-  /**
-   * TODO -Change the DEFAULT_BOOTSTRAP_SERVERS and DEFAULT_SCHEMA_REGISTRY_URL endpoints
-   * TODO -replacing the APACHE_KAFKA_HOST, APACHE_KAFKA_PORT, APACHE_KAFKA_HOST, SCHEMA_REGISTRY_PORT placeholders
-   */
-  private static final String DEFAULT_BOOTSTRAP_SERVERS = "YOUR_AIVEN_KAFKA_PUBLIC_URL:KAFKA_PORT";
-  private static final String DEFAULT_SCHEMA_REGISTRY_URL = "https://YOUR_AIVEN_KAFKA_PUBLIC_URL:YOUR_SCHEMA_REGISTRY_PORT";
-  private static final String USER_INFO_CONFIG = "YOUR_AIVEN_SERVICE_USER:USER_PASSWORD";
-
-  private static final String TRUST_STORE_PASSWORD ="YOUR_LOCAL_TRUST_STORE_PASSWORD";
-
-  private static final String KEY_STORE_PASSWORD ="YOUR_LOCAL_KEY_STORE_PASSWORD";
-
-  private static final String SSL_TRUSTSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.truststore.jks";
-
-  private static final String SSL_KEYSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.keystore.p12";
-
 
   public static void main(final String[] args) throws Exception {
-    if (args.length == 0 || args.length > 4) {
-      throw new IllegalArgumentException("usage: ... <portForRestEndpoint> " +
-          "[<bootstrap.servers> (optional, default: " + DEFAULT_BOOTSTRAP_SERVERS + ")] " +
-          "[<schema.registry.url> (optional, default: " + DEFAULT_SCHEMA_REGISTRY_URL + ")] " +
-          "[<hostnameForRestEndPoint> (optional, default: " + DEFAULT_REST_ENDPOINT_HOSTNAME + ")]");
-    }
+    // if (args.length == 0 || args.length > 4) {
+    //   throw new IllegalArgumentException("usage: ... <portForRestEndpoint> " +
+    //       "[<bootstrap.servers> (optional, default: " + DEFAULT_BOOTSTRAP_SERVERS + ")] " +
+    //       "[<schema.registry.url> (optional, default: " + DEFAULT_SCHEMA_REGISTRY_URL + ")] " +
+    //       "[<hostnameForRestEndPoint> (optional, default: " + DEFAULT_REST_ENDPOINT_HOSTNAME + ")]");
+    // }
     final int restEndpointPort = Integer.parseInt(args[0]);
-    //final String bootstrapServers = args.length > 1 ? args[1] : "localhost:9092";
-    //final String schemaRegistryUrl = args.length > 2 ? args[2] : "http://localhost:8081";
-    /**
-     * Updated
-     */
-    final String bootstrapServers = args.length > 1 ? args[1] : DEFAULT_BOOTSTRAP_SERVERS;
-    final String schemaRegistryUrl = args.length > 2 ? args[2] : DEFAULT_SCHEMA_REGISTRY_URL;
+    final String bootstrapServers = args.length > 1 ? args[1] : "localhost:9092";
+    final String schemaRegistryUrl = args.length > 2 ? args[2] : "http://localhost:8081";
+
+    // final String bootstrapServers = args.length > 1 ? args[1] : DEFAULT_BOOTSTRAP_SERVERS;
+    // final String schemaRegistryUrl = args.length > 2 ? args[2] : DEFAULT_SCHEMA_REGISTRY_URL;
     final String restEndpointHostname = args.length > 3 ? args[3] : DEFAULT_REST_ENDPOINT_HOSTNAME;
     final HostInfo restEndpoint = new HostInfo(restEndpointHostname, restEndpointPort);
 
@@ -221,9 +206,22 @@ public class KafkaMusicExample {
     System.out.println("REST endpoint at http://" + restEndpointHostname + ":" + restEndpointPort);
 
     final Map<String, String> serdeConfig = new HashMap<>();
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, USER_INFO_CONFIG);
+    final String configSchema = System.getProperty("configschema");
+    System.out.println("configschema file:"+configSchema);
+    if (configSchema != null) {
+      final InputStream confFileStream = new FileInputStream(configSchema);
+      final Properties schemaProps = new Properties();
+      schemaProps.load(confFileStream);
+      for (final String key : schemaProps.stringPropertyNames()) {
+        final String value = schemaProps.getProperty(key);
+        serdeConfig.put(key, value);
+      }
+    }
+    else {
+      serdeConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+      // serdeConfig.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
+      // serdeConfig.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, USER_INFO_CONFIG);
+    }
 
     final KafkaStreams streams = new KafkaStreams(
             buildTopology(serdeConfig),
@@ -272,25 +270,23 @@ public class KafkaMusicExample {
   static Properties streamsConfig(final String bootstrapServers,
                                   final int applicationServerPort,
                                   final String stateDir,
-                                  final String host) {
+                                  final String host) throws Exception {
     final Properties streamsConfiguration = new Properties();
+
+    final String configKafka = System.getProperty("configkafka");
+    System.out.println("configkafka file:"+configKafka);
+    if (configKafka != null) {
+      final InputStream confFileStream = new FileInputStream(configKafka);
+
+      streamsConfiguration.load(confFileStream);
+      System.out.println("---stream config:["+streamsConfiguration+"]");
+    }
+
     // Give the Streams application a unique name.  The name must be unique in the Kafka cluster
     // against which the application is run.
     streamsConfiguration.put(StreamsConfig.APPLICATION_ID_CONFIG, "kafka-music-charts");
     // Where to find Kafka broker(s).
-    streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-    /**
-     * TODO -define the keystore and truststore location and secrets for SSL connection,
-     * TODO -by replacing the placeholders KEYSTORE_PATH, TRUSTSTORE_PATH and KEY_TRUST_SECRET
-     * TODO -with the values set when creating the keystore and truststore.
-     */
-    streamsConfiguration.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    streamsConfiguration.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SSL_TRUSTSTORE_LOCATION_CONFIG);
-    streamsConfiguration.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, TRUST_STORE_PASSWORD);
-    streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
-    streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SSL_KEYSTORE_LOCATION_CONFIG);
-    streamsConfiguration.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, KEY_STORE_PASSWORD);
-    streamsConfiguration.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, KEY_STORE_PASSWORD);
+    // streamsConfiguration.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
     // Provide the details of our embedded http service that we'll use to connect to this streams
     // instance and discover locations of stores.

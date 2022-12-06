@@ -2,7 +2,7 @@ resource "aiven_kafka" "kafka" {
   project      = var.aiven_project
   cloud_name   = var.cloud_name
   plan         = var.kafka_plan
-  service_name = "kafka-streams"
+  service_name = var.aiven_service
   kafka_user_config {
     kafka_rest = true
     schema_registry = true

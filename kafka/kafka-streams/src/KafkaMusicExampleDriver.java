@@ -33,6 +33,7 @@ import java.util.Properties;
 import java.util.Random;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -60,29 +61,10 @@ import java.util.HashMap;
  */
 public class KafkaMusicExampleDriver {
 
-  /**
-   * TODO -After the KafkaMusicExampleDriver class declaration add the following two lines
-   * TODO -to set the DEFAULT_BOOTSTRAP_SERVERS and DEFAULT_SCHEMA_REGISTRY_URL endpoints
-   * TODO -replacing the APACHE_KAFKA_HOST, APACHE_KAFKA_PORT, APACHE_KAFKA_HOST, SCHEMA_REGISTRY_PORT
-   * TODO -placeholders
-   */
-  private static final String DEFAULT_BOOTSTRAP_SERVERS = "YOUR_AIVEN_KAFKA_PUBLIC_URL:KAFKA_PORT";
-  private static final String DEFAULT_SCHEMA_REGISTRY_URL = "https://YOUR_AIVEN_KAFKA_PUBLIC_URL:YOUR_SCHEMA_REGISTRY_PORT";
-  private static final String TRUST_STORE_PASSWORD = "YOUR_LOCAL_TRUST_STORE_PASSWORD";
-  private static final String KEY_STORE_PASSWORD = "YOUR_LOCAL_KEY_STORE_PASSWORD";
-
-  private static final String SSL_TRUSTSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.truststore.jks";
-  private static final String SSL_KEYSTORE_LOCATION_CONFIG = "PATH_TO_YOUR/client.keystore.p12";
-
-  private static final String USER_INFO_CONFIG = "YOUR_AIVEN_SERVICE_USER:USER_PASSWORD";
   public static void main(final String [] args) throws Exception {
-    //final String bootstrapServers = args.length > 0 ? args[0] : "localhost:9092";
-    //final String schemaRegistryUrl = args.length > 1 ? args[1] : "http://localhost:8081";
-    final String bootstrapServers = args.length > 1 ? args[1] : DEFAULT_BOOTSTRAP_SERVERS;
-    final String schemaRegistryUrl = args.length > 2 ? args[2] : DEFAULT_SCHEMA_REGISTRY_URL;
-    System.out.println("Connecting to Kafka cluster via bootstrap servers " + bootstrapServers);
-    System.out.println("Connecting to Confluent schema registry at " + schemaRegistryUrl);
-
+    final String bootstrapServers = args.length > 0 ? args[0] : "localhost:9092";
+    final String schemaRegistryUrl = args.length > 1 ? args[1] : "http://localhost:8081";
+ 
     // Read comma-delimited file of songs into Array
     final List<Song> songs = new ArrayList<>();
     final String SONGFILENAME= "song_source.csv";
@@ -98,30 +80,35 @@ public class KafkaMusicExampleDriver {
     }
     System.out.println("size of the list to publish:"+songs.size());
     final Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
 
-    /**
-     * TODO -define the keystore and truststore location and secrets for SSL connection,
-     * TODO -by replacing the placeholders KEYSTORE_PATH, TRUSTSTORE_PATH and KEY_TRUST_SECRET
-     * TODO -with the values set when creating the keystore and truststore.
-     */
-    props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
-    props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, SSL_TRUSTSTORE_LOCATION_CONFIG);
-    props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, TRUST_STORE_PASSWORD);
-    props.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "PKCS12");
-    props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, SSL_KEYSTORE_LOCATION_CONFIG);
-    props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, KEY_STORE_PASSWORD);
-    props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG,KEY_STORE_PASSWORD);
+    final String configKafka = System.getProperty("configkafka");
+    System.out.println("configkafka file:"+configKafka);
+    if (configKafka != null) {
+      final InputStream confFileStream = new FileInputStream(configKafka);
+      props.load(confFileStream);
+    }
+    else {
+      props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+    }
 
-
-    /**
-     * TODO -passing the schema registry username and password and
-     * TODO -substituting the SCHEMA_REGISTRY_USER and SCHEMA_REGISTRY_PASSWORD placeholders
-     */
     final Map<String, String> serdeConfig = new HashMap<>();
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
-    serdeConfig.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, USER_INFO_CONFIG);
+
+    final String configSchema = System.getProperty("configschema");
+    System.out.println("configschema file:"+configSchema);
+    if (configSchema != null) {
+      final InputStream confFileStream = new FileInputStream(configSchema);
+      final Properties schemaProps = new Properties();
+      schemaProps.load(confFileStream);
+      for (final String key : schemaProps.stringPropertyNames()) {
+        final String value = schemaProps.getProperty(key);
+        serdeConfig.put(key, value);
+      }
+    }
+    else {
+      serdeConfig.put(AbstractKafkaSchemaSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, schemaRegistryUrl);
+      // serdeConfig.put(AbstractKafkaSchemaSerDeConfig.BASIC_AUTH_CREDENTIALS_SOURCE, "USER_INFO");
+      // serdeConfig.put(AbstractKafkaSchemaSerDeConfig.USER_INFO_CONFIG, USER_INFO_CONFIG);
+    }
 
     final SpecificAvroSerializer<PlayEvent> playEventSerializer = new SpecificAvroSerializer<>();
     playEventSerializer.configure(serdeConfig, false);

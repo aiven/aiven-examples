@@ -3,6 +3,11 @@ variable "aiven_project" {
   default = "my-project"
 }
 
+variable "aiven_service" {
+  type    = string
+  default = "kafka-streams"
+}
+
 variable "cloud_name" {
   type    = string
   default = "google-us-west1"
