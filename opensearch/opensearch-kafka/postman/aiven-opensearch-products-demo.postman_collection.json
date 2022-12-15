@@ -1,0 +1,288 @@
+{
+	"info": {
+		"_postman_id": "028a6aec-e29c-43b2-8ed7-abb263114694",
+		"name": "aiven-opensearch-products-demo",
+		"description": "Postman collection showing how to perform some OpenSearch actions.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "24232886"
+	},
+	"item": [
+		{
+			"name": "searchByMultipleFields",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"query\": {\n  \"multi_match\": {\n    \"query\": \"cheese\",\n    \"fields\": [\"CATEGORY\", \"PRODUCT_NAME\"]\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/products/_search",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "searchByMultipleFieldsWithAggregation",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"size\" :10,\n  \"query\": {\n  \"multi_match\": {\n    \"query\": \"cheese\",\n    \"fields\": [\"CATEGORY\", \"PRODUCT_NAME\"]\n    }\n  },\n  \"aggs\": {\n    \"product_category\": {\n      \"terms\": {\n        \"field\": \"CATEGORY.keyword\",\n        \"size\": 10\n      }\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/products/_search",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "searchSpellCheck",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"suggest\": {\n    \"spell-check\": {\n      \"text\": \"cheeze\",\n      \"term\": {\n        \"field\": \"PRODUCT_NAME\"\n      }\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/products/_search",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "searchByPrefix",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"size\" :10,\n  \"query\": {\n    \"match_bool_prefix\": {\n      \"PRODUCT_NAME\": {\n        \"query\": \"Bang Pe\",\n        \"fuzziness\": \"AUTO\",\n        \"fuzzy_transpositions\": true,\n        \"max_expansions\": 50,\n        \"prefix_length\": 0,\n        \"operator\":  \"or\",\n        \"minimum_should_match\": 2,\n        \"analyzer\": \"standard\"\n      }\n    }\n  }\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/products/_search",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "searchMultiCriteria",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "{{password}}",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "{{username}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"query\": {\n\t\t\"bool\": {\n\t\t\t\"must\": {\n\t\t\t\t\"match\": {\n\t\t\t\t\t\"DEPARTMENT\": \"Deli\"\n\t\t\t\t}\n\t\t\t},\n\t\t\t\"filter\": {\n\t\t\t\t\"range\": {\n\t\t\t\t\t\"PRICE_RETAIL\": {\n\t\t\t\t\t\t\"lte\": 10,\n                        \"gte\": 5\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/products/_search",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"products",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "password",
+				"value": "{{password}}",
+				"type": "string"
+			},
+			{
+				"key": "username",
+				"value": "{{username}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "username",
+			"value": "{YOUR AIVEN OPEN SEARCH USERNAME}",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "{YOUR AIVEN OPEN SEARCH PASSWORD}",
+			"type": "string"
+		},
+		{
+			"key": "url",
+			"value": "{YOUR AIVEN OPEN SEARCH ENDPOINT}",
+			"type": "string"
+		}
+	]
+}

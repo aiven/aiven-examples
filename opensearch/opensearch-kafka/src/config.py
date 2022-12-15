@@ -1,0 +1,11 @@
+KAFKA_URI = "<SERVICE URI>"
+KAFKA_TOPIC_SOURCE = "products"
+KAFKA_TOPIC_SINK = "sink_topic"
+KAFKA_CONSUMER_CLIENT_ID = "demo-client"
+KAFKA_CONSUMER_GROUP_ID = "demo-group"
+KAFKA_SSL_CA = "ca.pem"
+KAFKA_SSL_CERT = "service.cert"
+KAFKA_SSL_KEY = "service.key"
+KAFKA_SECURITY_PROTOCOL = "SSL"
+KAFKA_TIMEOUT = 1000
+WAIT_TIME = 5

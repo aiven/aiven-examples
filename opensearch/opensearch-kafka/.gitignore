@@ -1,0 +1,8 @@
+terraform.tfvars
+terraform.tfstate*
+.terraform.lock.hcl
+*.csv
+*.key
+*.pem
+*.cert
+*DS_Store
