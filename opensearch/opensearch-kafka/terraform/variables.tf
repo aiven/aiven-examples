@@ -1,4 +1,3 @@
-variable aiven_api_token {}
 variable aiven_project_name {}
 variable cloud_name {
   type    = string

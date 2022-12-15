@@ -1,4 +1,4 @@
-KAFKA_URI = "tk-kafka-demo-tkuppinen-demo.aivencloud.com:26170"
+KAFKA_URI = "<SERVICE URI>"
 KAFKA_TOPIC_SOURCE = "products"
 KAFKA_TOPIC_SINK = "sink_topic"
 KAFKA_CONSUMER_CLIENT_ID = "demo-client"

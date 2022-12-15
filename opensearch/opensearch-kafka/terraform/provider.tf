@@ -7,5 +7,5 @@ terraform {
 }
 
 provider "aiven" {
-  api_token = var.aiven_api_token
+  api_token = data.external.env.result["auth_token"]
 }
