@@ -14,11 +14,16 @@ if [ "$#" -ne 1 ]; then
     usage;
 fi
 
+PROJECT=$1
+BILLING_GROUP_ID=$(avnapi project/${PROJECT} | jq -r '.project.billing_group_id')
 
-for INVOICE in $(avnapi project/felixwu-demo/invoice | jq -c '.invoices[] | { billing_group_id: .billing_group_id, invoice_number: .invoice_number }'); do
-    BG_ID=$(echo ${INVOICE} | jq -r '.billing_group_id')
+printf "Project [${PROJECT}]\nBilling Group ID: [${BILLING_GROUP_ID}]\n"
+for INVOICE in $(avnapi billing-group/${BILLING_GROUP_ID}/invoice | jq -c '.invoices[] | { invoice_number: .invoice_number, download_cookie: .download_cookie }'); do
     INV_ID=$(echo ${INVOICE} | jq -r '.invoice_number')
-    avnapi billing-group/${BG_ID}/invoice/${INV_ID}
-    printf "\n"
-done
+    COOKIE=$(echo ${INVOICE} | jq -r '.download_cookie')
 
+    avnapi billing-group/${BILLING_GROUP_ID}/invoice/${INV_ID}/csv?cookie=${COOKIE} > ${PROJECT}-${INV_ID}.csv
+    if [ $? -eq 0 ]; then
+        printf "Generated csv for invoice number: ${INV_ID}\n"
+    fi
+done
