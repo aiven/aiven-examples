@@ -22,7 +22,7 @@ terraform init
 terraform plan 
 terraform apply -var=aiven_project="<project-name>"
 ```
-You may encounter a permission error on the included avn-token.sh file.  To resolve yo umay need to run the following
+You may encounter a permission error on the included avn-token.sh file.  To resolve you may need to run the following
 
 ```
 chmod u+x avn-token.sh 
