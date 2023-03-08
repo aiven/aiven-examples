@@ -1,6 +1,6 @@
 # migrate-vpc
 
-This guide shows how-to migrate Aiven services to a different VPC within the same cloud region.  This can be a solution when the network CIDR previously created running out of IPs.
+This guide shows how-to migrate Aiven services to a different VPC within the same cloud region.  This can be a solution when the network CIDR previously created runs out of IP addresses.
 
 ## Requirement
 
@@ -49,11 +49,11 @@ OR
 You can use ``avn-vpc-datasource.sh`` to generate ``vpc-data-source.tf``, it would lookup all the VPCs in the project and create data-sources with naming convention of ``cidr_IP-CIDR`` for each VPC.
 
 
-- Create the same peerings for the new VPC has that the old VPC has using avn vpc peering-connection create. Remember to update firewall rules on the user side if they have such things set up
+- Create the same peerings for the new VPC has that the old VPC using avn vpc peering-connection create. Remember to update firewall rules on the user side if they have such things set up.
 
 - Migrate each service using the CLI with ``avn service update --project-vpc-id $new_vpc_id`` OR use terraform, in the example ``services.tf`` provided, it migrated from ``vpc0`` to ``vpc1``.
 ```
-  project_vpc_id = project_vpc_id = resource.aiven_project_vpc.vpc1.id 
+  project_vpc_id = resource.aiven_project_vpc.vpc1.id 
 ```
 OR if you are using data-source set project_vpc_id to ``data.aiven_project_vpc.key``
 ```
