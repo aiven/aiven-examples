@@ -20,14 +20,13 @@ do
     printf "CREATE TABLE IF NOT EXISTS ${CH_DB}.${TABLE}(" >> ${CH_SQL_LOAD}
     while read -r COL_NAME COL_TYPE
     do
-        #[[ i -ge 1 ]] && printf "," >> ${CH_SQL_LOAD} || KEY=${COL_NAME} ; ((i++))
-        [[ i -ge 1 ]] && printf "," >> ${CH_SQL_LOAD} ; ((i++))
+        [[ i -ge 1 ]] && printf "," >> ${CH_SQL_LOAD} || KEY=${COL_NAME} ; ((i++))
 
+        [[ "${COL_TYPE}" == *"Nullable"* ]] && echo "Warning: [${COL_TYPE}] column detected in [${TABLE}.${COL_NAME}], null records may fail to be migrated."
         COL_TYPE=${COL_TYPE#"Nullable("} && COL_TYPE=${COL_TYPE%")"}
         printf "\`${COL_NAME}\` ${COL_TYPE}" >> ${CH_SQL_LOAD}
     done <<< "$(echo "describe \`${CH_PGDB}\`.\`${TABLE}\`" |  ${CH_CLI})"
-    #printf ") ENGINE = MergeTree() ORDER by ${KEY};\n" >> ${CH_SQL_LOAD}
-    printf ") ENGINE = MergeTree() ORDER by tuple();\n" >> ${CH_SQL_LOAD}
+    printf ") ENGINE = MergeTree() ORDER by ${KEY};\n" >> ${CH_SQL_LOAD}
 
     printf "CREATE TABLE IF NOT EXISTS ${CH_DB}.${TABLE}_buffer AS ${CH_DB}.${TABLE} ENGINE = Buffer(${CH_DB}, ${TABLE}, ${NUM_LAYERS}, 10, 100, 10000, 1000000, 10000000, 100000000);\n" >> ${CH_SQL_LOAD}
     printf "INSERT INTO ${CH_DB}.${TABLE}_buffer SELECT * FROM \`${CH_PGDB}\`.\`${TABLE}\`;\n" >> ${CH_SQL_LOAD}
@@ -45,8 +44,7 @@ ${CH_CLI} --queries-file ./table_sizes.sql --progress=tty 2>&1
 EOF
 chmod 755 ${CH_SVC}-${CH_DB}-cleanup.sh
 
-
-printf "Generated ${CH_SQL_LOAD}\n"
+printf "Generated ${CH_SQL_LOAD}, By default tables are ordered by the 1st column, please review and adjust for optimal performance.\n"
 printf "Generated ${CH_SQL_DROP}\n\n"
 
 printf "Press any key to load ${CH_SQL_LOAD} to ${CH_SVC}.${CH_DB} or CTRL+C to stop\n"
