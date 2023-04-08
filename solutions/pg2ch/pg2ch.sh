@@ -23,7 +23,7 @@ do
         [[ i -ge 1 ]] && printf "," >> ${CH_SQL_LOAD} || KEY=${COL_NAME} ; ((i++))
 
         [[ "${COL_TYPE}" == *"Nullable"* ]] && echo "Warning: [${COL_TYPE}] column detected in [${TABLE}.${COL_NAME}], null records may fail to be migrated."
-        COL_TYPE=${COL_TYPE#"Nullable("} && COL_TYPE=${COL_TYPE%")"}
+#        COL_TYPE=${COL_TYPE#"Nullable("} && COL_TYPE=${COL_TYPE%")"}
         printf "\`${COL_NAME}\` ${COL_TYPE}" >> ${CH_SQL_LOAD}
     done <<< "$(echo "describe \`${CH_PGDB}\`.\`${TABLE}\`" |  ${CH_CLI})"
     printf ") ENGINE = MergeTree() ORDER by ${KEY};\n" >> ${CH_SQL_LOAD}

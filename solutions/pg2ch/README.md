@@ -39,59 +39,119 @@ This script copies all tables from PostgreSQL database to ClickHouse database on
 ```
 
 ## Example Demo
-- This is a demo on migrating a PostgreSQL (startup-16) table with 2,040,000,000 rows 99GB of data to ClickHouse (business-32).
+- This is a demo on migrating a PostgreSQL (startup-4) table with 100,000,000 rows around 6.5GB of data to ClickHouse (startup-16), with optimized compression it reduced to 237.48 MiB.
+
+- Please note the table schema codec compression for columns were manually optimized as the following.
+References:
+https://clickhouse.com/blog/optimize-clickhouse-codecs-compression-schema
+https://clickhouse.com/docs/en/sql-reference/statements/create/table#specialized-codecs
+
 ```
-test=> \d large_test;
-                 Table "public.large_test"
- Column |       Type       | Collation | Nullable | Default
---------+------------------+-----------+----------+---------
- num1   | bigint           |           |          |
- num2   | double precision |           |          |
- num3   | double precision |           |          |
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃ column        ┃ codec                   ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━┩
+│ id            │ CODEC(Delta,ZSTD)       │
+├───────────────┼─────────────────────────┤
+│ temperature   │ CODEC(T64,ZSTD)         │
+├───────────────┼─────────────────────────┤
+│ elevation     │ CODEC(T64,ZSTD)         │
+├───────────────┼─────────────────────────┤
+│ precipitation │ CODEC(T64,ZSTD)         │
+├───────────────┼─────────────────────────┤
+│ snow          │ CODEC(T64,ZSTD)         │
+├───────────────┼─────────────────────────┤
+│ wind          │ CODEC(T64,ZSTD)         │
+├───────────────┼─────────────────────────┤
+│ timestamp     │ CODEC(DoubleDelta,ZSTD) │
+└───────────────┴─────────────────────────┘
+```
 
-test=> \dt+;
+#### PostgreSQL
+```
+defaultdb=> \d weather;
+                                          Table "public.weather"
+    Column     |            Type             | Collation | Nullable |               Default
+---------------+-----------------------------+-----------+----------+-------------------------------------
+ id            | integer                     |           | not null | nextval('weather_id_seq'::regclass)
+ temperature   | integer                     |           | not null |
+ elevation     | bigint                      |           | not null |
+ precipitation | integer                     |           |          |
+ snow          | integer                     |           |          |
+ wind          | integer                     |           |          |
+ timestamp     | timestamp without time zone |           | not null |
+Indexes:
+    "weather_pkey" PRIMARY KEY, btree (id)
+    
+defaultdb=> \dt+;
                                      List of relations
- Schema |    Name    | Type  |  Owner   | Persistence | Access method | Size  | Description
---------+------------+-------+----------+-------------+---------------+-------+-------------
- public | large_test | table | avnadmin | permanent   | heap          | 99 GB |
+ Schema |  Name   | Type  |  Owner   | Persistence | Access method |  Size   | Description
+--------+---------+-------+----------+-------------+---------------+---------+-------------
+ public | weather | table | avnadmin | permanent   | heap          | 6577 MB |
+(1 row)
 
-test=> select count(num1) from large_test;
+defaultdb=> select count(id) from weather;
    count
-------------
- 2040000000
+-----------
+ 100000000
 (1 row)
 ```
 
+#### Running `pg2ch.sh`
 ```
--- CH_CLI: ./clickhouse client --user avnadmin --password ****** --host clickhouse-test-******.aivencloud.com --port ***** --secure
--- CH_PGDB: service_pg-load_test_public
--- CH_SVC: clickhouse-test
+-- CH_CLI: ./clickhouse client --user avnadmin --password ****** --host clickhouse-target-******.aivencloud.com --port ***** --secure
+-- CH_PGDB: service_pg-data_defaultdb_public
+-- CH_SVC: clickhouse-target
 -- SERVICE_INTEGRATION_ID: ***884f-****-4491-83e3-***********
-Setting up service integration [***884f-****-4491-83e3-**********] [pg-load.test.public] for [clickhouse-test.default] ...
+Setting up service integration [c***884f-****-4491-83e3-***********] [pg-data.defaultdb.public] for [clickhouse-target.default] ...
 
-Generated clickhouse-test_test_dump.sql
-Generated clickhouse-test_test_drop.sql
+Warning: [Nullable(Int32)] column detected in [weather.precipitation], null records may fail to be migrated.
+Warning: [Nullable(Int32)] column detected in [weather.snow], null records may fail to be migrated.
+Warning: [Nullable(Int32)] column detected in [weather.wind], null records may fail to be migrated.
+Generated clickhouse-target_defaultdb_dump.sql, By default tables are ordered by the 1st column, please review and adjust for optimal performance.
+Generated clickhouse-target_defaultdb_drop.sql
 
-Press any key to load clickhouse-test_test_dump.sql to clickhouse-test.default or CTRL+C to stop
+Press any key to load clickhouse-target_defaultdb_dump.sql to clickhouse-target.default or CTRL+C to stop
 
-CREATE TABLE IF NOT EXISTS default.large_test(`num1` Int64,`num2` Float64,`num3` Float64) ENGINE = MergeTree() ORDER by tuple();
-s_c2c75	clickhouse-test-13.felixwu-demo.aiven.local	OK	0	0
-0.015
+CREATE TABLE IF NOT EXISTS default.weather(`id` Int32 CODEC(Delta,ZSTD),`temperature` Int32 CODEC(T64,ZSTD),`elevation` Int64 CODEC(T64,ZSTD),`precipitation` Nullable(Int32) CODEC(T64,ZSTD),`snow` Nullable(Int32) CODEC(T64,ZSTD),`wind` Nullable(Int32) CODEC(T64,ZSTD),`ts` DateTime64(6) CODEC(DoubleDelta,ZSTD)) ENGINE = MergeTree() ORDER by id;
+s_42214	clickhouse-target-2.felixwu-demo.aiven.local	OK	0	0
+0.019
 Processed rows: 1
-CREATE TABLE IF NOT EXISTS default.large_test_buffer AS default.large_test ENGINE = Buffer(default, large_test, 40, 10, 100, 10000, 1000000, 10000000, 100000000);
-s_c2c75	clickhouse-test-13.felixwu-demo.aiven.local	OK	0	0
-0.005
+CREATE TABLE IF NOT EXISTS default.weather_buffer AS default.weather ENGINE = Buffer(default, weather, 40, 10, 100, 10000, 1000000, 10000000, 100000000);
+s_42214	clickhouse-target-2.felixwu-demo.aiven.local	OK	0	0
+0.006
 Processed rows: 1
-INSERT INTO default.large_test_buffer SELECT * FROM `service_pg-load_test_public`.`large_test`;
-0 rows in set. Elapsed: 3299.402 sec. Processed 2.04 billion rows, 55.08 GB (618.29 thousand rows/s., 16.69 MB/s.)
+INSERT INTO default.weather_buffer SELECT * FROM `service_pg-data_defaultdb_public`.`weather`
+0 rows in set. Elapsed: 209.327 sec. Processed 100.00 million rows, 3.90 GB (477.72 thousand rows/s., 18.63 MB/s.)
+Processed rows: 0
 
-┏━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┓
-┃ database ┃ table      ┃ compressed ┃ uncompressed ┃ compr_rate ┃       rows ┃ part_count ┃
-┡━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━┩
-│ default  │ large_test │ 36.92 GiB  │ 47.12 GiB    │       1.28 │ 2108155425 │         12 │
-├──────────┼────────────┼────────────┼──────────────┼────────────┼────────────┼────────────┤
-│ system   │ query_log  │ 1.85 MiB   │ 20.77 MiB    │      11.26 │      18012 │          7 │
-├──────────┼────────────┼────────────┼──────────────┼────────────┼────────────┼────────────┤
-│ default  │ rental     │ 378.93 KiB │ 579.71 KiB   │       1.53 │      16044 │          1 │
-└──────────┴────────────┴────────────┴──────────────┴────────────┴────────────┴────────────┘
+
+DROP TABLE IF EXISTS default.weather_buffer;
+s_42214	clickhouse-target-2.felixwu-demo.aiven.local	OK	0	0
+0.040
+Processed rows: 1
+
+┏━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━┓
+┃ database ┃ table     ┃ compressed ┃ uncompressed ┃ compr_rate ┃      rows ┃ part_count ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━┩
+│ default  │ weather   │ 237.48 MiB │ 3.63 GiB     │      15.66 │ 100000000 │          7 │
+├──────────┼───────────┼────────────┼──────────────┼────────────┼───────────┼────────────┤
+│ system   │ query_log │ 2.56 MiB   │ 27.79 MiB    │      10.87 │     27077 │          6 │
+└──────────┴───────────┴────────────┴──────────────┴────────────┴───────────┴────────────┘
+┏━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ name          ┃ compressed_size ┃ uncompressed_size ┃  ratio ┃
+┡━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ elevation     │ 48.05 MiB       │ 762.94 MiB        │  15.88 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ snow          │ 47.04 MiB       │ 476.84 MiB        │  10.14 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ wind          │ 47.04 MiB       │ 476.84 MiB        │  10.14 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ precipitation │ 47.04 MiB       │ 476.84 MiB        │  10.14 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ temperature   │ 46.98 MiB       │ 381.47 MiB        │   8.12 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ timestamp     │ 919.43 KiB      │ 762.94 MiB        │ 849.71 │
+├───────────────┼─────────────────┼───────────────────┼────────┤
+│ id            │ 429.22 KiB      │ 381.47 MiB        │ 910.09 │
+└───────────────┴─────────────────┴───────────────────┴────────┘
 ```
