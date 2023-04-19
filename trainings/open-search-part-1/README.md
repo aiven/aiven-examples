@@ -4,13 +4,22 @@
 
 To demonstrate data discovery based on measurements data
 
-1. Create OpenSearch cluster
-2. Create Apache Kafka cluster
+1. Create an OpenSearch cluster
+2. Create an Apache Kafka cluster
 3. Add a topic "measurements" to Kafka
 4. Copy kcat.config.example, remove ".example" and set your Kafka connection details
 5. Run the script measurements_generator.sh to add data to the topic
-6. Create Kafka connect and move data to OpenSearch
+6. Create a Kafka OpenSearch connector and replciate the data to OpenSearch
 
+Above steps can be done with setting project and services names in `lab.env` and run
+```
+./lab.sh up
+```
+
+To teardown these services and cleanup
+```
+./lab.sh down
+```
 
 ### Search queries
 

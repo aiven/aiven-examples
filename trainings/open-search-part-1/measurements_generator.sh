@@ -20,7 +20,8 @@ for h in {1..72}; do
 }
 EOF
 )
-   echo $json_object | kcat -F kcat.config -P -t measurements
+   echo $json_object | kcat -T -F kcat.config -P -t measurements
+   printf "${h}.${room}"
  done
 done
 
