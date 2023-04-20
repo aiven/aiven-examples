@@ -1,0 +1,14 @@
+{
+  "name": "sink_measurements",
+  "connection.url": "OS_URL",
+  "key.ignore": "true",
+  "connector.class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
+  "connection.username": "USERNAME",
+  "connection.password": "PASSWORD",
+  "schema.ignore": "true",
+  "tasks.max": "1",
+  "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "topics": "measurements",
+  "value.converter.schemas.enable": "false"
+}

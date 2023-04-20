@@ -1,0 +1,5 @@
+bootstrap.servers=address:port
+security.protocol=ssl
+ssl.key.location=service.key
+ssl.certificate.location=service.cert
+ssl.ca.location=ca.pem
