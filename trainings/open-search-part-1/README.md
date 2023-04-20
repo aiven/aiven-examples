@@ -24,6 +24,7 @@ To teardown these services and cleanup
 ### Term level and full-text search query examples
 
 Below you can find the examples that are provided in the training to show term-level and full-text search requests.
+You can copy the content and past it in OpenSearch Dashboards Dev Tools, you can do it example by example. Or, alternatively, bring all examples together and then select the one you want to run from the DevTools.
 
 Create an index with predefined explicit mapping:
 ```bash
@@ -141,12 +142,6 @@ GET buildings/_search
  }
 }
 ```
-
-### Search queries
-
-For the building examples, find queries to setup mapping, data and run search requests in buildings.sh.
-You can copy the content and past it in OpenSearch Dashboards Dev Tools and then select chunks one by one to run them.
-
 
 
 
