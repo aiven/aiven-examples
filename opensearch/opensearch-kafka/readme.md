@@ -20,9 +20,9 @@ This repo is intended to provide an example of how to populate an OpenSearch ind
 cd terraform
 terraform init
 terraform plan 
-terraform apply -var="aiven_api_token=$AVN_TOKEN" -var="aiven_project=<project-name>"
+terraform apply -var=aiven_project="<project-name>"
 ```
-You may encounter a permission error on the included avn-token.sh file.  To resolve yo umay need to run the following
+You may encounter a permission error on the included avn-token.sh file.  To resolve you may need to run the following
 
 ```
 chmod u+x avn-token.sh 

@@ -1,4 +1,7 @@
-variable aiven_project_name {}
+variable aiven_project_name {
+  type = string
+}
+
 variable cloud_name {
   type    = string
   default = "google-us-west1"
