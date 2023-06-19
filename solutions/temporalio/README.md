@@ -85,7 +85,7 @@ Here are examples of commands you can use to create and initialize the databases
 
 ```bash
 # in https://github.com/temporalio/temporal git repo dir
-export SQL_PLUGIN=mysql
+export SQL_PLUGIN=postgres
 export SQL_HOST=<host>
 export SQL_PORT=<port>
 export SQL_USER=avnadmin
