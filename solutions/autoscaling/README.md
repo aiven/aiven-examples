@@ -35,12 +35,12 @@ This is a demo of using avn CLI and prometheus endpoint to upsize an Aiven servi
 ./autoscale.sh setup
 ```
 
-- Run `./autoscale.sh demo`, this starts to check cpu idle percentage every 10 seconds, when it is less than `60%` which means overall cpu usage is over `40%` it will keep track of the duration, if this continues for 60 seconds, it will trigger `avn` CLI to upsize the plan to `startup-8`.  Leave this running in a terminal, this does not exit until `CTRL + C`, open another terminal to run `./autoscale.sh pgload`
+- Run `./autoscale.sh demo`, this starts to check cpu idle percentage every 10 seconds, when it is less than `60%` which means overall cpu usage is over `40%` it will keep track of the duration, if this continues for 60 seconds, it will trigger `avn` CLI to upsize the plan to `startup-8`.  This process does not exit until `CTRL + C`, *please keep this process and terminal running through out the entire demo.*
 ```
 ./autoscale.sh demo
 ```
 
-- This step runs an expensive PostgreSQL query to spike up CPU load that may take a few minutes to complete, it is expected that you will not get the sum response in over 1 minute.  Go to Aiven Console and open the service `Metrics` view to monitor the change in CPU usage, click on the `Nodes` icon to see node replacement during the plan upgrade, it is expected in `./autoscale.sh demo` terminal you will get `Unable to get metrics...` during the new node takes over.
+- This step runs an expensive PostgreSQL query to spike up CPU load that may take a few minutes to complete, it is expected that you will not get the sum response in over 1 minute.  Go to Aiven Console and open the service `Metrics` view to monitor the change in CPU usage, click on the `Nodes` icon to see node replacement during the plan upgrade, it is expected in `./autoscale.sh demo` terminal you will get `Unable to get metrics...` during the new node takes over.  Open a new terminal to monitor spike in CPU load when running the below command.
 ```
 ./autoscale.sh pgload
 ```
