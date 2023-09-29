@@ -14,7 +14,7 @@
     </modules>
 
     <properties>
-        <avro.version>1.11.0</avro.version>
+        <avro.version>1.11.3</avro.version>
         <kafka.version>3.0.0</kafka.version>
         <kafka-avro-serializer.version>7.0.1</kafka-avro-serializer.version>
         <maven-assembly-plugin.version>3.3.0</maven-assembly-plugin.version>
