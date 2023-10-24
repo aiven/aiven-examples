@@ -1,0 +1,4 @@
+confluent_kafka[avro]==1.4.0
+requests
+prometheus-kafka-metrics
+prometheus-client

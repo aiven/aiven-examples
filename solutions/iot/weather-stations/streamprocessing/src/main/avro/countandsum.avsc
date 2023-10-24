@@ -1,0 +1,27 @@
+{
+    "namespace": "fi.saily.tmsdemo",
+    "type": "record",    
+    "name": "CountAndSum",
+    "fields": [
+        {
+            "name": "id",
+            "type": "int"
+        },
+        {
+            "name": "roadStationId",
+            "type": "int"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },
+        {
+            "name": "count",
+            "type": "long"
+        },
+        {
+            "name": "sum",
+            "type": "double"
+        }
+    ]
+  }
