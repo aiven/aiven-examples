@@ -22,7 +22,8 @@ autoscale_teardown() {
 
 autoscale_demo() {
     PROMETHEUS_PORT=$(avn service integration-endpoint-list --json | jq -r --arg PROMETHEUS_NAME ${PROMETHEUS_NAME} '.[] | select(.endpoint_name == $PROMETHEUS_NAME) | .endpoint_config.client_port')
-    PROMETHEUS_URL="https://${PROMETHEUS_USER}:${PROMETHEUS_PASS}@${SERVICE}-${PROJECT}.aivencloud.com:${PROMETHEUS_PORT}/metrics"
+    PROMETHEUS_HOST=$(avn service get ${SERVICE} --json | jq -r '.service_uri_params.host')
+    PROMETHEUS_URL="https://${PROMETHEUS_USER}:${PROMETHEUS_PASS}@${PROMETHEUS_HOST}:${PROMETHEUS_PORT}/metrics"
     printf "Prometheus URL: ${PROMETHEUS_URL}\n"
 
     printf "Waiting for metrics to be available..."
