@@ -1,6 +1,7 @@
 #include <kafka/KafkaProducer.h>
 
-extern const kafka::Properties props({  {"bootstrap.servers", {getenv("KAFKA_BROKER_LIST")}},
+extern const kafka::Properties props({
+                    {"bootstrap.servers", {getenv("KAFKA_BROKER_LIST")}},
                     {"security.protocol", {getenv("SECURITY_PROTOCOL")}},
                     {"ssl.ca.location"  , {getenv("SSL_CA_LOCATION")}},
                     {"ssl.certificate.location" , {getenv("SSL_CERTIFICATE_LOCATION")}},
