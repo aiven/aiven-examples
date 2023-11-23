@@ -2,8 +2,8 @@
 
 #include <cstdlib>
 #include <iostream>
-#include <signal.h>
 #include <string>
+#include <signal.h>
 
 #include "config.hh"
 
@@ -33,7 +33,7 @@ int main()
 
     while (running) {
         // Prepare a message
-        std::cout << "Type message value and hit enter to produce message..." << std::endl;
+        std::cout << "Type anything and [enter] to produce a message or empty line to exit..." << std::endl;
         std::string line;
         std::getline(std::cin, line);
 
@@ -45,16 +45,19 @@ int main()
                 std::cout << "Message delivered: " << metadata.toString() << std::endl;
             } else {
                 std::cerr << "Message failed to be delivered: " << error.message() << std::endl;
+                running = false;
             }
         };
 
-        if (running) {
+        if (running && !line.empty()) {
             // Send a message
             producer.send(record, deliveryCb);
             // Close the producer explicitly(or not, since RAII will take care of it)
             producer.close();
         }
+        else {
+            break;
+        }
     }
-
 }
 

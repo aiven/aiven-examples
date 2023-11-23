@@ -50,7 +50,8 @@ int main()
                 std::cout << "    Key   [" << record.key().toString() << "]" << std::endl;
                 std::cout << "    Value [" << record.value().toString() << "]" << std::endl;
             } else {
-                std::cerr << record.toString() << std::endl;
+                std::cerr << "Failed to consume message: [" << record.toString() << "]" << std::endl;
+                break;
             }
         }
     }
