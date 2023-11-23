@@ -29,6 +29,7 @@ int main()
     signal(SIGINT, stopRunning);    // NOLINT
 
     // Create a consumer instance
+    // No explicit consumer.close() is needed, RAII will take care of it
     KafkaConsumer consumer(props);
 
     // Subscribe to topics
@@ -53,8 +54,5 @@ int main()
             }
         }
     }
-
-    // No explicit close is needed, RAII will take care of it
-    consumer.close();
 }
 
