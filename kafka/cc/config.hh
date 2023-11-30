@@ -9,3 +9,4 @@ extern const kafka::Properties props({
 });
 
 extern const kafka::Topic topic = getenv("KAFKA_TOPIC");
+

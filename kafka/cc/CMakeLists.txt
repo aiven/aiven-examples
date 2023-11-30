@@ -46,3 +46,4 @@ target_link_libraries("avn_KafkaProducer_Simple" modern-cpp-kafka-api)
 # Target: example_KafkaConsumer_Simple
 add_executable("avn_KafkaConsumer_Simple" "avn_KafkaConsumer_Simple.cc")
 target_link_libraries("avn_KafkaConsumer_Simple" modern-cpp-kafka-api)
+
