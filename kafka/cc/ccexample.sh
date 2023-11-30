@@ -12,8 +12,10 @@ ccexample_setup() {
 }
 
 ccexample_build() {
-    cmake .
+    mkdir -p build && cd build
+    cmake ..
     make
+    cd ..
 }
 
 ccexample_teardown() {
@@ -21,11 +23,11 @@ ccexample_teardown() {
 }
 
 ccexample_producer() {
-    ./avn_KafkaProducer_Simple
+    ./build/avn_KafkaProducer_Simple
 }
 
 ccexample_consumer() {
-    ./avn_KafkaConsumer_Simple
+    ./build/avn_KafkaConsumer_Simple
 }
 
 case $1 in
@@ -42,3 +44,4 @@ case $1 in
     *)
         printf "Usage: ./ccexample.sh [ setup | build | producer | consumer | teardown ]\n" ;;
 esac
+

@@ -7,17 +7,13 @@
 
 #include "config.hh"
 
-std::atomic_bool running = {true};
+std::atomic_flag stop = ATOMIC_FLAG_INIT;
 
-void stopRunning(int sig) {
-    if (sig != SIGINT) return;
+void signalHandler(int signum) {
+    if (signum != SIGINT) return;
 
-    if (running) {
-        running = false;
-    } else {
-        // Restore the signal handler, -- to avoid stuck with this handler
-        signal(SIGINT, SIG_IGN); // NOLINT
-    }
+    stop.test_and_set();
+    signal(SIGINT, SIG_IGN);
 }
 
 int main()
@@ -29,9 +25,9 @@ int main()
     KafkaProducer producer(props);
 
     // Use Ctrl-C to terminate the program
-    signal(SIGINT, stopRunning);    // NOLINT
+    signal(SIGINT, signalHandler);
 
-    while (running) {
+    while (!stop.test()) {
         // Prepare a message
         std::cout << "Type anything and [enter] to produce a message or empty line to exit..." << std::endl;
         std::string line;
@@ -45,19 +41,20 @@ int main()
                 std::cout << "Message delivered: " << metadata.toString() << std::endl;
             } else {
                 std::cerr << "Message failed to be delivered: " << error.message() << std::endl;
-                running = false;
+                stop.test_and_set();
             }
         };
 
-        if (running && !line.empty()) {
+        if (!line.empty()) {
             // Send a message
             producer.send(record, deliveryCb);
-            // Close the producer explicitly(or not, since RAII will take care of it)
-            producer.close();
+            producer.flush();
         }
         else {
             break;
         }
     }
+    // Close the producer explicitly(or not, since RAII will take care of it)
+    producer.close();
 }
 

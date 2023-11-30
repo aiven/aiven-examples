@@ -7,17 +7,13 @@
 
 #include "config.hh"
 
-std::atomic_bool running = {true};
+std::atomic_flag stop = ATOMIC_FLAG_INIT;
 
-void stopRunning(int sig) {
-    if (sig != SIGINT) return;
+void signalHandler(int signum) {
+    if (signum != SIGINT) return;
 
-    if (running) {
-        running = false;
-    } else {
-        // Restore the signal handler, -- to avoid stuck with this handler
-        signal(SIGINT, SIG_IGN); // NOLINT
-    }
+    stop.test_and_set();
+    signal(SIGINT, SIG_IGN);
 }
 
 int main()
@@ -26,7 +22,7 @@ int main()
     using namespace kafka::clients::consumer;
 
     // Use Ctrl-C to terminate the program
-    signal(SIGINT, stopRunning);    // NOLINT
+    signal(SIGINT, signalHandler);
 
     // Create a consumer instance
     // No explicit consumer.close() is needed, RAII will take care of it
@@ -35,7 +31,7 @@ int main()
     // Subscribe to topics
     consumer.subscribe({topic});
 
-    while (running) {
+    while (!stop.test()) {
         // Poll messages from Kafka brokers
         auto records = consumer.poll(std::chrono::milliseconds(100));
 

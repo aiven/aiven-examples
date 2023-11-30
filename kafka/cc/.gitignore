@@ -1,5 +1,12 @@
 CMakeCache.txt
-CMakeFiles/
 Makefile
-_deps/
 cmake_install.cmake
+
+*.swp
+*.pyc
+*.*~
+
+_deps/
+CMakeFiles/
+build/
+install/
