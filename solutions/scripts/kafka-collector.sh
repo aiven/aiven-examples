@@ -21,7 +21,7 @@ get_topics() {
 # get all consumer groups
 get_consumer_groups() {
     echo "----------========== Consumers  ==========----------"
-    ${KAFKA_HOME}/bin/kafka-consumer-groups.sh --bootstrap-server ${KAFKA_URI} --describe --all-groups --command-config ./client.properties
+    ${KAFKA_HOME}/bin/kafka-consumer-groups.sh --bootstrap-server ${KAFKA_URI} --describe --all-groups --command-config ${KAFKA_CONF}
 }
 
 get_cluster_config > ${KAFKA_INFO}
