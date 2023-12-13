@@ -1,18 +1,29 @@
 source ./lab.env
 
 lab_setup() {
-avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d .
+avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d . \
+&& printf "✅ " || echo "❌ "
+echo "certificates and keys downloaded from ${SERVICE_KAFKA}"
 
+echo
 KAFKA_SERVICE_URI=$(avn service list --json ${SERVICE_KAFKA} | jq -r '.[].service_uri')
 echo ${KAFKA_SERVICE_URI}
 cat kcat.config.example > kcat.config
-sed -i '' -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config
+sed -i '' -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config \
+&& printf "✅ " || echo "❌ "
+echo "kcat.config setup completed"
 
+echo
 PG_SERVICE_URI=$(avn service get ${SERVICE_PG} --json | jq -r '.service_uri')
-cat audit_logs.sql | psql ${PG_SERVICE_URI}
+cat audit_logs.sql | psql ${PG_SERVICE_URI} \
+&& printf "✅ " || echo "❌ "
+echo "audit_logs.sql imported into postgres ${SERVICE_PG}"
 
+echo
 OS_SERVICE_URI=$(avn service get ${SERVICE_OS} --json | jq -r '.service_uri')
-curl -X PUT ${OS_SERVICE_URI}/suspecious-logins -H 'Content-Type: application/json' --data @suspecious-logins-mapping.json
+curl -X PUT ${OS_SERVICE_URI}/suspecious-logins -H 'Content-Type: application/json' --data @suspecious-logins-mapping.json \
+&& printf "\n✅ " || echo "❌ "
+echo "suspecious-logins index mapping created in opensearch ${SERVICE_OS}"
 }
 
 lab_teardown() {
@@ -49,5 +60,5 @@ case $1 in
     demo)
         lab_demo ;;
     *)
-        printf "Usage: ./lab.sh [setup|teardown]\n" ;;
+        printf "Usage: ./lab.sh [ setup | demo | teardown]\n" ;;
 esac

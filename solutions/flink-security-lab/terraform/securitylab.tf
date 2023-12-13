@@ -132,7 +132,7 @@ resource "aiven_flink_application_version" "os-suspecious-logins-v1" {
     SELECT k.ts_ltz AS time_stamp, k.user_id, k.action, k.source_ip
     FROM kafka_source k
     JOIN pg_source p ON k.user_id = p.user_id
-    WHERE k.action = 'login';
+    WHERE k.action = 'login' AND p.distinct_ips > 1;
   EOT
   sink {
     create_table   = <<EOT
