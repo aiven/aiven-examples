@@ -4,7 +4,7 @@ variable "aiven_api_token" {
 }
 variable "aiven_project" {
   type    = string
-  default = "flink-demo"
+  default = "felixwu-demo"
 }
 
 variable "cloud_name" {

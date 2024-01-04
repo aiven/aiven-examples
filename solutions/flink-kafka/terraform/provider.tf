@@ -2,10 +2,10 @@ terraform {
   required_providers {
     aiven = {
       source = "aiven/aiven"
-    version = ">= 2.0.0, < 3.0.0" }
+    version = ">=4.0.0, < 5.0.0" }
   }
 }
 
 provider "aiven" {
-  api_token = var.aiven_api_token
+  api_token = data.external.env.result["auth_token"]
 }
