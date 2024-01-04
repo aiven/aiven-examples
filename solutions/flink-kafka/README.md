@@ -1,31 +1,29 @@
-# flink-kafka demo
+# Flink Stock Data Demo
 
-This is an example code uses aiven flink and kafka to simulate processing stock data.
+This demo uses Aiven Flink and Kafka to simulate processing stock data.
 
 ## Requirement
 
+- `avn`
+- `jq`
 - `python3`
 - `terraform`
 
 ## Usage
 
-- create a new project on aiven console
-- Run the following command to set the Aiven token in the environment variable AVN_TOKEN
-  
-  ```. ./scripts/save-token.sh```
-- run terraform to create `flinkdemo-kafka` and `flinkdemo-flink` services in aiven console under the project you created.
+- run terraform to create `stockdata-kafka` and `stockdata-flink` services in aiven console under the project you created.
 
 ```bash
 terraform init
 terraform plan
-terraform apply -var="aiven_api_token=$AVN_TOKEN" -var="aiven_project=<project-name>"
+terraform apply"
 ```
 
-- after terraform completed successfully, the follwing would be in `flinkdemo-flink`
+- after terraform completed successfully, the follwing would be in `stockdata-flink`
 
 * `flinkdemo-flink`: flink job to prcoess stock data
-* `stock_exchange` : source table for data feeded from kafka `source_topic`
-* `stock_data`: target table for flink processed data into kafka `sink_topic`
+* `stock_source` : source table for data feeded from kafka `source_topic`
+* `stock_sink`: target table for flink processed data into kafka `sink_topic`
 
 - install the following demo code in virtualenv:
 
@@ -37,9 +35,10 @@ pip install -r requirements.txt
 
 - download `ca.pem` `service.cert` `service.key` into `src/` from `flinkdemo-kafka`
 ```
-cd src && ../../scripts/save-certs.sh flinkdemo-kafka
+./lab.sh setup
 ```
-- replace `KAFKA_URI` in `src/config.py` with `Service URI` from `flinkdemo-kafka`
+
+- Go to aiven console, stockdata-flink service -> Applications -> stock-data -> Create deployment
 
 - open two terminals to send messages to kafka `source_topic` and consume messages from `sink_topic`.
   these are running in an infinite loop, press `ctrl` + `c` to stop at anytime.
@@ -47,7 +46,7 @@ cd src && ../../scripts/save-certs.sh flinkdemo-kafka
 - send stock messages to kafka producer `source_topic`
 
 ```
-$ cd src && python3 producer.py
+./lab.sh producer
 ```
 
 example output:
@@ -85,7 +84,7 @@ example output:
 - consume messages from kafka consumer `sink_topic`
 
 ```
-$ cd src && python3 consumer.py
+./lab.sh consumer
 ```
 
 example output:
@@ -110,3 +109,7 @@ Received: b'{"symbol":"PSQL","change_bid_price":4.35,"change_ask_price":4.67,"mi
 Received: b'{"symbol":"GRAFANA","change_bid_price":6.04,"change_ask_price":6.28,"min_bid_price":24.56,"max_bid_price":30.6,"min_ask_price":24.48,"max_ask_price":30.76,"time_interval":6,"time_stamp":"2021-11-27 01:52:42.359"}'
 Received: b'{"symbol":"AVN","change_bid_price":4.23,"change_ask_price":3.86,"min_bid_price":999.49,"max_bid_price":1003.72,"min_ask_price":1000.24,"max_ask_price":1004.1,"time_interval":6,"time_stamp":"2021-11-27 01:52:42.359"}'
 ```
+
+- Run ./lab.sh teardown to delete all the resources created from this demo. Note: this would cause terraform.tfstate out of sync which would have to be deleted after.
+
+./lab.sh teardown
