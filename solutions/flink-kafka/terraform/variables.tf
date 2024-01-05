@@ -1,10 +1,6 @@
-variable "aiven_api_token" {
-  type    = string
-  default = ""
-}
 variable "aiven_project" {
   type    = string
-  default = "felixwu-demo"
+  default = "myproject"
 }
 
 variable "cloud_name" {
