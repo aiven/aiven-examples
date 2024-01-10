@@ -3,6 +3,14 @@ set -e
 source ./lab.env
 
 lab_setup() {
+cd terraform
+terraform init
+terraform plan
+terraform apply \
+&& printf "✅ " || echo "❌ "
+echo "services created successfully."
+cd ..
+
 avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d src/ \
 && printf "✅ " || echo "❌ "
 echo "certificates and keys downloaded from ${SERVICE_KAFKA}"
@@ -29,9 +37,13 @@ cd ..
 }
 
 lab_teardown() {
-rm -f ca.pem service.cert service.key os-connector.json kcat.config
-echo ${SERVICE_KAFKA} | avn service terminate ${SERVICE_KAFKA}
-echo ${SERVICE_FLINK} | avn service terminate ${SERVICE_FLINK}
+rm -f src/ca.pem src/service.cert src/service.key
+cd terraform
+terraform destroy \
+&& printf "✅ " || echo "❌ "
+echo "services deleted successfully."
+cd ..
+
 }
 
 lab_producer() {
