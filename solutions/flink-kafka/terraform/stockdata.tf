@@ -105,3 +105,10 @@ resource "aiven_flink_application_version" "stock-data-version" {
     integration_id = aiven_service_integration.flink_to_kafka.integration_id
   }
 }
+
+resource "aiven_flink_application_deployment" "stock-data-version" {
+  project      = aiven_flink.flink.project
+  service_name = aiven_flink.flink.service_name
+  application_id = aiven_flink_application.stock-data.application_id
+  version_id = aiven_flink_application_version.stock-data-version.application_version_id
+}

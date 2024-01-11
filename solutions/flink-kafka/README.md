@@ -11,34 +11,13 @@ This demo uses Aiven Flink and Kafka to simulate processing stock data.
 
 ## Usage
 
-- run terraform to create `stockdata-kafka` and `stockdata-flink` services in aiven console under the project you created.
+- Update `aiven_project` in `terraform/variables.tf` to your project name.
 
-```bash
-terraform init
-terraform plan
-terraform apply"
-```
+- Run the following to call terraform to create flink and kafka services and download certificates.
 
-- after terraform completed successfully, the follwing would be in `stockdata-flink`
-
-* `flinkdemo-flink`: flink job to prcoess stock data
-* `stock_source` : source table for data feeded from kafka `source_topic`
-* `stock_sink`: target table for flink processed data into kafka `sink_topic`
-
-- install the following demo code in virtualenv:
-
-```bash
-python3 -m venv venv
-. venv/bin/activate
-pip install -r requirements.txt
-```
-
-- download `ca.pem` `service.cert` `service.key` into `src/` from `flinkdemo-kafka`
 ```
 ./lab.sh setup
 ```
-
-- Go to aiven console, stockdata-flink service -> Applications -> stock-data -> Create deployment
 
 - open two terminals to send messages to kafka `source_topic` and consume messages from `sink_topic`.
   these are running in an infinite loop, press `ctrl` + `c` to stop at anytime.
@@ -110,6 +89,8 @@ Received: b'{"symbol":"GRAFANA","change_bid_price":6.04,"change_ask_price":6.28,
 Received: b'{"symbol":"AVN","change_bid_price":4.23,"change_ask_price":3.86,"min_bid_price":999.49,"max_bid_price":1003.72,"min_ask_price":1000.24,"max_ask_price":1004.1,"time_interval":6,"time_stamp":"2021-11-27 01:52:42.359"}'
 ```
 
-- Run ./lab.sh teardown to delete all the resources created from this demo. Note: this would cause terraform.tfstate out of sync which would have to be deleted after.
+- Run `./lab.sh teardown` to delete all the resources created from this demo. 
 
+```
 ./lab.sh teardown
+```
