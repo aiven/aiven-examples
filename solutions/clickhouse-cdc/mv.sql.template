@@ -1,3 +1,6 @@
+-- ReplacingMergeTree
+-- https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/replacingmergetree
+
 CREATE TABLE `role_name`.population (
     `id` UInt64,
     `ts` DateTime64,

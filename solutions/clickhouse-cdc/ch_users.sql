@@ -1,10 +1,10 @@
-CREATE USER OR REPLACE frodo IDENTIFIED BY 'your_password';
+CREATE USER OR REPLACE frodo IDENTIFIED BY 'password';
 
-CREATE USER OR REPLACE sam IDENTIFIED BY 'your_password';
+CREATE USER OR REPLACE sam IDENTIFIED BY 'password';
 
-CREATE USER OR REPLACE arwen IDENTIFIED BY 'your_password';    
+CREATE USER OR REPLACE arwen IDENTIFIED BY 'password';    
 
-CREATE USER OR REPLACE elrond IDENTIFIED BY 'your_password';
+CREATE USER OR REPLACE elrond IDENTIFIED BY 'password';
 
 GRANT shire to frodo;
 

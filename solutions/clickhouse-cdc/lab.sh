@@ -26,37 +26,42 @@ lab_psql() {
     psql ${PG_SERVICE_URI} $@
 }
 
+lab_setuppg() {
+    echo
+    PG_SERVICE_URI=$(avn service get ${SERVICE_PG} --json | jq -r '.service_uri')
+    cat pg_tables.sql | psql ${PG_SERVICE_URI} \
+    && printf "✅ " || echo "❌ "
+    echo "pg_tables.sql imported into postgres ${SERVICE_PG}"
+}
+
 lab_setup() {
-avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d . \
-&& printf "✅ " || echo "❌ "
-echo "certificates and keys downloaded from ${SERVICE_KAFKA}"
+    setup_env
+    avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d . \
+    && printf "✅ " || echo "❌ "
+    echo "certificates and keys downloaded from ${SERVICE_KAFKA}"
 
-echo
-KAFKA_SERVICE_URI=$(avn service list --json ${SERVICE_KAFKA} | jq -r '.[].service_uri')
-echo ${KAFKA_SERVICE_URI}
-cat kcat.config.template > kcat.config
-sed -i '' -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config \
-&& printf "✅ " || echo "❌ "
-echo "kcat.config setup completed"
+    echo
+    KAFKA_SERVICE_URI=$(avn service list --json ${SERVICE_KAFKA} | jq -r '.[].service_uri')
+    echo ${KAFKA_SERVICE_URI}
+    cat kcat.config.template > kcat.config
+    sed -i '' -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config \
+    && printf "✅ " || echo "❌ "
+    echo "kcat.config setup completed"
 
-echo
-PG_SERVICE_URI=$(avn service get ${SERVICE_PG} --json | jq -r '.service_uri')
-cat pg_tables.sql | psql ${PG_SERVICE_URI} \
-&& printf "✅ " || echo "❌ "
-echo "pg_tables.sql imported into postgres ${SERVICE_PG}"
+    echo
+    PG_SERVICE_URI=$(avn service get ${SERVICE_PG} --json | jq -r '.service_uri')
+    cat pg_tables.sql | psql ${PG_SERVICE_URI} \
+    && printf "✅ " || echo "❌ "
+    echo "pg_tables.sql imported into postgres ${SERVICE_PG}"
 
+    [ -e "./clickhouse" ] || curl https://clickhouse.com/ | sh
 
-[ -e "./clickhouse" ] || curl https://clickhouse.com/ | sh
-
-# echo
-# OS_SERVICE_URI=$(avn service get ${SERVICE_OS} --json | jq -r '.service_uri')
-# curl -X PUT ${OS_SERVICE_URI}/suspecious-logins -H 'Content-Type: application/json' --data @suspecious-logins-mapping.json \
-# && printf "\n✅ " || echo "❌ "
-# echo "suspecious-logins index mapping created in opensearch ${SERVICE_OS}"
+    ${CH_CLI} --queries-file ./ch_mv.sql --progress=tty --processed-rows --echo -t 2>&1
 }
 
 lab_teardown() {
 rm -f ca.pem service.cert service.key os-connector.json kcat.config
+cd terraform && terraform destroy
 # echo ${SERVICE_KAFKA} | avn service terminate ${SERVICE_KAFKA}
 # echo ${SERVICE_CH} | avn service terminate ${SERVICE_CH}
 # echo ${SERVICE_PG} | avn service terminate ${SERVICE_PG}
@@ -64,20 +69,12 @@ rm -f ca.pem service.cert service.key os-connector.json kcat.config
 
 lab_pgload() {
     setup_env
-# while true; do
-    # num_entries=$((1 + RANDOM % 100))
-   num_entries=$1
+    num_entries=$1
 
-    echo "---${num_entries} entries---"
+    echo "Generating ${num_entries} entries..."
     SQL="\c middleearth;\n"
     for _ in $(seq $num_entries); do
         # time_stamp=$(date +%s)
-        # user_id=$((190 + RANDOM % 10))
-        # action=("login" "attempt")
-        # random_action=${action[RANDOM % ${#action[@]}]}
-        # source_ip="192.168.123.16$((RANDOM % 10))"
-
-        # echo "{\"time_stamp\": $time_stamp, \"user_id\": $user_id, \"action\": \"$random_action\", \"source_ip\": \"$source_ip\"}" | kcat -T -F kcat.config -P -t test00
 
         region="1$((RANDOM % 2))"
         total="1$((RANDOM % 1000))"
@@ -87,12 +84,9 @@ lab_pgload() {
         WSQL+="INSERT INTO weather (region, temperature) VALUES (${region}, ${temperature});\n"        
     done
     SQL+=${PSQL}${WSQL};
-    # SQL+="        | psql ${PG_SERVICE_URI}
-    #     sleep 1
+
     printf "${SQL}"
     printf "${SQL}" | psql ${PG_SERVICE_URI}
-#     sleep 10;
-# done
 }
 
 lab_chmv() {
@@ -112,6 +106,7 @@ lab_chmv() {
 
 lab_reset() {
     setup_env
+    printf "Reset all test data in postgres ${SERVICE_PG} and clickhouse ${SERVICE_CH}..."
     printf "\c middleearth;\nDELETE FROM population;\nDELETE FROM weather;\n" | psql ${PG_SERVICE_URI}
     # ${CH_CLI} --queries-file ./ch_drop.sql --progress=tty --processed-rows --echo -t 2>&1
 
@@ -134,6 +129,8 @@ case $1 in
         lab_reset ;;
     setup)
         lab_setup ;;
+    setuppg)
+        lab_setuppg ;;
     teardown)
         lab_teardown ;;
     pgload)
@@ -141,5 +138,5 @@ case $1 in
     chmv)
         lab_chmv "${@:2}" ;; 
     *)
-        printf "Usage: ./lab.sh [ setup | pgload n | teardown]\n" ;;
+        printf "Usage: ./lab.sh [ setup | clickhouse | psql | pgload n | reset | teardown]\n" ;;
 esac

@@ -6,6 +6,7 @@ resource "aiven_pg" "pg" {
 }
 
 resource "aiven_pg_database" "pgdb" {
+  depends_on = [aiven_pg.pg]
   project       = var.aiven_project
   service_name  = "cdc-pg"
   database_name = "middleearth"
@@ -30,23 +31,8 @@ resource "aiven_kafka" "kafka" {
   }
 }
 
-# resource "aiven_kafka_topic" "source" {
-#   project      = aiven_kafka.kafka.project
-#   service_name = aiven_kafka.kafka.service_name
-#   partitions   = 2
-#   replication  = 3
-#   topic_name   = "source_topic"
-# }
-
-# resource "aiven_kafka_topic" "sink" {
-#   project      = aiven_kafka.kafka.project
-#   service_name = aiven_kafka.kafka.service_name
-#   partitions   = 2
-#   replication  = 3
-#   topic_name   = "sink_topic"
-# }
-
 resource "aiven_kafka_connector" "kafka-pg-source" {
+  depends_on = [aiven_pg_database.pgdb]
   project        = var.aiven_project
   service_name   = aiven_kafka.kafka.service_name
   connector_name = "kafka-pg-source"
@@ -64,12 +50,12 @@ resource "aiven_kafka_connector" "kafka-pg-source" {
     "database.ssl.mode"           = "require"
     "include.schema.changes"      = true
     "include.query"               = true
-    # "plugin.name"                 = "wal2json"
-    "plugin.name"                 = "pgoutput"
+    "plugin.name"                 = "wal2json"
     # tables needs to be specified for pgoutput plugin
     # see details https://docs.aiven.io/docs/products/kafka/kafka-connect/howto/debezium-source-connector-pg#
-    "publication.autocreate.mode" = "filtered"
-    "table.include.list"          = "public.population,public.weather"
+    # "plugin.name"                 = "pgoutput"
+    # "publication.autocreate.mode" = "filtered"
+    # "table.include.list"          = "public.population,public.weather"
     "slot.name"                   = "dbz"
     "decimal.handling.mode"       = "double"
     "_aiven.restart.on.failure"   = "true"
@@ -86,6 +72,7 @@ resource "aiven_clickhouse" "clickhouse" {
 }
 
 resource "aiven_service_integration" "clickhouse_kafka_source" {
+  depends_on = [aiven_kafka_connector.kafka-pg-source]
   project                  = var.aiven_project
   integration_type         = "clickhouse_kafka"
   source_service_name      = aiven_kafka.kafka.service_name
