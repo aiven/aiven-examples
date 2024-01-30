@@ -62,4 +62,3 @@ WHERE region = region_id AND ((op = 'c') OR (op = 'r') OR (op = 'u') OR (op = 'd
 CREATE role OR REPLACE role_name;
 
 GRANT SELECT ON role_name.* TO role_name;
-GRANT SELECT ON role_name.* TO role_name;

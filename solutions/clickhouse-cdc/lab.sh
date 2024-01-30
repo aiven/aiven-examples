@@ -62,9 +62,6 @@ lab_setup() {
 lab_teardown() {
 rm -f ca.pem service.cert service.key os-connector.json kcat.config
 cd terraform && terraform destroy
-# echo ${SERVICE_KAFKA} | avn service terminate ${SERVICE_KAFKA}
-# echo ${SERVICE_CH} | avn service terminate ${SERVICE_CH}
-# echo ${SERVICE_PG} | avn service terminate ${SERVICE_PG}
 }
 
 lab_pgload() {

@@ -50,12 +50,12 @@ resource "aiven_kafka_connector" "kafka-pg-source" {
     "database.ssl.mode"           = "require"
     "include.schema.changes"      = true
     "include.query"               = true
-    "plugin.name"                 = "wal2json"
+    # "plugin.name"                 = "wal2json"
     # tables needs to be specified for pgoutput plugin
     # see details https://docs.aiven.io/docs/products/kafka/kafka-connect/howto/debezium-source-connector-pg#
-    # "plugin.name"                 = "pgoutput"
-    # "publication.autocreate.mode" = "filtered"
-    # "table.include.list"          = "public.population,public.weather"
+    "plugin.name"                 = "pgoutput"
+    "publication.autocreate.mode" = "filtered"
+    "table.include.list"          = "public.population,public.weather"
     "slot.name"                   = "dbz"
     "decimal.handling.mode"       = "double"
     "_aiven.restart.on.failure"   = "true"
