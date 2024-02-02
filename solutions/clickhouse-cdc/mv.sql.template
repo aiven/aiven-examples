@@ -1,0 +1,64 @@
+-- ReplacingMergeTree
+-- https://clickhouse.com/docs/en/engines/table-engines/mergetree-family/replacingmergetree
+
+CREATE TABLE `role_name`.population (
+    `id` UInt64,
+    `ts` DateTime64,
+    `region` UInt64,
+    `total` UInt64,
+    `version` UInt64,
+    `deleted` UInt8
+) ENGINE = ReplacingMergeTree(version, deleted)
+PRIMARY KEY(id)
+ORDER BY (id);
+
+CREATE MATERIALIZED VIEW `role_name`.population_mv TO `role_name`.population (
+    `id` UInt64,
+    `ts` DateTime64,
+    `region` UInt64,
+    `total` UInt64,
+    `version` UInt64,
+    `deleted` UInt8
+) AS
+SELECT
+    if(op = 'd', before.id, after.id) AS id,
+    toDateTime64(ts_ms / 1000, 3) as ts,
+    if(op = 'd', before.region, after.region) AS region,
+    if(op = 'd', before.total, after.total) AS total,
+    source.lsn, source.lsn AS version,
+    if(op = 'd', 1, 0) AS deleted
+FROM `service_cdc-kafka`.population_cdc
+WHERE region = region_id AND ((op = 'c') OR (op = 'r') OR (op = 'u') OR (op = 'd'));
+
+CREATE TABLE `role_name`.weather (
+    `id` UInt64,
+    `ts` DateTime64,
+    `region` UInt64,
+    `temperature` Float64,
+    `version` UInt64,
+    `deleted` UInt8
+) ENGINE = ReplacingMergeTree(version, deleted)
+PRIMARY KEY(id)
+ORDER BY (id);
+
+CREATE MATERIALIZED VIEW `role_name`.weather_mv TO `role_name`.weather (
+    `id` UInt64,
+    `ts` DateTime64,
+    `region` UInt64,
+    `temperature` Float64,
+    `version` UInt64,
+    `deleted` UInt8
+) AS
+SELECT
+    if(op = 'd', before.id, after.id) AS id,
+    toDateTime64(ts_ms / 1000, 3) as ts,
+    if(op = 'd', before.region, after.region) AS region,
+    if(op = 'd', before.temperature, after.temperature) AS temperature,
+    source.lsn AS version,
+    if(op = 'd', 1, 0) AS deleted
+FROM `service_cdc-kafka`.weather_cdc
+WHERE region = region_id AND ((op = 'c') OR (op = 'r') OR (op = 'u') OR (op = 'd'));
+
+CREATE role OR REPLACE role_name;
+
+GRANT SELECT ON role_name.* TO role_name;
