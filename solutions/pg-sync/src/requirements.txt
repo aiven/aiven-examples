@@ -1,5 +1,5 @@
 kafka-python==2.0.1
-orjson==3.6.0
+orjson==3.9.15
 psycopg[binary,pool]==3.0
 pypika==0.48.8
 loguru
