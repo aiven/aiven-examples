@@ -1,8 +1,7 @@
 # clickhouse-cdc
 
-**PostgreSQL® -> Debezium ->  Apache Kafka® -> ClickHouse®**
+**PostgreSQL® -> Debezium -> Apache Kafka® -> ClickHouse®**
 This demo showcases a solution for real-time data integration and analytics using PostgreSQL, Debezium, Apache Kafka, and ClickHouse. The workflow involves capturing changes (supports insert, update and delete) from a PostgreSQL source table, streaming the changes into Kafka using Debezium, integrating Kafka topics into ClickHouse via ClickHouse Kafka Engine, and finally, leveraging ClickHouse's **ReplacingMergeTree** engine with **Materialized View** to isolate and efficiently manage data for different regions.
-
 
 ## Requirements
 
@@ -12,19 +11,17 @@ This demo showcases a solution for real-time data integration and analytics usin
 - `clickhouse`
 - `psql`
 
-
 ## Steps
 
-- Update the `PROJECT` and `SERVICE` in `lab.env`
+- Update the `PROJECT` and `SERVICE` in `lab.env` and `aiven_project` in `terraform/variables.tf`
 
 Run the following to setup required services and download `clickhouse` CLI.
 
 ```bash
-cd terraform && terraform apply && cd ..
 ./lab.sh setup
 ```
 
-Run the following to create clickhouse databases, tables materialized views and load sample data into postgres.  This step would create `mv-${ROLE}.sql` for creating materizled views in ClickHouse.
+Run the following to create clickhouse databases, tables materialized views and load sample data into postgres. This step would create `mv-${ROLE}.sql` for creating materizled views in ClickHouse.
 
 ```bash
 ./lab.sh reset
@@ -122,14 +119,14 @@ kcat -F kcat.config -t middleearth-replicator.public.population
 defaultdb=> \c middleearth;
 middleearth=> \dt
            List of relations
- Schema |    Name    | Type  |  Owner   
+ Schema |    Name    | Type  |  Owner
 --------+------------+-------+----------
  public | population | table | avnadmin
  public | weather    | table | avnadmin
 (2 rows)
 
 middleearth=> select * from weather;
- id | region | temperature 
+ id | region | temperature
 ----+--------+-------------
   1 |     11 |       35.82
   2 |     10 |       42.12
@@ -144,7 +141,7 @@ middleearth=> select * from weather;
 (10 rows)
 
 middleearth=> select * from population;
- id | region | total 
+ id | region | total
 ----+--------+-------
   1 |     11 |  1493
   2 |     10 |   174
@@ -176,7 +173,7 @@ Query id: f2bea58f-70b5-4085-99dc-ea0d4ecf6fff
 │ shire              │
 │ system             │
 └────────────────────┘
-7 rows in set. Elapsed: 0.001 sec. 
+7 rows in set. Elapsed: 0.001 sec.
 
 cdc-clickhouse-1 :) select * from `shire`.weather final order by id;
 . . .
@@ -187,7 +184,7 @@ cdc-clickhouse-1 :) select * from `shire`.weather final order by id;
 │  8 │ 2024-01-30 00:13:12.228 │     11 │      -17.82 │ 150998520 │       0 │
 │  9 │ 2024-01-30 00:13:12.228 │     11 │        8.92 │ 150998520 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-5 rows in set. Elapsed: 0.002 sec. 
+5 rows in set. Elapsed: 0.002 sec.
 
 cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 . . .
@@ -198,7 +195,7 @@ cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 │  7 │ 2024-01-30 00:13:12.228 │     10 │       16.16 │ 150998520 │       0 │
 │ 10 │ 2024-01-30 00:13:12.228 │     10 │        2.42 │ 150998520 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-5 rows in set. Elapsed: 0.002 sec. 
+5 rows in set. Elapsed: 0.002 sec.
 ```
 
 ### Test UPDATE from PostgreSQL®
@@ -221,7 +218,7 @@ cdc-clickhouse-1 :) select * from `shire`.weather final order by id;
 │  9 │ 2024-01-30 00:31:39.818 │     11 │       99.99 │ 201328872 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
 
-5 rows in set. Elapsed: 0.003 sec. 
+5 rows in set. Elapsed: 0.003 sec.
 
 cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 . . .
@@ -232,7 +229,7 @@ cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 │  7 │ 2024-01-30 00:31:39.818 │     10 │       99.99 │ 201328664 │       0 │
 │ 10 │ 2024-01-30 00:31:39.819 │     10 │       99.99 │ 201328976 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-5 rows in set. Elapsed: 0.002 sec. 
+5 rows in set. Elapsed: 0.002 sec.
 ```
 
 ### Test DELETE from PostgreSQL®
@@ -251,14 +248,14 @@ cdc-clickhouse-1 :) select * from `shire`.weather final order by id;
 │  1 │ 2024-01-30 00:13:12.224 │     11 │       35.82 │ 150998520 │       0 │
 │  3 │ 2024-01-30 00:13:12.225 │     11 │       10.28 │ 150998520 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-2 rows in set. Elapsed: 0.002 sec. 
+2 rows in set. Elapsed: 0.002 sec.
 
 cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 . . .
 ┌─id─┬──────────────────────ts─┬─region─┬─temperature─┬───version─┬─deleted─┐
 │  2 │ 2024-01-30 00:13:12.225 │     10 │       42.12 │ 150998520 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-1 row in set. Elapsed: 0.002 sec. 
+1 row in set. Elapsed: 0.002 sec.
 ```
 
 ### Validate users only have permission to assigned database in ClickHouse®
@@ -272,14 +269,14 @@ cdc-clickhouse-1 :) show databases;
 ┌─name──┐
 │ shire │
 └───────┘
-1 row in set. Elapsed: 0.001 sec. 
+1 row in set. Elapsed: 0.001 sec.
 cdc-clickhouse-1 :) select * from `shire`.weather final order by id;
 . . .
 ┌─id─┬──────────────────────ts─┬─region─┬─temperature─┬───version─┬─deleted─┐
 │  1 │ 2024-01-30 00:13:12.224 │     11 │       35.82 │ 150998520 │       0 │
 │  3 │ 2024-01-30 00:13:12.225 │     11 │       10.28 │ 150998520 │       0 │
 └────┴─────────────────────────┴────────┴─────────────┴───────────┴─────────┘
-2 rows in set. Elapsed: 0.002 sec. 
+2 rows in set. Elapsed: 0.002 sec.
 cdc-clickhouse-1 :) select * from `rivendell`.weather final order by id;
 . . .
 Received exception from server (version 23.8.8):
