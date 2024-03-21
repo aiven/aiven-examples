@@ -1,0 +1,13 @@
+clickhouse_imdb:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: imdb_dbt
+      host: CH_HOST
+      port: CH_HTTPS_PORT
+      user: CH_USER
+      password: CH_PASS
+      secure: True
+      verify: False
+
