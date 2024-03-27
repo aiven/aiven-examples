@@ -32,7 +32,7 @@ resource "aiven_kafka" "kafka" {
 }
 
 resource "aiven_kafka_connector" "kafka-pg-source" {
-  depends_on = [aiven_pg_database.pgdb]
+  depends_on = [aiven_pg_database.pgdb, aiven_kafka.kafka]
   project        = var.aiven_project
   service_name   = aiven_kafka.kafka.service_name
   connector_name = "kafka-pg-source"
@@ -56,6 +56,7 @@ resource "aiven_kafka_connector" "kafka-pg-source" {
     "plugin.name"                 = "pgoutput"
     "publication.autocreate.mode" = "filtered"
     "table.include.list"          = "public.population,public.weather"
+    "topic.prefix"                = "middleearth-replicator"
     "slot.name"                   = "dbz"
     "decimal.handling.mode"       = "double"
     "_aiven.restart.on.failure"   = "true"
@@ -72,7 +73,7 @@ resource "aiven_clickhouse" "clickhouse" {
 }
 
 resource "aiven_service_integration" "clickhouse_kafka_source" {
-  depends_on = [aiven_kafka_connector.kafka-pg-source]
+  depends_on = [aiven_kafka_connector.kafka-pg-source, aiven_clickhouse.clickhouse]
   project                  = var.aiven_project
   integration_type         = "clickhouse_kafka"
   source_service_name      = aiven_kafka.kafka.service_name

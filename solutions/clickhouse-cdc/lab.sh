@@ -35,6 +35,8 @@ lab_setuppg() {
 }
 
 lab_setup() {
+    cd terraform && terraform apply ; cd ..
+
     setup_env
     avn service user-creds-download ${SERVICE_KAFKA} --username avnadmin -d . \
     && printf "✅ " || echo "❌ "
@@ -44,7 +46,7 @@ lab_setup() {
     KAFKA_SERVICE_URI=$(avn service list --json ${SERVICE_KAFKA} | jq -r '.[].service_uri')
     echo ${KAFKA_SERVICE_URI}
     cat kcat.config.template > kcat.config
-    sed -i '' -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config \
+    sed -i -e "s/address:port/${KAFKA_SERVICE_URI}/" kcat.config \
     && printf "✅ " || echo "❌ "
     echo "kcat.config setup completed"
 
@@ -56,12 +58,13 @@ lab_setup() {
 
     [ -e "./clickhouse" ] || curl https://clickhouse.com/ | sh
 
+    avn service connector restart-task ${SERVICE_KAFKA} kafka-pg-source 0
     ${CH_CLI} --queries-file ./ch_mv.sql --progress=tty --processed-rows --echo -t 2>&1
 }
 
 lab_teardown() {
-rm -f ca.pem service.cert service.key os-connector.json kcat.config
-cd terraform && terraform destroy
+    rm -f ca.pem service.cert service.key os-connector.json kcat.config
+    cd terraform && terraform destroy ; cd ..
 }
 
 lab_pgload() {
@@ -95,7 +98,7 @@ lab_chmv() {
     && printf "✅ " || echo "❌ "
     echo "${ROLE} created in clickhouse ${SERVICE_CH}"
     sed -e "s/role_name/${ROLE}/g" mv.sql.template > mv-${ROLE}.sql
-    sed -i '' -e "s/region_id/${REGION}/g" mv-${ROLE}.sql \
+    sed -i -e "s/region_id/${REGION}/g" mv-${ROLE}.sql \
     && printf "✅ " || echo "❌ "
     echo " mv-${ROLE}.sql created successfully."
     ${CH_CLI} --queries-file ./mv-${ROLE}.sql --progress=tty --processed-rows --echo -t 2>&1
