@@ -1,0 +1,27 @@
+resources:
+- deploy-ingest.yaml
+- deploy-processing.yaml
+- deploy-sink.yaml
+secretGenerator:
+- name: tms-ingest-cert
+  namespace: tms-demo
+  files:
+  - secrets/aiven/ingest/service.cert
+  - secrets/aiven/ingest/service.key
+  - secrets/aiven/ingest/ca.pem
+  - secrets/aiven/ingest/client.keystore.p12
+  - secrets/aiven/ingest/client.truststore.jks 
+- name: tms-processing-cert
+  files:
+  - secrets/aiven/processing/service.cert
+  - secrets/aiven/processing/service.key
+  - secrets/aiven/processing/ca.pem
+  - secrets/aiven/processing/client.keystore.p12
+  - secrets/aiven/processing/client.truststore.jks
+- name: tms-sink-cert
+  files:
+  - secrets/aiven/sink/service.cert
+  - secrets/aiven/sink/service.key
+  - secrets/aiven/sink/ca.pem
+  - secrets/aiven/sink/client.keystore.p12
+  - secrets/aiven/sink/client.truststore.jks

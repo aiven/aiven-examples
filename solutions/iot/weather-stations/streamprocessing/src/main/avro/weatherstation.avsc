@@ -1,0 +1,27 @@
+{
+    "name": "WeatherStation",
+    "namespace": "fi.saily.tmsdemo",
+    "type": "record",
+    "fields" : [        
+        {
+            "name": "roadStationId",
+            "type": "int"
+        },
+        {
+            "name": "name",
+            "type": "string"
+        },        
+        {
+            "name": "municipality",
+            "type": "string"          
+        },
+        {
+            "name": "province",
+            "type": "string"          
+        },
+        {
+            "name": "geohash",
+            "type": "string"            
+        }
+    ]
+}

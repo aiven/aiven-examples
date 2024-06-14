@@ -1,0 +1,4 @@
+paho-mqtt
+confluent_kafka
+prometheus-kafka-metrics
+prometheus-client

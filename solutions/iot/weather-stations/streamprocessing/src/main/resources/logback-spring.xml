@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+ 
+    <property name="LOGS" value="./logs" />
+ 
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="utf-8" class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+            <Pattern>%d{"yyyy-MM-dd'T'HH:mm:ss,SSSXXX", UTC} - %msg%n</Pattern>
+        </encoder>
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %d{"yyyy-MM-dd'T'HH:mm:ss,SSSXXX", UTC} %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
+            </Pattern>
+        </layout>
+    </appender>
+     
+    <root level="warn">        
+        <appender-ref ref="Console" />
+    </root>
+ 
+    <logger name="org.apache.kafka" level="warn" additivity="false">        
+        <appender-ref ref="Console" />
+    </logger>
+ 
+</configuration>
