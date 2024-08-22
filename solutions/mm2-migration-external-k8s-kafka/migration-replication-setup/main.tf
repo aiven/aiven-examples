@@ -87,7 +87,7 @@ resource "aiven_mirrormaker_replication_flow" "replication-flow-1" {
   topics_blacklist = [".*[\\-\\.]internal",".*\\.replica","__.*","connect.*"]
 }
 
-//Replication Flow - RF=2 --- This will be using Aiven Kafka External Service Integration --- Check and match cluster_alias with target_cluster
+/*//Replication Flow - RF=2 --- This will be using Aiven Kafka External Service Integration --- Check and match cluster_alias with target_cluster
 resource "aiven_mirrormaker_replication_flow" "replication-flow-ext-1" {
   depends_on = [
     time_sleep.wait_180_seconds,
@@ -129,4 +129,4 @@ resource "aiven_mirrormaker_replication_flow" "replication-flow-ext-2" {
   topics = [
     "meta_test_topic_rf_1"
   ]
-}
+} */
