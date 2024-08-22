@@ -1,8 +1,34 @@
+resource "aiven_kafka" "destination_kafka_1" {
+  project                 = var.aiven_project_name
+  cloud_name              = var.cloud_name_primary
+  plan                    = var.dest_kafka_plan
+  service_name            = "${var.service_prefix}-dest-kafka-1"
+  maintenance_window_dow  = "monday"
+  maintenance_window_time = "10:00:00"
+
+  kafka_user_config {
+    kafka_rest      = true
+    kafka_connect   = false
+    schema_registry = true
+    kafka_version   = "3.5"
+
+    kafka {
+      default_replication_factor = 3
+      min_insync_replicas = 2
+      message_max_bytes = 100001200
+    }
+
+    public_access {
+      kafka_rest    = false
+      kafka_connect = false
+    }
+  }
+}
 resource "aiven_kafka_mirrormaker" "mm2-cluster1" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name_primary
   plan         = var.mm2_plan_cluster_1
-  service_name = "${var.service_prefix}-mm2"
+  service_name = "${var.service_prefix}-mm2-rf2"
 
   /*kafka_mirrormaker_user_config {
     ip_filter = ["0.0.0.0/0"]
@@ -29,7 +55,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name_primary
   plan         = var.mm2_plan_cluster_2
-  service_name = "${var.service_prefix}-mm2"
+  service_name = "${var.service_prefix}-mm2-rf3-set1"
 
   /*kafka_mirrormaker_user_config {
     ip_filter = ["0.0.0.0/0"]
@@ -56,7 +82,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster3" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name_primary
   plan         = var.mm2_plan_cluster_3
-  service_name = "${var.service_prefix}-mm2"
+  service_name = "${var.service_prefix}-mm2-rf3-set2"
 
   /*kafka_mirrormaker_user_config {
     ip_filter = ["0.0.0.0/0"]
@@ -80,11 +106,12 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster3" {
 }
 resource "time_sleep" "wait_mm2_readiness" {
   depends_on = [
+    aiven_kafka.destination_kafka_1,
     aiven_kafka_mirrormaker.mm2-cluster1,
     aiven_kafka_mirrormaker.mm2-cluster2,
     aiven_kafka_mirrormaker.mm2-cluster3
   ]
-  create_duration = "600s"
+  create_duration = "1200s"
 }
 
 // Strimzi Kafka External Endpoint as a pre-req to create service integration for mm2
