@@ -6,12 +6,12 @@ resource "aiven_service_integration" "mm2-primary-svc-integration" {
   source_endpoint_id = var.external_source_strimzi_kafka_endpoint_id
   destination_service_name = var.mm2_service_name
   kafka_mirrormaker_user_config {
-    cluster_alias = "strimzi-source-kafka-1",
+    cluster_alias = "strimzi-source-kafka-1"
     kafka_mirrormaker {
-      producer_max_request_size = 66901452,
-      producer_buffer_memory = 33554432,
-      consumer_max_poll_records = 1000,
-      producer_batch_size = 32768,
+      producer_max_request_size = 66901452
+      producer_buffer_memory = 33554432
+      consumer_max_poll_records = 1000
+      producer_batch_size = 32768
       producer_linger_ms = 100
     }
 }
@@ -22,12 +22,12 @@ resource "aiven_service_integration" "mm2-backup-svc-integration" {
   source_service_name      = var.destination_kafka_service
   destination_service_name = var.mm2_service_name
   kafka_mirrormaker_user_config {
-    cluster_alias = "aiven-destination-kafka-1",
+    cluster_alias = "aiven-destination-kafka-1"
     kafka_mirrormaker {
-      producer_max_request_size = 66901452,
-      producer_buffer_memory = 33554432,
-      consumer_max_poll_records = 1000,
-      producer_batch_size = 32768,
+      producer_max_request_size = 66901452
+      producer_buffer_memory = 33554432
+      consumer_max_poll_records = 1000
+      producer_batch_size = 32768
       producer_linger_ms = 100
     }
   }
