@@ -77,7 +77,7 @@ resource "aiven_mirrormaker_replication_flow" "replication-flow-1" {
   sync_group_offsets_enabled = true
   offset_syncs_topic_location = "target"
   emit_heartbeats_enabled    = true
-  enable                     = true
+  enable                     = false
   sync_group_offsets_interval_seconds = 1
   replication_factor = 3
   config_properties_exclude = ["follower\\.replication\\.throttled\\.replicas", "leader\\.replication\\.throttled\\.replicas", "message\\.timestamp\\.difference\\.max\\.ms", "message\\.timestamp\\.type"]
