@@ -7,6 +7,11 @@ resource "aiven_service_integration" "mm2-primary-svc-integration" {
   destination_service_name = var.mm2_service_name
   kafka_mirrormaker_user_config {
     cluster_alias = "strimzi-source-kafka-1"
+    producer_max_request_size = 66901452,
+    producer_buffer_memory = 33554432,
+    consumer_max_poll_records = 10000,
+    producer_batch_size = 32768,
+    producer_linger_ms = 100
   }
 }
 resource "aiven_service_integration" "mm2-backup-svc-integration" {
@@ -16,9 +21,14 @@ resource "aiven_service_integration" "mm2-backup-svc-integration" {
   destination_service_name = var.mm2_service_name
   kafka_mirrormaker_user_config {
     cluster_alias = "aiven-destination-kafka-1"
+    producer_max_request_size = 66901452,
+    producer_buffer_memory = 33554432,
+    consumer_max_poll_records = 10000,
+    producer_batch_size = 32768,
+    producer_linger_ms = 100
   }
 }
-
+/*
 resource "aiven_service_integration" "mm2-backup-svc-integration-2" {
   project                  = var.aiven_project_name
   integration_type         = "kafka_mirrormaker"
@@ -39,13 +49,13 @@ resource "aiven_service_integration" "mm2-backup-svc-integration-3" {
   kafka_mirrormaker_user_config {
     cluster_alias = "aiven-external-destination-kafka-3"
   }
-}
+} */
 
 resource "time_sleep" "wait_180_seconds" {
   depends_on = [
     aiven_service_integration.mm2-primary-svc-integration,
     aiven_service_integration.mm2-backup-svc-integration,
-    aiven_service_integration.mm2-backup-svc-integration-2
+    //aiven_service_integration.mm2-backup-svc-integration-2
   ]
   create_duration = "180s"
 }
@@ -70,6 +80,7 @@ resource "aiven_mirrormaker_replication_flow" "replication-flow-1" {
   topics = [
     "meta_test_topic_rf_3"
   ]
+  topics_blacklist = [".*[\\-\\.]internal",".*\\.replica","__.*","connect.*"]
 }
 
 //Replication Flow - RF=2 --- This will be using Aiven Kafka External Service Integration --- Check and match cluster_alias with target_cluster
