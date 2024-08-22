@@ -13,7 +13,15 @@ variable "cloud_name_primary" {
   type = string
 }
 
-variable "mm2_plan" {
+variable "mm2_plan_cluster_1" {
+  type = string
+}
+
+variable "mm2_plan_cluster_2" {
+  type = string
+}
+
+variable "mm2_plan_cluster_3" {
   type = string
 }
 
