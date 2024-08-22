@@ -20,7 +20,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster1" {
       tasks_max_per_cpu = 4 //changed from 2 to 4
       emit_checkpoints_enabled = true
       emit_checkpoints_interval_seconds = 10
-      offset_lag_max = 0
+      offset_lag_max = 1
     }
   }
 }
@@ -47,7 +47,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
       tasks_max_per_cpu = 4 //changed from 2 to 4
       emit_checkpoints_enabled = true
       emit_checkpoints_interval_seconds = 10
-      offset_lag_max = 0
+      offset_lag_max = 1
     }
   }
 }
@@ -74,7 +74,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster3" {
       tasks_max_per_cpu = 4 //changed from 2 to 4
       emit_checkpoints_enabled = true
       emit_checkpoints_interval_seconds = 10
-      offset_lag_max = 0
+      offset_lag_max = 1
     }
   }
 }
