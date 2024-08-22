@@ -114,18 +114,19 @@ resource "time_sleep" "wait_mm2_readiness" {
   create_duration = "1200s"
 }
 
+/*
 // Strimzi Kafka External Endpoint as a pre-req to create service integration for mm2
-resource "aiven_service_integration_endpoint" "strimzi_external_endpoint"
+resource "aiven_service_integration_endpoint" "strimzi_external_endpoint_1"
 {
   depends_on = [time_sleep.wait_mm2_readiness]
-  endpoint_name = "strimzi_kafka_source_endpoint"
+  endpoint_name = "strimzi_kafka_source_endpoint_1"
   project = var.aiven_project_name
   endpoint_type = "external_kafka"
   external_kafka_user_config {
     bootstrap_servers = var.strimzi_bootstrap_url
     security_protocol = "PLAINTEXT"
   }
-}
+} */
 /*
 //////----------
 // AIVEN KAFKA EXTERNAL ENDPOINT for allowing more than 1 destination service integration for more than 1 replication flows

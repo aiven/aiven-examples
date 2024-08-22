@@ -29,10 +29,6 @@ variable "strimzi_bootstrap_url" {
   type = string
 }
 
-variable "aiven_kafka_bootstrap_url" {
-  type = string
-}
-
 variable "dest_kafka_plan" {
   type = string
 }
