@@ -19,20 +19,43 @@ variable "external_source_strimzi_kafka_endpoint_id" {
   //default = "your-aiven-project-name/source-integration-endpoint-id"
 }
 
+variable "external_source_strimzi_kafka_endpoint_id_rf2" {
+  description = "Endpoint ID - Strimzi Source Kafka Service via External Integration"
+  type        = string
+  //default     = "kafka-migration-labs/strimzi-kafka-external-endpoint-1-guid"
+}
+variable "external_source_strimzi_kafka_endpoint_id_rf3_set1" {
+  description = "Endpoint ID - Strimzi Source Kafka Service via External Integration"
+  type        = string
+  //default     = "kafka-migration-labs/strimzi-kafka-external-endpoint-2-guid"
+}
+
+variable "external_source_strimzi_kafka_endpoint_id_rf3_set2" {
+  description = "Endpoint ID - Strimzi Source Kafka Service via External Integration"
+  type        = string
+  //default     = "kafka-migration-labs/strimzi-kafka-external-endpoint-3-guid"
+}
 variable "destination_kafka_service" {
   description = "Strimzi Source Kafka Service"
   type        = string
   //default = "destination-aiven-kafka-service-name"
 }
 
-variable "external_aiven_destination_kafka_service_1_endpoint_id" {
-  description = "Endpoint ID - Aiven Kafka Destination Service via External Integration"
+variable "aiven-labs-mm2-rf2" {
+  description = "Mirror Maker2 Service Name RF2"
   type        = string
-  //default = "your-aiven-project-name/source-integration-endpoint-id"
+  //default     = "aiven-labs-mm2-rf2"
 }
 
-variable "mm2_service_name" {
-  description = "Mirror Maker2 Service Name"
+variable "aiven-labs-mm2-rf3-set1" {
+  description = "Mirror Maker2 Service Name RF3 set 1"
   type        = string
-  //default = "your mm2 service name"
+  //default     = "aiven-labs-mm2-rf3-set1"
 }
+
+variable "aiven-labs-mm2-rf3-set2" {
+  description = "Mirror Maker2 Service Name RF3 set 2"
+  type        = string
+  //default     = "aiven-labs-mm2-rf3-set2"
+}
+
