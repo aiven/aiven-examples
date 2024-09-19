@@ -36,6 +36,9 @@ Create a JSON configuration file with the connection details for the target
 ```
 It is recommended to use the default aivenadmin user for this task.
 
+NOTE! you can also re-use security config migration configuration, in
+which case only the "target" section of if it applies.
+
 ### Run the re-apply script
 
 Once your configuration file is ready, run the following command to re-apply the
@@ -51,5 +54,6 @@ then goes thru it and re-applies the ISM policy to the appropriate index.
 
 ### Re-running the script
 
-This script can only be run once as Opensearch will clear the metadata automatically
-when the ISM policies are executed the first time.
+This script should only be run once as Opensearch will clear the metadata automatically
+when the ISM policies are executed the first time. You can re-attempt running the script
+via use of --force option.
