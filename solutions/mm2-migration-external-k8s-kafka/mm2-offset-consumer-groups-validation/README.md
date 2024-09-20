@@ -124,29 +124,9 @@ $ ./bin/kafka-mirrormaker-offset-sync-inspector.sh --mm2-config <CONFIG FILE PAT
 ### CSV File Format
 Format is subject to change during development. File contains the following headers and columns.
 
-- CLUSTER PAIR
-  - The replication flow. 
-  - source->target
-- GROUP 
-  - Consumer group name.
-- GROUP STATE 
-  - Consumer group state.
-- TOPIC 
-  - The topic name.
-- PARTITION 
-  - The topic partition.
-- SOURCE OFFSET 
-  - Consumer group committed offset at the source.
-- TARGET LAG TO SOURCE 
-  - Lag of the consumer group compared to the latest offset at the source.
-- TARGET OFFSET 
-  - Consumer group synced offset at the target. This is the translated offset.
-- TARGET LAG 
-  - Consumer group lag at the target cluster.
-- IS OK 
-  - Tool's indication of the offset sync state. When false the consumer group and topic partition manual requires investigation.
-- MESSAGE 
-  - Message/Reason why the result is _true or false_.
+| Cluster Pair  | Group   | GROUP STATE  | TOPIC  | PARTITION  | SOURCE OFFSET  | TARGET LAG TO SOURCE  |  TARGET OFFSET  |  TARGET LAG  |  IS OK  |  MESSAGE  |
+| ------------- |---------|--------------| -------| -----------| ---------------| ----------------------| ----------------| -------------| --------| ----------|
+ | Source to Traget Replication Flow  | Consumer Group Name | Consumer Group State | Topic Name | The topic partition | Consumer group committed offset at the source | Lag of the consumer group compared to the latest offset at the source | Consumer group synced offset at the target. This is the translated offset | Consumer group lag at the target cluster | Tool's indication of the offset sync state. When false the consumer group and topic partition manual requires investigation | Message/Reason why the result is _true or false_ |  
 
 #### MESSAGE Definitions
 - Message : _**“Target has offset sync.”**_
