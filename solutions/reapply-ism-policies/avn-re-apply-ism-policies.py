@@ -10,9 +10,11 @@ import argparse
 import json
 import requests
 import urllib3
+import textwrap
 
 from typing import Any
 
+AIVEN_SECURITY_MANAGER = "os-sec-admin"
 
 class AivenForOpensearchIsm:
     def __init__(
@@ -92,6 +94,12 @@ def init_argparse() -> argparse.ArgumentParser:
         required=True,
         help="Configuration for the migration",
     )
+    parser.add_argument(
+        "--force",
+        required=False,
+        action="store_true",
+        help="Force re-apply policies",
+    )
     return parser
 
 
@@ -110,11 +118,18 @@ def main() -> None:
     except Exception as e:
         print(f"ERROR: Failed to read the configuration file: {e}")
 
+    # Allow using the same configuration file for this and security
+    # configuration migration
+    user = None
+    if "target" in config:
+        config = config["target"]
+        user = AIVEN_SECURITY_MANAGER
+
     try:
         aiven_ism = AivenForOpensearchIsm(
             host=config["host"],
             port=config["port"],
-            user=config["user"],
+            user=user if user else config["user"],
             password=config["password"],
         )
     except requests.exceptions.ConnectionError as e:
@@ -132,20 +147,23 @@ def main() -> None:
         print(f"ERROR: Failed to connect to AivenForOpensearch: {e}")
         return
 
-    if aiven_ism.already_applied():
-        print(
-            "ERROR: Policies appear to be already applied. Re-applying them using "
-            "this script is not possible."
-        )
-        return
+    if not args.force:
+        if aiven_ism.already_applied():
+            print(textwrap.dedent("""\
+                ERROR: Policies appear to be already applied.
 
-    # Read the original ism assignments (after migration those are stored in cluster state)
+                Possible reasons:
+                - Policies have already been applied
+                - Restored indices are not managed by ISM
+                - Snapshot restore was done without include_global_state enabled
+                - Snapshot does not include global state
+
+                To attempt re-apply the policies use --force flag."""))
+
+    # Read the original ism assignments (after snapshot restore those are stored in cluster state)
     original_policy_assignments = aiven_ism.retrieve_assignments_from_cluster_metadata()
     if not original_policy_assignments:
-        print(
-            "ERROR: Failed to retrieve original policy assignments. Was restore done "
-            "with include_global_state enabled?"
-        )
+        print("Unable to re-apply policies as no ISM policy were assignments found in the cluster state.")
         return
 
     # Re-apply the policies, there does not seem to be a way to do this in bulk so we need to execute this one by one

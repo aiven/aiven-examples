@@ -239,8 +239,9 @@ def section_aware_updater(
     section: str,
     entries: dict[str, Any],
     aiven_config: dict[str, Any],
-) -> list[dict[str, Any]]:
+) -> tuple[list[dict[str, Any]], int]:
     # TODO: actually implement the section awareness
+    skipped = 0
     actions: list[dict[str, Any]] = []
     for path, values in entries.items():
         os_values, aiven_values = get_filtered_for_migration(
@@ -277,6 +278,7 @@ def section_aware_updater(
 
         if not changed:
             print(f"- skip {path} [unchanged]")
+            skipped += 1
             continue
 
         aiven_values.update(os_values)
@@ -289,7 +291,7 @@ def section_aware_updater(
         )
         print(f"- update {path}")
 
-    return actions
+    return actions, skipped
 
 
 def init_argparse() -> argparse.ArgumentParser:
@@ -388,11 +390,18 @@ def main() -> None:
         print("Nothing to migrate.")
         return
 
+    counts = {}
     for entry, action in actions.items():
         print(f"Migrating {entry}")
+        counts[entry] = {
+            "additions": 0,
+            "updates": 0,
+            "unchanged": 0,
+        }
         try:
             additions = simple_adder(section=entry, entries=action["add"])
             if additions:
+                counts[entry]["additions"] = len(additions)
                 result = aiven_security.patch(section=entry, actions=additions)
                 if not result.ok:
                     print(f"Failed to add {entry}: {result}")
@@ -403,12 +412,13 @@ def main() -> None:
             print("Contact support with the error message above.")
             return
         try:
-            updates = section_aware_updater(
+            updates, counts[entry]["unchanged"]= section_aware_updater(
                 section=entry,
                 entries=action["update"],
                 aiven_config=aiven_configuration,
             )
             if updates:
+                counts[entry]["updates"] = len(updates)
                 result = aiven_security.patch(section=entry, actions=updates)
                 if not result.ok:
                     print(f"Failed to update {entry}: {result}")
@@ -420,6 +430,13 @@ def main() -> None:
             return
         print()
 
+    print("Migration completed")
+    print("Summary:")
+    for entry, count in counts.items():
+        print(f"{entry}:")
+        print(f"     Added: {count['additions']}")
+        print(f"   Updated: {count['updates']}")
+        print(f" Unchanged: {count['unchanged']}")
 
 if __name__ == "__main__":
     main()
