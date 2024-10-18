@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: highlander
+  namespace: monitoring
+  labels:
+    app: highlander
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: highlander
+  template:
+    metadata:
+      labels:
+        app: highlander
+    spec:
+      containers:      
+      - name: highlander
+        image: ssaily/highlander:0.0.4
+        envFrom:
+          - secretRef: 
+              name: m3-prom
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "100m"
+        imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: highlander
+  namespace: monitoring
+  labels:
+    app: highlander
+spec:
+  ports:
+    - name: highlander
+      port: 9092
+      targetPort: 9092
+      protocol: TCP
+  selector:
+    app: highlander

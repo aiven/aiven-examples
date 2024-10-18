@@ -1,0 +1,64 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-enrichment
+  namespace: tms-demo
+spec:
+  selector:
+    matchLabels:
+      app: tms-demo-enrichment
+  endpoints:
+  - interval: 10s
+    port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-calculations
+  namespace: tms-demo
+spec:
+  selector:
+    matchLabels:
+      app: tms-demo-calculations
+  endpoints:
+  - interval: 10s
+    port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-multivariate
+  namespace: tms-demo
+spec:
+  selector:
+    matchLabels:
+      app: tms-demo-multivariate
+  endpoints:
+  - interval: 10s
+    port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-m3sink
+  namespace: tms-demo
+spec:
+  selector:
+    matchLabels:
+      app: tms-demo-sink
+  endpoints:
+  - interval: 10s
+    port: metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: servicemonitor-ingest
+  namespace: tms-demo
+spec:
+  selector:
+    matchLabels:
+      app: tms-demo-ingest
+  endpoints:
+  - interval: 10s
+    port: metrics

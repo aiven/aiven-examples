@@ -1,0 +1,55 @@
+{
+    "type": "record",
+    "name": "WeatherStation",
+    "namespace": "fi.saily",
+    "fields": [
+      {
+        "name": "roadstationid",
+        "type": {
+          "type": "int",
+          "connect.type": "int16"
+        }
+      },
+      {
+        "name": "name",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "municipality",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "province",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+      },
+      {
+        "name": "latitude",
+        "type": [
+          "null",
+          "double"
+        ],
+        "default": null
+      },
+      {
+        "name": "longitude",
+        "type": [
+          "null",
+          "double"
+        ],
+        "default": null
+      }
+    ],
+    "connect.name": "tms_demo_pg.public.weather_stations.Value"
+}
