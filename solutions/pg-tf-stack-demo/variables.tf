@@ -21,7 +21,7 @@ variale "pg_shared_memory_buffer_percentage"
 {
   type = number
 }
-variable "pg_max_parallel_workers
+variable "pg_max_parallel_workers"
 {
   type = number
 }
