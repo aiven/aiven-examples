@@ -17,3 +17,19 @@ variable "pg_plan"{
 variable "pg_version"{
     type = string
 }
+variale "pg_shared_memory_buffer_percentage"
+{
+  type = number
+}
+variable "pg_max_parallel_workers
+{
+  type = number
+}
+variable "pg_max_parallel_workers_per_gather"
+{
+  type = number
+}
+variable "pg_max_connections"
+{
+  type = number
+}

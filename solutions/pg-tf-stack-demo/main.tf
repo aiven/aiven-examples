@@ -8,6 +8,10 @@ resource "aiven_pg" "primary_pg" {
 
   pg_user_config {
     pg_version = var.pg_version
+    shared_buffers_percentage = var.pg_shared_memory_buffer_percentage
+    max_parallel_workers = var.pg_max_parallel_workers
+    max_parallel_workers_per_gather = var.pg_max_parallel_workers_per_gather
+    max_connections = var.pg_max_connections
 
     public_access {
       pg = false
