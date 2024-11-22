@@ -26,6 +26,3 @@ variable "pg_max_parallel_workers"{
 variable "pg_max_parallel_workers_per_gather"{
   type = number
 }
-variable "pg_max_connections"{
-  type = number
-}
