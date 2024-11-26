@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tms-demo-ingest
+  namespace: tms-demo
+  labels:
+    app: tms-demo-ingest
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tms-demo-ingest
+  template:
+    metadata:
+      labels:
+        app: tms-demo-ingest
+    spec:
+      containers:      
+      - name: tms-demo-ingest
+        image: ssaily/tms-demo-ingest:0.1.2
+        env:          
+          - name: MQTT_USER
+            value: digitraffic
+          - name: MQTT_PASSWORD
+            value: digitrafficPassword
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        envFrom:          
+          - secretRef: 
+              name: tms-service-endpoint
+        volumeMounts:
+        - mountPath: /etc/streams/tms-ingest-cert
+          name: tms-ingest-cert
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: "1"
+          requests:
+            memory: 256Mi
+            cpu: "100m"
+        imagePullPolicy: Always
+      volumes:
+        - name: tms-ingest-cert
+          secret:
+            secretName: tms-ingest-cert
+            items:
+            - key: service.cert
+              path: service.cert
+            - key: service.key
+              path: service.key
+            - key: ca.pem
+              path: ca.pem
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tms-demo-ingest-svc
+  namespace: tms-demo
+  labels:
+    app: tms-demo-ingest
+spec:
+  ports:
+    - name: metrics
+      port: 9091
+      targetPort: 9091
+      protocol: TCP
+  selector:
+    app: tms-demo-ingest

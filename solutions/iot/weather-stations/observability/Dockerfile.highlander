@@ -1,0 +1,19 @@
+FROM golang:1.15 as builder
+ENV APP_USER highlander
+ENV APP_HOME /go/src/highlander
+RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
+RUN mkdir -p $APP_HOME && chown -R $APP_USER:$APP_USER $APP_HOME
+WORKDIR $APP_HOME
+USER $APP_USER
+COPY --chown=$APP_USER:$APP_USER highlander/ highlander
+RUN cd highlander && make
+FROM golang:1.15
+ENV APP_USER highlander
+ENV APP_HOME /go/src/highlander
+RUN groupadd $APP_USER && useradd -m -g $APP_USER -l $APP_USER
+RUN mkdir -p $APP_HOME
+WORKDIR $APP_HOME
+COPY --chown=0:0 --from=builder $APP_HOME/highlander/build/highlander $APP_HOME
+EXPOSE 9092
+USER $APP_USER
+ENTRYPOINT exec ./highlander -r $M3_URL -u $M3_USER -p $M3_PASSWORD -l 0.0.0.0:9092
