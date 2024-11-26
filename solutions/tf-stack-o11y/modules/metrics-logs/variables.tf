@@ -54,3 +54,6 @@ variable "prom_password" {
 
 variable "svcs" {}
 //variable "vpc_id" {}
+variable aiven_api_token{
+  type = string
+}

@@ -47,9 +47,9 @@ resource "aiven_m3db" "metrics" {
 }
 
 resource "aiven_service_integration" "logging" {
-  for_each                 = toset(var.svcs)
+  //for_each                 = toset(var.svcs)
   project                  = var.project
-  source_service_name      = each.key
+  source_service_name      = var.svcs
   integration_type         = "logs"
   destination_service_name = aiven_opensearch.os.service_name
 
@@ -61,11 +61,12 @@ resource "aiven_service_integration" "logging" {
 
 
 resource "aiven_service_integration" "metrics" {
-  for_each                 = toset(var.svcs)
+  //for_each                 = toset(var.svcs)
   project                  = var.project
   destination_service_name = aiven_m3db.metrics.service_name
   integration_type         = "metrics"
-  source_service_name      = each.key
+  //source_service_name      = each.key
+  source_service_name      = var.source_service_name
 }
 
 
@@ -87,11 +88,13 @@ resource "aiven_service_integration_endpoint" "prom" {
 }
 
 resource "aiven_service_integration" "rsys_int" {
-  for_each                = toset(var.svcs)
+  //for_each                = toset(var.svcs)
   project                 = var.project
   destination_endpoint_id = aiven_service_integration_endpoint.prom.id
   integration_type        = "prometheus"
-  source_service_name     = each.key
+  //source_service_name     = each.key
+  source_service_name     = var.source_service_name
+
 }
 
 
