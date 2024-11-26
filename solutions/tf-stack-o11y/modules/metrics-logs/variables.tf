@@ -52,8 +52,12 @@ variable "prom_password" {
   type = string
 }
 
-variable "svcs" {}
+//variable "svcs" {}
 //variable "vpc_id" {}
 variable aiven_api_token{
+  type = string
+}
+
+variable "source_service_name"{
   type = string
 }

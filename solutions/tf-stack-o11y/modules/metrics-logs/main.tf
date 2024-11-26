@@ -49,7 +49,7 @@ resource "aiven_m3db" "metrics" {
 resource "aiven_service_integration" "logging" {
   //for_each                 = toset(var.svcs)
   project                  = var.project
-  source_service_name      = var.svcs
+  source_service_name      = var.source_service_name
   integration_type         = "logs"
   destination_service_name = aiven_opensearch.os.service_name
 
