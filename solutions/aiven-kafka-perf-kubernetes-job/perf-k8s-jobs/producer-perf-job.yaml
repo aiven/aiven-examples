@@ -1,0 +1,52 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kafka-producer-perf-test
+spec:
+  parallelism: 100  # Number of pods to run in parallel at any given time
+  completions: 10000  # Total number of pods that need to complete successfully
+  template:
+    metadata:
+      name: kafka-producer-perf-test
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: kafka-producer
+        image: YOUR_KAFKA_IMAGE
+        command: ["/opt/kafka/bin/kafka-producer-perf-test.sh"]
+        args: [
+          "--topic", "your-topic",
+          "--num-records", "100000000", #Adjusted Number of messages to send to reflect 10,000 runs in total
+          "--throughput", "-1",
+          "--producer-props",
+          "bootstrap.servers=YOUR_AIVEN_BOOTSTRAP_SERVERS:PORT",
+          "security.protocol=SASL_SSL",
+          "sasl.mechanism=SCRAM-SHA-512",
+          "sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username=\"${USERNAME}\" password=\"${PASSWORD}\";",
+          "ssl.truststore.location=/etc/kafka-certs/ca.pem",
+          "ssl.truststore.password=password",
+          "acks=all",
+          "linger.ms=25",
+          "compression.type=none",
+          "--record-size", "1500",
+          "--print-metrics"
+        ]
+        env:
+        - name: USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: aiven-kafka-credentials
+              key: username
+        - name: PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: aiven-kafka-credentials
+              key: password
+        volumeMounts:
+        - name: kafka-certs
+          mountPath: /etc/kafka-certs
+          readOnly: true
+      volumes:
+      - name: kafka-certs
+        secret:
+          secretName: aiven-kafka-truststore
