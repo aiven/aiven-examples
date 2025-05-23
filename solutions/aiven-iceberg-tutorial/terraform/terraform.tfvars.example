@@ -1,0 +1,6 @@
+aiven_api_token      = "your-aiven-api-token"
+aiven_project_name   = "your-project-name"
+s3_warehouse_location = "s3://your-bucket/warehouse"
+snowflake_uri        = "https://your-account.snowflakecomputing.com"
+snowflake_warehouse  = "your-warehouse"
+snowflake_database   = "your-database" 
