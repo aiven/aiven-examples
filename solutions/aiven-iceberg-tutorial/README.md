@@ -35,42 +35,35 @@ Before starting, ensure you have:
    - Example Path: `s3://your-iceberg-s3-bucket/your-catalog-path/`
 
 ### Step 2: IAM Role and Policy Setup
-To automate the creation of IAM roles and policies required for Snowflake Open Catalog, use the included `roles.sh` script:
+To automate the creation of IAM roles and policies required for Snowflake Open Catalog, use the included `setup_snowflake_aws_access.sh` script:
 
 1. Configure Environment Variables:
-   - Open `roles.sh` and set:
-     - `AWS_ACCOUNT_ID`: Your AWS account ID
-     - `EXTERNAL_ID`: An external ID for role assumption
-     - `BUCKET_NAME`: Your S3 bucket name
+   ```bash
+   export AWS_ACCOUNT_ID="your-aws-account-id"
+   export EXTERNAL_ID="your-external-id"
+   export S3_BUCKET_NAME="your-bucket-name"
+   ```
 
 2. Run the Script:
    ```bash
-   ./roles.sh
+   ./setup_snowflake_aws_access.sh
    ```
-   This will create the necessary IAM policy and role, and attach the policy to the role.
-
-### Step 3: Create IAM Policy for S3 Access
-1. Create a policy granting necessary permissions to Snowflake Open Catalog
-2. Use the provided JSON template to create the policy
-
-### Step 4: Create IAM Role for Snowflake Open Catalog
-1. Create a role and attach the policy created in Step 3
-2. Record the Role ARN for later use
+   This will create:
+   - An IAM policy for S3 access
+   - An IAM role for Snowflake
+   - Attach the policy to the role
 
 ## Snowflake Open Catalog Setup
 
-### Step 5: Access or Create a Snowflake Open Catalog Account
+### Step 3: Access or Create a Snowflake Open Catalog Account
 1. Sign in as an ORGADMIN or create a new account
 
-### Step 6: Create a Catalog Resource in Open Catalog
+### Step 4: Create a Catalog Resource in Open Catalog
 1. Link your S3 storage to Open Catalog
-
-### Step 7: Update IAM Role Trust Policy
-1. Modify the trust policy to include the Open Catalog IAM User ARN
 
 ## Aiven Kafka Setup
 
-### Step 8: Set Up Aiven Services using Terraform
+### Step 5: Set Up Aiven Services using Terraform
 
 1. **Configure Terraform Variables**
    ```bash
@@ -80,10 +73,9 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
    Edit `terraform.tfvars` and set your values:
    - `aiven_api_token`: Your Aiven API token (get from Aiven Console)
    - `aiven_project_name`: Your Aiven project name
-   - `s3_warehouse_location`: Your S3 warehouse path
-   - `snowflake_uri`: Your Snowflake account URL
-   - `snowflake_warehouse`: Your Snowflake warehouse name
-   - `snowflake_database`: Your Snowflake database name
+   - `s3_access_key_id`: Your AWS access key ID
+   - `s3_secret_access_key`: Your AWS secret access key
+   - `snowflake_uri`: Your Snowflake Open Catalog URI
 
 2. **Initialize and Apply Terraform**
    ```bash
@@ -98,19 +90,9 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
    - A Kafka Connect service named `iceberg-connect`
    - An Iceberg Sink Connector
 
-3. **Get Service Details**
-   After Terraform completes, note the following details from the output:
-   - Kafka Service URI
-   - Kafka Connect Service URI
-   - Topic names
-
-### Step 9: Create Kafka Topics
-1. Create the topic for your producer
-2. Create a control topic for the connector
-
 ## Go Kafka Producer Setup
 
-### Step 10: Set Up and Run the Go Producer
+### Step 6: Set Up and Run the Go Producer
 1. Customize the `main.go` file with your Aiven cert file paths
 2. Build and run the Go application:
    ```bash
@@ -120,43 +102,34 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
 
 ## Aiven Kafka Connect and Iceberg Sink
 
-### Step 11: Set Up Aiven for Apache Kafka Connect Service
+### Step 7: Set Up Aiven for Apache Kafka Connect Service
 1. Create a Kafka Connect service linked to your Kafka service
 
-### Step 12: Configure the Iceberg Sink Connector
+### Step 8: Configure the Iceberg Sink Connector
 1. Use the provided JSON configuration
 2. Replace placeholders with your specific values
 
 ## Data Verification
 
-### Step 13: Verify Data in S3
+### Step 9: Verify Data in S3
 1. Check your S3 bucket to ensure data and metadata are appearing correctly
 2. Verify the Iceberg table structure
 
 ## Trino Setup and Querying
 
-### Step 14: Prepare Trino Environment
-1. Copy the following files to the `aiven-iceberg-tutorial` directory:
-   - `docker-compose.yml`
-   - `trino/etc/catalog/iceberg.properties`
-
-### Step 15: Configure Trino's Iceberg Catalog
-1. Modify `iceberg.properties` with your Snowflake and S3 details
-2. Ensure correct configuration for your Iceberg catalog
-
-### Step 16: Launch Trino
-1. Navigate to the `aiven-iceberg-tutorial` directory
+### Step 10: Set Up Trino
+1. Navigate to the `trinocontainer` directory
 2. Start the Trino service:
    ```bash
    docker-compose up -d
    ```
-3. Check logs to ensure proper startup:
+
+### Step 11: Query with Trino
+1. Connect to Trino CLI:
    ```bash
-   docker-compose logs trino-coordinator
+   docker exec -it trinocontainer-trino-1 trino
    ```
 
-### Step 17: Query with Trino
-1. Connect to Trino CLI
 2. Run example queries:
    ```sql
    SHOW SCHEMAS FROM iceberg;
@@ -165,11 +138,20 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
 
 ## Cleanup
 
-After completing the setup, you can remove the following directories if no longer needed:
-- `aiveniceberg`
-- `iceberg`
-- `polaris-trino-iceberg-spark-main`
+To clean up resources:
+1. Stop the Trino container:
+   ```bash
+   cd trinocontainer
+   docker-compose down
+   ```
 
----
+2. Destroy Terraform resources:
+   ```bash
+   cd terraform
+   terraform destroy
+   ```
 
-This guide provides a comprehensive walkthrough for setting up a data pipeline from Kafka to Iceberg on S3, managed by Snowflake Open Catalog, and queried using Trino. Customize the provided configurations and scripts to fit your specific environment and requirements. 
+3. Delete AWS resources:
+   - Remove the IAM role and policy
+   - Delete the S3 bucket
+   

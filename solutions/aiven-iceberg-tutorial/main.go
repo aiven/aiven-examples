@@ -46,9 +46,9 @@ func main() {
 	// Set up TLS configuration for Aiven Kafka
 
 	// File paths for Aiven cert files
-	certFile := "<path-to-your-cert-file>"
-	keyFile := "<path-to-your-key-file>"
-	caFile := "<path-to-your-ca-file>"
+	certFile := "./certs/service.cert"
+	keyFile := "./certs/service.key"
+	caFile := "./certs/ca.pem"
 
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
@@ -80,7 +80,7 @@ func main() {
 	config.Producer.Return.Successes = true
 
 	// Broker addresses for Aiven Kafka
-	brokers := []string{"<your-kafka-broker-address>"}
+	brokers := []string{"kafka-test-iceberg-dyoung-demo.f.aivencloud.com:23283"}
 
 	log.Printf("Connecting to Kafka brokers: %v", brokers)
 	producer, err := sarama.NewSyncProducer(brokers, config)
