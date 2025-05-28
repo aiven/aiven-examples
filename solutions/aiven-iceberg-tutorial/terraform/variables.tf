@@ -20,13 +20,13 @@ variable "cloud_name" {
   default     = "aws-us-west-2"
 }
 
-variable "snowflake_access_key_id" {
-  description = "S3 access key id"
+variable "snowflake_client_id" {
+  description = "Snowflake client id"
   type        = string
 }
 
-variable "snowflake_secret_access_key" {
-  description = "S3 secret access key"
+variable "snowflake_client_secret" {
+  description = "Snowflake client secret"
   type        = string
 }
 
@@ -80,7 +80,7 @@ variable "iceberg_catalog_credential" {
 }
 
 variable "iceberg_catalog_scope" {
-  description = "Iceberg catalog scope with format PRINCIPAL_ROLE:<catalog-role>"
+  description = "Iceberg catalog scope with format PRINCIPAL_ROLE:<role>"
   type        = string
 }
 
@@ -90,12 +90,13 @@ variable "iceberg_catalog_region" {
   default     = "us-west-2"
 }
 
-variable "iceberg_s3_access_key" {
+variable "aws_access_key_id" {
   description = "S3 access key for Iceberg"
   type        = string
 }
 
-variable "iceberg_s3_secret_key" {
+variable "aws_secret_access_key" {
   description = "S3 secret key for Iceberg"
   type        = string
+
 } 

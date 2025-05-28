@@ -110,6 +110,41 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
      (Format: `arn:aws:iam::<AWS_ACCOUNT_ID>:role/snowflake_s3_role`)
    - External Id: Enter the external id from the setup_snowflake_aws_access.sh script
 4. Click "Create" to finalize the catalog creation
+5. Copy the `IAM user arn` in the new catalog details page and edit the `trust relationships` tab for the snowflake_s3_role. For example:
+``` JSON
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Principal": {
+				"AWS": "<IAM user arn here>"
+			},
+			"Action": "sts:AssumeRole",
+			"Condition": {
+				"StringEquals": {
+					"sts:ExternalId": "123"
+				}
+			}
+		}
+	]
+}
+```
+
+### Step 3: Create a Connector, Principal, and Principal Roles in snowflake Open Catalog
+1. Click under Connections and click `+ Connection`
+2. Fill in the following details:
+   - Name: Choose a name for your connector
+   - Query Engine: Trino
+   - Enable Create New Principal Role
+   - Name Principal Role
+3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup)
+
+### Step 4: Create Namespace in catalog and connect to connector
+1. Click under Catalogs, select your Catalog and go to the roles tab. From there press `+ Catalog Role`
+2. Create a name and for priviledges select `CATALOG_MANAGE_CONTENT` and any others you need
+3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in step 3
+
 
 ## Aiven Kafka Setup
 
@@ -123,12 +158,12 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
    Edit `terraform.tfvars` and set your values:
    - `aiven_api_token`: Your Aiven API token (Aiven Console https://console.aiven.io/profile/tokens)
    - `aiven_project_name`: Your Aiven project name (Aiven Console https://console.aiven.io/projects)
-   - `s3_access_key_id`: Your AWS access key ID
-   - `s3_secret_access_key`: Your AWS secret access key
+   - `aws_access_key_id`: Your AWS access key ID
+   - `aws_secret_access_key`: Your AWS secret access key
    - `snowflake_uri`: Your Snowflake Open Catalog URI (eg. https://<your-account>.snowflakecomputing.com/polaris/api/catalog)
-   - `iceberg_catalog_scope`:
-   - `iceberg_s3_access_key`: Your Snowflake Connector access key
-   - `iceberg_s3_secret_key`: Your Snowflake Connector secret key
+   - `iceberg_catalog_scope`: Your Principale Role created in Step 3 of Snowflake Open Catalog Setup (format: PRINCIPAL_ROLE:<role>)
+   - `snowflake_client_id` `iceberg_s3_access_key`: Your Snowflake Connector client id
+   - `snowflake_client_secret`: Your Snowflake Connector secret key
 
 2. **Initialize and Apply Terraform**
    ```bash

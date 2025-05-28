@@ -80,7 +80,7 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "key.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "value.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "topics" = "product"
-    "iceberg.catalog.credential" = "${var.snowflake_access_key_id}:${var.snowflake_secret_access_key}"
+    "iceberg.catalog.credential" = "${var.snowflake_client_id}:${var.snowflake_client_secret}"
     "iceberg.catalog.io-impl" = "org.apache.iceberg.aws.s3.S3FileIO"
     "iceberg.catalog.scope" = var.iceberg_catalog_scope
     "iceberg.catalog.type" = "rest"
@@ -99,8 +99,8 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "iceberg.catalog.s3.path-style-access" = "true"
     "consumer.override.auto.offset.reset" = "earliest"
     "iceberg.kafka.auto.offset.reset" = "earliest"
-    "iceberg.catalog.s3.access-key-id" = var.iceberg_s3_access_key
-    "iceberg.catalog.s3.secret-access-key" = var.iceberg_s3_secret_key
+    "iceberg.catalog.s3.access-key-id" = var.aws_access_key_id
+    "iceberg.catalog.s3.secret-access-key" = var.aws_secret_access_key
     "value.converter.schemas.enable" = "false"
   } 
 } 
