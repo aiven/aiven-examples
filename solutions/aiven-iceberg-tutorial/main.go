@@ -80,7 +80,7 @@ func main() {
 	config.Producer.Return.Successes = true
 
 	// Broker addresses for Aiven Kafka
-	brokers := []string{"kafka-test-iceberg-dyoung-demo.f.aivencloud.com:23283"}
+	brokers := []string{"<your-aiven-kafka-broker-address>"}
 
 	log.Printf("Connecting to Kafka brokers: %v", brokers)
 	producer, err := sarama.NewSyncProducer(brokers, config)

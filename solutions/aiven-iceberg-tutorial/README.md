@@ -28,38 +28,88 @@ Before starting, ensure you have:
 
 ## AWS Setup
 
-### Step 1: Create S3 Bucket
-1. Create an S3 bucket in your desired AWS region (e.g., us-west-2)
-2. Note the bucket name and path:
-   - Example Bucket Name: `your-iceberg-s3-bucket`
-   - Example Path: `s3://your-iceberg-s3-bucket/your-catalog-path/`
+### Step 1: Create or use AWS IAM User
+1. Create an AWS User or use an existing one
+2. Make sure the following policy is attached to the user (either create or use existing policy):
+   ```json
+   {
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreatePolicy",
+                "iam:CreateRole",
+                "iam:AttachRolePolicy",
+                "iam:GetRole",
+                "iam:GetPolicy",
+                "iam:ListAttachedRolePolicies"
+            ],
+            "Resource": [
+                "arn:aws:iam::<>:role/*",
+                "arn:aws:iam::033443074232:policy/*"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:HeadBucket",
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:PutBucketPolicy",
+                "s3:GetBucketPolicy"
+            ],
+            "Resource": [
+                "arn:aws:s3:::<your-s3-bucket>",
+                "arn:aws:s3:::<your-s3-bucket>/*"
+            ]
+        }
+    ]
+   }    
+   ```
+### Step 2: S3, IAM Role and Policy Setup
+To automate the creation of S3, IAM roles and policies required for Snowflake Open Catalog, use the included `setup_snowflake_aws_access.sh` script:
+1. Ensure AWS cli is downloaded and run:
+   ```bash
+   aws configure
+   ```
+2. You should be prompted to enter your AWS credentials, make sure you use the same aws-region as the S3 bucket you created.
 
-### Step 2: IAM Role and Policy Setup
-To automate the creation of IAM roles and policies required for Snowflake Open Catalog, use the included `setup_snowflake_aws_access.sh` script:
-
-1. Configure Environment Variables:
+3. Configure Environment Variables (note: for external-id, we can create an id of our choice and use it in the snowflake catalog):
    ```bash
    export AWS_ACCOUNT_ID="your-aws-account-id"
    export EXTERNAL_ID="your-external-id"
    export S3_BUCKET_NAME="your-bucket-name"
+   export AWS_REGION="your-aws-region"
    ```
-
-2. Run the Script:
+4. Run the Script:
    ```bash
    ./setup_snowflake_aws_access.sh
    ```
    This will create:
+   - An S3 bucket in your desired AWS region (e.g., us-west-2)
    - An IAM policy for S3 access
    - An IAM role for Snowflake
    - Attach the policy to the role
 
 ## Snowflake Open Catalog Setup
 
-### Step 3: Access or Create a Snowflake Open Catalog Account
-1. Sign in as an ORGADMIN or create a new account
+### Step 1: Access or Create a Snowflake Open Catalog Account
+1. Sign in as an ORGADMIN or create a new account 
 
-### Step 4: Create a Catalog Resource in Open Catalog
-1. Link your S3 storage to Open Catalog
+### Step 2: Create a Catalog Resource in Open Catalog
+1. Click create a Catalog in Snowflake open catalog
+1. In the Snowflake UI, navigate to Catalogs
+2. Click "Create Catalog"
+3. Fill in the following details:
+   - Name: Choose a name for your catalog (e.g., `ICEBERG_CATALOG`)
+   - Storage Provider: Select "S3" 
+   - Default base location: Enter `s3://<s3-bucket-name>` (e.g., `s3://apache-iceberg-bucket-demo`)
+   - S3 Role ARN: Enter the ARN of the role created by setup_snowflake_aws_access.sh
+     (Format: `arn:aws:iam::<AWS_ACCOUNT_ID>:role/snowflake_s3_role`)
+   - External Id: Enter the external id from the setup_snowflake_aws_access.sh script
+4. Click "Create" to finalize the catalog creation
 
 ## Aiven Kafka Setup
 
@@ -71,11 +121,11 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
    cp terraform.tfvars.example terraform.tfvars
    ```
    Edit `terraform.tfvars` and set your values:
-   - `aiven_api_token`: Your Aiven API token (get from Aiven Console)
-   - `aiven_project_name`: Your Aiven project name
+   - `aiven_api_token`: Your Aiven API token (Aiven Console https://console.aiven.io/profile/tokens)
+   - `aiven_project_name`: Your Aiven project name (Aiven Console https://console.aiven.io/projects)
    - `s3_access_key_id`: Your AWS access key ID
    - `s3_secret_access_key`: Your AWS secret access key
-   - `snowflake_uri`: Your Snowflake Open Catalog URI
+   - `snowflake_uri`: Your Snowflake Open Catalog URI (eg. https://<your-account>.snowflakecomputing.com/polaris/api/catalog)
 
 2. **Initialize and Apply Terraform**
    ```bash
@@ -93,21 +143,13 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
 ## Go Kafka Producer Setup
 
 ### Step 6: Set Up and Run the Go Producer
-1. Customize the `main.go` file with your Aiven cert file paths
-2. Build and run the Go application:
+1. Add your certs from the Aiven for Kafka Service to certs directory (ca.pem, service.cert, service.key)
+2. Update `main.go` on line 83 <your-aiven-kafka-broker-address> with the Service URI from Aiven for Kafka Service
+3. Build and run the Go application:
    ```bash
    go build
    ./aiven-iceberg-tutorial
    ```
-
-## Aiven Kafka Connect and Iceberg Sink
-
-### Step 7: Set Up Aiven for Apache Kafka Connect Service
-1. Create a Kafka Connect service linked to your Kafka service
-
-### Step 8: Configure the Iceberg Sink Connector
-1. Use the provided JSON configuration
-2. Replace placeholders with your specific values
 
 ## Data Verification
 
@@ -119,7 +161,8 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
 
 ### Step 10: Set Up Trino
 1. Navigate to the `trinocontainer` directory
-2. Start the Trino service:
+2. Inside `trinocontainer/trino/etc/catalog/iceberg.properties` and update the values
+3. Start the Trino service:
    ```bash
    docker-compose up -d
    ```
@@ -133,7 +176,7 @@ To automate the creation of IAM roles and policies required for Snowflake Open C
 2. Run example queries:
    ```sql
    SHOW SCHEMAS FROM iceberg;
-   SELECT * FROM iceberg.spark_demo.product LIMIT 10;
+   SELECT * FROM iceberg.spark_demo.product LIMIT 15;
    ```
 
 ## Cleanup

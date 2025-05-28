@@ -1,9 +1,25 @@
 #!/bin/bash
 
 # Configuration variables
-export AWS_ACCOUNT_ID="YOUR_AWS_ACCOUNT_ID"
-export EXTERNAL_ID="YOUR_EXTERNAL_ID"
-export S3_BUCKET_NAME="YOUR_BUCKET_NAME"
+export AWS_ACCOUNT_ID="033443074232"
+export EXTERNAL_ID=""
+export S3_BUCKET_NAME="apache-iceberg-bucket-demo"
+export AWS_REGION="us-west-2"  # Default region, can be overridden
+
+# Function to create S3 bucket
+create_s3_bucket() {
+    echo "Checking if S3 bucket exists..."
+    if aws s3api head-bucket --bucket "$S3_BUCKET_NAME" 2>/dev/null; then
+        echo "Bucket '$S3_BUCKET_NAME' already exists."
+    else
+        echo "Creating S3 bucket '$S3_BUCKET_NAME'..."
+        aws s3api create-bucket \
+            --bucket "$S3_BUCKET_NAME" \
+            --region "$AWS_REGION" \
+            --create-bucket-configuration LocationConstraint="$AWS_REGION" || \
+            echo "Bucket creation failed or bucket already exists. Continuing..."
+    fi
+}
 
 # Function to create IAM policy
 create_iam_policy() {
@@ -92,6 +108,7 @@ if [ "$AWS_ACCOUNT_ID" = "YOUR_AWS_ACCOUNT_ID" ] || \
 fi
 
 # Execute the setup steps
+create_s3_bucket
 create_iam_policy
 create_iam_role
 attach_policy_to_role
