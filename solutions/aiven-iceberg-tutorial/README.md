@@ -46,8 +46,8 @@ Before starting, ensure you have:
                 "iam:ListAttachedRolePolicies"
             ],
             "Resource": [
-                "arn:aws:iam::<>:role/*",
-                "arn:aws:iam::033443074232:policy/*"
+                "arn:aws:iam::<account-id>:role/*",
+                "arn:aws:iam::<account-id>:policy/*"
             ]
         },
         {
@@ -113,7 +113,7 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ## Aiven Kafka Setup
 
-### Step 5: Set Up Aiven Services using Terraform
+### Step 1: Set Up Aiven Services using Terraform
 
 1. **Configure Terraform Variables**
    ```bash
@@ -126,6 +126,9 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
    - `s3_access_key_id`: Your AWS access key ID
    - `s3_secret_access_key`: Your AWS secret access key
    - `snowflake_uri`: Your Snowflake Open Catalog URI (eg. https://<your-account>.snowflakecomputing.com/polaris/api/catalog)
+   - `iceberg_catalog_scope`:
+   - `iceberg_s3_access_key`: Your Snowflake Connector access key
+   - `iceberg_s3_secret_key`: Your Snowflake Connector secret key
 
 2. **Initialize and Apply Terraform**
    ```bash
@@ -142,7 +145,7 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ## Go Kafka Producer Setup
 
-### Step 6: Set Up and Run the Go Producer
+### Step 1: Set Up and Run the Go Producer
 1. Add your certs from the Aiven for Kafka Service to certs directory (ca.pem, service.cert, service.key)
 2. Update `main.go` on line 83 <your-aiven-kafka-broker-address> with the Service URI from Aiven for Kafka Service
 3. Build and run the Go application:
@@ -153,13 +156,13 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ## Data Verification
 
-### Step 9: Verify Data in S3
+### Step 1: Verify Data in S3
 1. Check your S3 bucket to ensure data and metadata are appearing correctly
 2. Verify the Iceberg table structure
 
 ## Trino Setup and Querying
 
-### Step 10: Set Up Trino
+### Step 1: Set Up Trino
 1. Navigate to the `trinocontainer` directory
 2. Inside `trinocontainer/trino/etc/catalog/iceberg.properties` and update the values
 3. Start the Trino service:
@@ -167,7 +170,7 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
    docker-compose up -d
    ```
 
-### Step 11: Query with Trino
+### Step 2: Query with Trino
 1. Connect to Trino CLI:
    ```bash
    docker exec -it trinocontainer-trino-1 trino
