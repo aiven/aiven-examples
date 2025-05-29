@@ -87,7 +87,7 @@ Before starting, ensure you have:
 ### 1. AWS Setup
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[Start] --> B[Create IAM User]
     B --> C[Attach IAM Policy]
     C --> D[Configure AWS CLI]
@@ -181,7 +181,7 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 ### 2. Snowflake Open Catalog Setup
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[Start] --> B[Access Snowflake Open Catalog]
     B --> C[Create Catalog Resource]
     C --> D[Configure S3 Connection]
@@ -255,7 +255,7 @@ flowchart TD
 ### 3. Aiven Kafka Setup
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[Start] --> B[Configure Terraform Variables]
     B --> C[Initialize Terraform]
     C --> D[Create Kafka Service]
