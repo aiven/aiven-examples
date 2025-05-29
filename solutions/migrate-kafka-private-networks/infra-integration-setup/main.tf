@@ -21,8 +21,16 @@ resource "aiven_kafka" "destination_kafka_1" {
     public_access {
       kafka_rest    = false
       kafka_connect = false
+      schema_registry = false
+      prometheus = true
+      kafka = false
+    }
+
+    schema_registry_config{
+      leader_eligibility = false
     }
   }
+  
 }
 
 resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
@@ -38,7 +46,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
   kafka_mirrormaker_user_config {
     kafka_mirrormaker {
       refresh_groups_enabled = true
-      refresh_groups_interval_seconds = 180 //changed from 10 to 180
+      refresh_groups_interval_seconds = 10 //changed from 10 to 180
       refresh_topics_enabled          = true
       refresh_topics_interval_seconds = 60
       sync_group_offsets_enabled = true
