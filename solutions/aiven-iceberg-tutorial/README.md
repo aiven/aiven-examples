@@ -1,6 +1,31 @@
 # 🚀 Kafka to Iceberg on S3 with Snowflake Open Catalog & Trino
 
-![Architecture Diagram](docs/architecture.png)
+```mermaid
+flowchart LR
+    subgraph "Data Production"
+        A[Go Producer] -->|Produces JSON| B[Kafka Topic]
+    end
+
+    subgraph "Data Processing"
+        B -->|Consumes| C[Kafka Connect]
+        C -->|Writes| D[Iceberg Tables in S3]
+    end
+
+    subgraph "Data Management"
+        D -->|Metadata| E[Snowflake Open Catalog]
+    end
+
+    subgraph "Data Querying"
+        D -->|Query| F[Trino]
+    end
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#fbb,stroke:#333,stroke-width:2px
+    style E fill:#fbf,stroke:#333,stroke-width:2px
+    style F fill:#bff,stroke:#333,stroke-width:2px
+```
 
 This guide demonstrates how to build a modern data pipeline that streams data from Kafka to Iceberg tables, with Snowflake Open Catalog managing metadata and Trino for querying.
 
@@ -13,31 +38,60 @@ This guide demonstrates how to build a modern data pipeline that streams data fr
 - 🛠️ Infrastructure as Code with Terraform
 - 🚀 Go-based Kafka producer
 
-## 🏗️ Architecture Overview
+## 🛠️ Prerequisites
 
-```mermaid
-graph LR
-    A[Go Producer] -->|Produces| B[Kafka]
-    B -->|Consumes| C[Kafka Connect]
-    C -->|Writes| D[Iceberg Tables]
-    D -->|Metadata| E[Snowflake Open Catalog]
-    D -->|Query| F[Trino]
-```
+Before starting, ensure you have:
 
-## 📋 Quick Start
+- **Docker & Docker Compose**
+  - For running Trino locally
+  - For containerized development environment
 
-1. **Prerequisites** 🛠️
-   - Docker & Docker Compose
-   - AWS Account
-   - Aiven Account
-   - Snowflake Account
-   - AWS CLI
+- **AWS Account & CLI**
+  - AWS CLI installed and configured
+  - Appropriate permissions for S3 and IAM
+  - AWS credentials configured locally
+
+- **Aiven Account**
+  - Access to Aiven Console
+  - API token for Terraform
+  - Project created in Aiven
+
+- **Snowflake Account**
+  - Access to Snowflake Open Catalog
+  - ORGADMIN privileges or equivalent
+
+- **Go Development Environment**
+  - Go 1.16 or later
+  - Basic understanding of Go programming
+
+- **Terraform**
+  - Terraform CLI installed
+  - Basic understanding of Terraform
 
 ## 🗺️ Detailed Guide
 
 ### 1. AWS Setup
 
-![AWS Setup Diagram](docs/aws-setup.png)
+```mermaid
+flowchart TD
+    A[Start] --> B[Create IAM User]
+    B --> C[Attach IAM Policy]
+    C --> D[Configure AWS CLI]
+    D --> E[Set Environment Variables]
+    E --> F[Run Setup Script]
+    F --> G[Create S3 Bucket]
+    G --> H[Create IAM Role]
+    H --> I[Create IAM Policy]
+    I --> J[Attach Policy to Role]
+    J --> K[End]
+
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px
+    classDef end fill:#f9f,stroke:#333,stroke-width:2px
+    classDef step fill:#bbf,stroke:#333,stroke-width:2px
+
+    class A,K start
+    class B,C,D,E,F,G,H,I,J step
+```
 
 #### Step 1: Create or use AWS IAM User
 1. Create an AWS User or use an existing one
@@ -107,7 +161,24 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ### 2. Snowflake Open Catalog Setup
 
-![Snowflake Setup Diagram](docs/snowflake-setup.png)
+```mermaid
+flowchart TD
+    A[Start] --> B[Access Snowflake Open Catalog]
+    B --> C[Create Catalog Resource]
+    C --> D[Configure S3 Connection]
+    D --> E[Create Connector]
+    E --> F[Create Principal Role]
+    F --> G[Create Catalog Role]
+    G --> H[Grant Permissions]
+    H --> I[End]
+
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px
+    classDef end fill:#f9f,stroke:#333,stroke-width:2px
+    classDef step fill:#fbf,stroke:#333,stroke-width:2px
+
+    class A,I start
+    class B,C,D,E,F,G,H step
+```
 
 #### Step 1: Access or Create a Snowflake Open Catalog Account
 1. Sign in as an ORGADMIN or create a new account 
@@ -161,7 +232,23 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ### 3. Aiven Kafka Setup
 
-![Aiven Setup Diagram](docs/aiven-setup.png)
+```mermaid
+flowchart TD
+    A[Start] --> B[Configure Terraform Variables]
+    B --> C[Initialize Terraform]
+    C --> D[Create Kafka Service]
+    D --> E[Create Kafka Topics]
+    E --> F[Create Kafka Connect]
+    F --> G[Configure Iceberg Sink]
+    G --> H[End]
+
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px
+    classDef end fill:#f9f,stroke:#333,stroke-width:2px
+    classDef step fill:#bfb,stroke:#333,stroke-width:2px
+
+    class A,H start
+    class B,C,D,E,F,G step
+```
 
 #### Step 1: Set Up Aiven Services using Terraform
 1. **Configure Terraform Variables**
@@ -194,7 +281,19 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ### 4. Go Kafka Producer
 
-![Producer Flow](docs/producer-flow.png)
+```mermaid
+flowchart LR
+    A[Go Application] -->|1. Generate JSON| B[Message]
+    B -->|2. Add Certs| C[Kafka Client]
+    C -->|3. Connect| D[Kafka Broker]
+    D -->|4. Produce| E[Kafka Topic]
+
+    classDef app fill:#f9f,stroke:#333,stroke-width:2px
+    classDef kafka fill:#bbf,stroke:#333,stroke-width:2px
+
+    class A app
+    class B,C,D,E kafka
+```
 
 #### Step 1: Set Up and Run the Go Producer
 1. Add your certs from the Aiven for Kafka Service to certs directory (ca.pem, service.cert, service.key)
@@ -207,7 +306,26 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 ### 5. Data Verification & Querying
 
-![Query Flow](docs/query-flow.png)
+```mermaid
+flowchart LR
+    A[Trino CLI] -->|1. Connect| B[Trino Server]
+    B -->|2. Query| C[Iceberg Tables]
+    C -->|3. Read| D[S3 Storage]
+    C -->|4. Metadata| E[Snowflake Catalog]
+    E -->|5. Return| B
+    D -->|6. Return| B
+    B -->|7. Results| A
+
+    classDef start fill:#bff,stroke:#333,stroke-width:2px
+    classDef step fill:#fbb,stroke:#333,stroke-width:2px
+    classDef storage fill:#bbf,stroke:#333,stroke-width:2px
+    classDef catalog fill:#fbf,stroke:#333,stroke-width:2px
+
+    class A,B start
+    class C step
+    class D storage
+    class E catalog
+```
 
 #### Step 1: Verify Data in S3
 1. Check your S3 bucket to ensure data and metadata are appearing correctly
