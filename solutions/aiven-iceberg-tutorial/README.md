@@ -307,10 +307,10 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Go Application] -->|1. Generate JSON| B[Message]
-    B -->|2. Add Certs| C[Kafka Client]
-    C -->|3. Connect| D[Kafka Broker]
-    D -->|4. Produce| E[Kafka Topic]
+    A[Go Application] -->|Generate JSON| B[Message]
+    B -->|Add Certs| C[Kafka Client]
+    C -->|Connect| D[Kafka Broker]
+    D -->|Produce| E[Kafka Topic]
 
     style A fill:#f9f,stroke:#333,stroke-width:2px
     style B fill:#bbf,stroke:#333,stroke-width:2px
@@ -332,13 +332,13 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Trino CLI] -->|1. Connect| B[Trino Server]
-    B -->|2. Query| C[Iceberg Tables]
-    C -->|3. Read| D[S3 Storage]
-    C -->|4. Metadata| E[Snowflake Catalog]
-    E -->|5. Return| B
-    D -->|6. Return| B
-    B -->|7. Results| A
+    A[Trino CLI] -->|Connect| B[Trino Server]
+    B -->|Query| C[Iceberg Tables]
+    C -->|Read| D[S3 Storage]
+    C -->|Metadata| E[Snowflake Catalog]
+    E -->|Return| B
+    D -->|Return| B
+    B -->|Results| A
 
     style A fill:#bff,stroke:#333,stroke-width:2px
     style B fill:#bff,stroke:#333,stroke-width:2px
