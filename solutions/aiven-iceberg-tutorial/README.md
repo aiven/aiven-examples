@@ -38,7 +38,7 @@ This guide demonstrates how to build a modern data pipeline that streams data fr
   - [2. Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
   - [3. Aiven Kafka Setup](#3-aiven-kafka-setup)
   - [4. Go Kafka Producer](#4-go-kafka-producer)
-  - [5. Data Verification & Querying](#5-data-verification--querying)
+  - [5. [Query with Trino](#query-with-trino)
 - [🧹 Cleanup](#-cleanup)
 - [📚 Additional Resources](#-additional-resources)
 - [🤝 Contributing](#-contributing)
@@ -56,31 +56,17 @@ This guide demonstrates how to build a modern data pipeline that streams data fr
 
 Before starting, ensure you have:
 
-- **Docker & Docker Compose**
-  - For running Trino locally
-  - For containerized development environment
+- **Docker & Docker Compose for running Trino locally**
 
-- **AWS Account & CLI**
-  - AWS CLI installed and configured
-  - Appropriate permissions for S3 and IAM
-  - AWS credentials configured locally
+- **AWS Account & AWS CLI installed**
 
-- **Aiven Account**
-  - Access to Aiven Console
-  - API token for Terraform
-  - Project created in Aiven
+- **Aiven Account, API Token and Project**
 
-- **Snowflake Account**
-  - Access to Snowflake Open Catalog
-  - ORGADMIN privileges or equivalent
+- **Snowflake Account with open catalog and ORGADMIN privileges or equivalent**
 
 - **Go Development Environment**
-  - Go 1.16 or later
-  - Basic understanding of Go programming
 
-- **Terraform**
-  - Terraform CLI installed
-  - Basic understanding of Terraform
+- **Terraform CLI installed**
 
 ## 🗺️ Detailed Guide
 
@@ -285,8 +271,8 @@ flowchart LR
    - `aiven_project_name`: Your Aiven project name (Aiven Console https://console.aiven.io/projects)
    - `aws_access_key_id`: Your AWS access key ID
    - `aws_secret_access_key`: Your AWS secret access key
-   - `snowflake_uri`: Your Snowflake Open Catalog URI (eg. https://<your-account>.snowflakecomputing.com/polaris/api/catalog)
-   - `iceberg_catalog_scope`: Your Principale Role created in Step 3 of Snowflake Open Catalog Setup (format: PRINCIPAL_ROLE:<role>)
+   - `snowflake_uri`: Your Snowflake Open Catalog URI (eg. https://<r>{your-account}.snowflakecomputing.com/polaris/api/catalog)
+   - `iceberg_catalog_scope`: Your Principale Role created in Step 3 of Snowflake Open Catalog Setup (format: PRINCIPAL_ROLE:{your-principal-role-name})
    - `snowflake_client_id` `iceberg_s3_access_key`: Your Snowflake Connector client id
    - `snowflake_client_secret`: Your Snowflake Connector secret key
 
@@ -328,7 +314,7 @@ flowchart LR
    ./aiven-iceberg-tutorial
    ```
 
-### 5. Data Verification & Querying
+### 5. Query with Trino
 
 ```mermaid
 flowchart LR
@@ -347,11 +333,7 @@ flowchart LR
     style E fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
-#### Step 1: Verify Data in S3
-1. Check your S3 bucket to ensure data and metadata are appearing correctly
-2. Verify the Iceberg table structure
-
-#### Step 2: Query with Trino
+#### Step 1: Run Trino Container and Execute Query
 1. Navigate to the `trinocontainer` directory
 2. Inside `trinocontainer/trino/etc/catalog/iceberg.properties` and update the values
 3. Start the Trino service:
