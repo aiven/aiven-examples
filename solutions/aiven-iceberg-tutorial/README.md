@@ -38,7 +38,7 @@ This guide demonstrates how to build a modern data pipeline that streams data fr
   - [2. Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
   - [3. Aiven Kafka Setup](#3-aiven-kafka-setup)
   - [4. Go Kafka Producer](#4-go-kafka-producer)
-  - [5. [Query with Trino](#query-with-trino)
+  - [5. Query with Trino](#5-query-with-trino)
 - [🧹 Cleanup](#-cleanup)
 - [📚 Additional Resources](#-additional-resources)
 - [🤝 Contributing](#-contributing)
