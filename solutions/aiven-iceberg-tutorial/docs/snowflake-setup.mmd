@@ -1,4 +1,4 @@
-graph TD
+flowchart TD
     A[Start] --> B[Access Snowflake Open Catalog]
     B --> C[Create Catalog Resource]
     C --> D[Configure S3 Connection]
@@ -8,12 +8,9 @@ graph TD
     G --> H[Grant Permissions]
     H --> I[End]
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style I fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#fbf,stroke:#333,stroke-width:2px
-    style C fill:#fbf,stroke:#333,stroke-width:2px
-    style D fill:#fbf,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-    style F fill:#fbf,stroke:#333,stroke-width:2px
-    style G fill:#fbf,stroke:#333,stroke-width:2px
-    style H fill:#fbf,stroke:#333,stroke-width:2px 
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px
+    classDef end fill:#f9f,stroke:#333,stroke-width:2px
+    classDef step fill:#fbf,stroke:#333,stroke-width:2px
+
+    class A,I start
+    class B,C,D,E,F,G,H step 

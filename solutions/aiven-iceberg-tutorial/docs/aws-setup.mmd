@@ -1,4 +1,4 @@
-graph TD
+flowchart TD
     A[Start] --> B[Create IAM User]
     B --> C[Attach IAM Policy]
     C --> D[Configure AWS CLI]
@@ -10,14 +10,9 @@ graph TD
     I --> J[Attach Policy to Role]
     J --> K[End]
 
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style K fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style E fill:#bbf,stroke:#333,stroke-width:2px
-    style F fill:#bbf,stroke:#333,stroke-width:2px
-    style G fill:#bbf,stroke:#333,stroke-width:2px
-    style H fill:#bbf,stroke:#333,stroke-width:2px
-    style I fill:#bbf,stroke:#333,stroke-width:2px
-    style J fill:#bbf,stroke:#333,stroke-width:2px 
+    classDef start fill:#f9f,stroke:#333,stroke-width:2px
+    classDef end fill:#f9f,stroke:#333,stroke-width:2px
+    classDef step fill:#bbf,stroke:#333,stroke-width:2px
+
+    class A,K start
+    class B,C,D,E,F,G,H,I,J step 
