@@ -1,0 +1,19 @@
+graph TD
+    A[Start] --> B[Access Snowflake Open Catalog]
+    B --> C[Create Catalog Resource]
+    C --> D[Configure S3 Connection]
+    D --> E[Create Connector]
+    E --> F[Create Principal Role]
+    F --> G[Create Catalog Role]
+    G --> H[Grant Permissions]
+    H --> I[End]
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style I fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#fbf,stroke:#333,stroke-width:2px
+    style C fill:#fbf,stroke:#333,stroke-width:2px
+    style D fill:#fbf,stroke:#333,stroke-width:2px
+    style E fill:#fbf,stroke:#333,stroke-width:2px
+    style F fill:#fbf,stroke:#333,stroke-width:2px
+    style G fill:#fbf,stroke:#333,stroke-width:2px
+    style H fill:#fbf,stroke:#333,stroke-width:2px 

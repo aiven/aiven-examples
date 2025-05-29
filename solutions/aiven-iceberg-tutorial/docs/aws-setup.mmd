@@ -1,0 +1,23 @@
+graph TD
+    A[Start] --> B[Create IAM User]
+    B --> C[Attach IAM Policy]
+    C --> D[Configure AWS CLI]
+    D --> E[Set Environment Variables]
+    E --> F[Run Setup Script]
+    F --> G[Create S3 Bucket]
+    G --> H[Create IAM Role]
+    H --> I[Create IAM Policy]
+    I --> J[Attach Policy to Role]
+    J --> K[End]
+
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style K fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style F fill:#bbf,stroke:#333,stroke-width:2px
+    style G fill:#bbf,stroke:#333,stroke-width:2px
+    style H fill:#bbf,stroke:#333,stroke-width:2px
+    style I fill:#bbf,stroke:#333,stroke-width:2px
+    style J fill:#bbf,stroke:#333,stroke-width:2px 
