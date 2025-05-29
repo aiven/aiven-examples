@@ -80,6 +80,10 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "key.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "value.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "topics" = "product"
+    "transforms" = "k2v"
+    "transforms.k2v.type" = "io.aiven.kafka.connect.transforms.KeyToValue"
+    "transforms.k2v.key.fields" = "keyId"
+    "transforms.k2v.value.fields" = "kId"
     "iceberg.catalog.credential" = "${var.snowflake_client_id}:${var.snowflake_client_secret}"
     "iceberg.catalog.io-impl" = "org.apache.iceberg.aws.s3.S3FileIO"
     "iceberg.catalog.scope" = var.iceberg_catalog_scope
