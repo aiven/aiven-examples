@@ -29,6 +29,20 @@ flowchart LR
 
 This guide demonstrates how to build a modern data pipeline that streams data from Kafka to Iceberg tables, with Snowflake Open Catalog managing metadata and Trino for querying.
 
+## 📑 Table of Contents
+
+- [✨ Key Features](#-key-features)
+- [🛠️ Prerequisites](#️-prerequisites)
+- [🗺️ Detailed Guide](#️-detailed-guide)
+  - [1. AWS Setup](#1-aws-setup)
+  - [2. Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
+  - [3. Aiven Kafka Setup](#3-aiven-kafka-setup)
+  - [4. Go Kafka Producer](#4-go-kafka-producer)
+  - [5. Data Verification & Querying](#5-data-verification--querying)
+- [🧹 Cleanup](#-cleanup)
+- [📚 Additional Resources](#-additional-resources)
+- [🤝 Contributing](#-contributing)
+
 ## ✨ Key Features
 
 - 📊 Real-time data streaming with Apache Kafka
@@ -85,12 +99,17 @@ flowchart TD
     I --> J[Attach Policy to Role]
     J --> K[End]
 
-    classDef start fill:#f9f,stroke:#333,stroke-width:2px
-    classDef end fill:#f9f,stroke:#333,stroke-width:2px
-    classDef step fill:#bbf,stroke:#333,stroke-width:2px
-
-    class A,K start
-    class B,C,D,E,F,G,H,I,J step
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style K fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
+    style F fill:#bbf,stroke:#333,stroke-width:2px
+    style G fill:#bbf,stroke:#333,stroke-width:2px
+    style H fill:#bbf,stroke:#333,stroke-width:2px
+    style I fill:#bbf,stroke:#333,stroke-width:2px
+    style J fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 #### Step 1: Create or use AWS IAM User
@@ -172,12 +191,15 @@ flowchart TD
     G --> H[Grant Permissions]
     H --> I[End]
 
-    classDef start fill:#f9f,stroke:#333,stroke-width:2px
-    classDef end fill:#f9f,stroke:#333,stroke-width:2px
-    classDef step fill:#fbf,stroke:#333,stroke-width:2px
-
-    class A,I start
-    class B,C,D,E,F,G,H step
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style I fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#fbf,stroke:#333,stroke-width:2px
+    style C fill:#fbf,stroke:#333,stroke-width:2px
+    style D fill:#fbf,stroke:#333,stroke-width:2px
+    style E fill:#fbf,stroke:#333,stroke-width:2px
+    style F fill:#fbf,stroke:#333,stroke-width:2px
+    style G fill:#fbf,stroke:#333,stroke-width:2px
+    style H fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
 #### Step 1: Access or Create a Snowflake Open Catalog Account
@@ -242,12 +264,14 @@ flowchart TD
     F --> G[Configure Iceberg Sink]
     G --> H[End]
 
-    classDef start fill:#f9f,stroke:#333,stroke-width:2px
-    classDef end fill:#f9f,stroke:#333,stroke-width:2px
-    classDef step fill:#bfb,stroke:#333,stroke-width:2px
-
-    class A,H start
-    class B,C,D,E,F,G step
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style H fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bfb,stroke:#333,stroke-width:2px
+    style C fill:#bfb,stroke:#333,stroke-width:2px
+    style D fill:#bfb,stroke:#333,stroke-width:2px
+    style E fill:#bfb,stroke:#333,stroke-width:2px
+    style F fill:#bfb,stroke:#333,stroke-width:2px
+    style G fill:#bfb,stroke:#333,stroke-width:2px
 ```
 
 #### Step 1: Set Up Aiven Services using Terraform
@@ -288,11 +312,11 @@ flowchart LR
     C -->|3. Connect| D[Kafka Broker]
     D -->|4. Produce| E[Kafka Topic]
 
-    classDef app fill:#f9f,stroke:#333,stroke-width:2px
-    classDef kafka fill:#bbf,stroke:#333,stroke-width:2px
-
-    class A app
-    class B,C,D,E kafka
+    style A fill:#f9f,stroke:#333,stroke-width:2px
+    style B fill:#bbf,stroke:#333,stroke-width:2px
+    style C fill:#bbf,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style E fill:#bbf,stroke:#333,stroke-width:2px
 ```
 
 #### Step 1: Set Up and Run the Go Producer
@@ -316,15 +340,11 @@ flowchart LR
     D -->|6. Return| B
     B -->|7. Results| A
 
-    classDef start fill:#bff,stroke:#333,stroke-width:2px
-    classDef step fill:#fbb,stroke:#333,stroke-width:2px
-    classDef storage fill:#bbf,stroke:#333,stroke-width:2px
-    classDef catalog fill:#fbf,stroke:#333,stroke-width:2px
-
-    class A,B start
-    class C step
-    class D storage
-    class E catalog
+    style A fill:#bff,stroke:#333,stroke-width:2px
+    style B fill:#bff,stroke:#333,stroke-width:2px
+    style C fill:#fbb,stroke:#333,stroke-width:2px
+    style D fill:#bbf,stroke:#333,stroke-width:2px
+    style E fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
 #### Step 1: Verify Data in S3
