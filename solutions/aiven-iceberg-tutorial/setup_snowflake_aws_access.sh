@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Configuration variables
-export AWS_ACCOUNT_ID="033443074232"
-export EXTERNAL_ID=""
-export S3_BUCKET_NAME="apache-iceberg-bucket-demo"
-export AWS_REGION="us-west-2"  # Default region, can be overridden
+export AWS_ACCOUNT_ID="your-aws-account-id"
+export EXTERNAL_ID="your-external-id"
+export S3_BUCKET_NAME="your-bucket-name"
+export AWS_REGION="your-aws-region"  # Default region, can be overridden
 
 # Function to create S3 bucket
 create_s3_bucket() {

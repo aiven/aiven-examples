@@ -124,7 +124,6 @@ flowchart LR
             "Effect": "Allow",
             "Action": [
                 "s3:CreateBucket",
-                "s3:HeadBucket",
                 "s3:ListBucket",
                 "s3:GetBucketLocation",
                 "s3:PutBucketPolicy",
@@ -138,6 +137,7 @@ flowchart LR
     ]
    }    
    ```
+3. Create an AWS Access Key and Secret Access Key for the user and store the information for later use
 
 #### Step 2: S3, IAM Role and Policy Setup
 To automate the creation of S3, IAM roles and policies required for Snowflake Open Catalog, use the included `setup_snowflake_aws_access.sh` script:
@@ -149,10 +149,10 @@ To automate the creation of S3, IAM roles and policies required for Snowflake Op
 
 3. Configure Environment Variables (note: for external-id, we can create an id of our choice and use it in the snowflake catalog):
    ```bash
-   export AWS_ACCOUNT_ID="your-aws-account-id"
-   export EXTERNAL_ID="your-external-id"
-   export S3_BUCKET_NAME="your-bucket-name"
-   export AWS_REGION="your-aws-region"
+   AWS_ACCOUNT_ID="your-aws-account-id"
+   EXTERNAL_ID="your-external-id"
+   S3_BUCKET_NAME="your-bucket-name"
+   AWS_REGION="your-aws-region"
    ```
 4. Run the Script:
    ```bash
@@ -203,7 +203,7 @@ flowchart LR
      (Format: `arn:aws:iam::<AWS_ACCOUNT_ID>:role/snowflake_s3_role`)
    - External Id: Enter the external id from the setup_snowflake_aws_access.sh script
 5. Click "Create" to finalize the catalog creation
-6. Copy the `IAM user arn` in the new catalog details page and edit the `trust relationships` tab for the snowflake_s3_role. For example:
+6. Click on the new catalog created and under catalog details Copy the `IAM user arn` and edit the `trust relationships` tab in AWS IAM Roles for the snowflake_s3_role. For example:
 ``` JSON
 {
    "Version": "2012-10-17",
@@ -211,7 +211,7 @@ flowchart LR
       {
          "Effect": "Allow",
          "Principal": {
-            "AWS": "<IAM user arn here>"
+            "AWS": "<Replace with Snowflake IAM user arn here>"
          },
          "Action": "sts:AssumeRole",
          "Condition": {
