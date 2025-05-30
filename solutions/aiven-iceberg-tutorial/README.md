@@ -225,7 +225,7 @@ flowchart LR
 ```
 
 #### Step 3: Create a Connector, Principal, and Principal Roles in snowflake Open Catalog
-1. Click under Connections and click `+ Connection`
+1. In Snowflake Open Catalog main page, click under Connections and click `+ Connection`
 2. Fill in the following details:
    - Name: Choose a name for your connector
    - Query Engine: Trino
@@ -233,7 +233,7 @@ flowchart LR
    - Name Principal Role
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup)
 
-#### Step 4: Create Namespace in catalog and connect to connector
+#### Step 4: Create/Attribute roles in your catalog for the connector
 1. Click under Catalogs, select your Catalog and go to the roles tab. From there press `+ Catalog Role`
 2. Create a name and for priviledges select `CATALOG_MANAGE_CONTENT` and any others you need
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in step 3
