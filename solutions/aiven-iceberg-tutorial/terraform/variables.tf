@@ -30,31 +30,14 @@ variable "snowflake_client_secret" {
   type        = string
 }
 
-variable "s3_warehouse_location" {
-  description = "S3 warehouse location for Iceberg tables"
-  type        = string
-}
-
-variable "snowflake_warehouse" {
-  description = "Snowflake warehouse name"
-  type        = string
-}
-
-variable "snowflake_database" {
-  description = "Snowflake database name"
-  type        = string
-}
-
-variable "iceberg_tables_config" {
+variable "iceberg_catalog_tables_config" {
   description = "Iceberg tables configuration"
   type        = string
-  default     = "spark_demo.product"
 }
 
 variable "iceberg_catalog_name" {
   description = "Iceberg catalog name"
   type        = string
-  default     = "icebergdoyo"
 }
 
 variable "iceberg_control_topic" {
@@ -65,17 +48,6 @@ variable "iceberg_control_topic" {
 
 variable "iceberg_catalog_uri" {
   description = "Iceberg catalog URI"
-  type        = string
-}
-
-variable "iceberg_catalog_warehouse" {
-  description = "Iceberg catalog warehouse"
-  type        = string
-  default     = "icebergdoyo"
-}
-
-variable "iceberg_catalog_credential" {
-  description = "Iceberg catalog credential"
   type        = string
 }
 
@@ -98,5 +70,9 @@ variable "aws_access_key_id" {
 variable "aws_secret_access_key" {
   description = "S3 secret key for Iceberg"
   type        = string
-
 } 
+
+variable "aiven_kafka_name" {
+  description = "Aiven Kafka service name"
+  type        = string
+}

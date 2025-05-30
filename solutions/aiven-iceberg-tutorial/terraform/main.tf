@@ -16,7 +16,7 @@ resource "aiven_kafka" "iceberg_kafka" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name
   plan         = "business-4"
-  service_name = "iceberg-kafka"
+  service_name = var.aiven_kafka_name
 
   kafka_user_config {
     kafka_version = "3.8"
@@ -66,10 +66,10 @@ resource "aiven_service_integration" "kafka_connect_integration" {
 resource "aiven_kafka_connector" "iceberg_sink" {
   project        = var.aiven_project_name
   service_name   = aiven_kafka_connect.iceberg_kafka_connect.service_name
-  connector_name = "iceberg-sink-to-s3-with-snowflake-open-catalog"
+  connector_name = "${aiven_kafka.iceberg_kafka.service_name}-iceberg-sink"
   config = {
-    "name": "iceberg-sink-to-s3-with-snowflake-open-catalog",
-    "iceberg.tables" = var.iceberg_tables_config
+    "name": "${aiven_kafka.iceberg_kafka.service_name}-iceberg-sink"
+    "iceberg.tables" = var.iceberg_catalog_tables_config
     "iceberg.tables.auto-create-enabled" = "true"
     "iceberg.catalog" = var.iceberg_catalog_name
     "iceberg.control.topic" = var.iceberg_control_topic
@@ -89,7 +89,7 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "iceberg.catalog.scope" = var.iceberg_catalog_scope
     "iceberg.catalog.type" = "rest"
     "iceberg.catalog.uri" = var.iceberg_catalog_uri
-    "iceberg.catalog.warehouse" = var.iceberg_catalog_warehouse
+    "iceberg.catalog.warehouse" = var.iceberg_catalog_name
     "iceberg.kafka.bootstrap.servers" = aiven_kafka.iceberg_kafka.service_uri
     "iceberg.kafka.security.protocol" = "SSL"
     "iceberg.kafka.ssl.key.password" = "password"

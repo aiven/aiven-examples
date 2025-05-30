@@ -233,10 +233,11 @@ flowchart LR
    - Name Principal Role
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup)
 
-#### Step 4: Create/Attribute roles in your catalog for the connector
+#### Step 4: Attribute roles in your catalog for the connector and Create Namespace
 1. Click under Catalogs, select your Catalog and go to the roles tab. From there press `+ Catalog Role`
 2. Create a name and for priviledges select `CATALOG_MANAGE_CONTENT` and any others you need
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in step 3
+4. Create a Namespace in your Catalog with the name of your choice (should inherit the principal role about)
 
 ### 3. Aiven Kafka Setup
 

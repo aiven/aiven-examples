@@ -13,6 +13,8 @@ import (
 	"github.com/IBM/sarama"
 )
 
+const KafkaBrokerAddress = "<your-kafka-broker-address>"
+
 type ProductKey struct {
 	KeyId   int    `json:"keyId"`
 	KeyCode string `json:"keyCode"`
