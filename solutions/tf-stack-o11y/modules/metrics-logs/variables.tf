@@ -61,3 +61,8 @@ variable aiven_api_token{
 variable "source_service_name"{
   type = string
 }
+
+variable "thanos_plan"{
+  type = string
+  default = "business-8"
+}

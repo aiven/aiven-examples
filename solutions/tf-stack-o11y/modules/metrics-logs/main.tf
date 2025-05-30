@@ -27,7 +27,7 @@ resource "aiven_grafana" "gr" {
   }
 }
 
-resource "aiven_m3db" "metrics" {
+/*resource "aiven_m3db" "metrics" {
   project                 = var.project
   cloud_name              = var.cloud_name
   //project_vpc_id          = var.vpc_id //Not required for BYOC
@@ -44,8 +44,27 @@ resource "aiven_m3db" "metrics" {
       type = "unaggregated"
     }
   }
-}
+}*/
 
+resource "aiven_thanos" "thanos_metrics" {
+  project                 = var.project
+  cloud_name              = var.cloud_name
+  //project_vpc_id          = var.vpc_id //Not required for BYOC
+  plan                    = var.thanos_plan
+  service_name            = "thanos-metrics-demo"
+  maintenance_window_dow  = var.maint_dow
+  maintenance_window_time = var.maint_time
+
+  thanos_user_config {
+    compactor {
+      retention_days = "90"
+    }
+    object_storage_usage_alert_threshold_gb = "100"
+    query{
+      query_timeout = "3m"
+    }
+  }
+}
 resource "aiven_service_integration" "logging" {
   //for_each                 = toset(var.svcs)
   project                  = var.project
@@ -63,7 +82,7 @@ resource "aiven_service_integration" "logging" {
 resource "aiven_service_integration" "metrics" {
   //for_each                 = toset(var.svcs)
   project                  = var.project
-  destination_service_name = aiven_m3db.metrics.service_name
+  destination_service_name = aiven_thanos.thanos_metrics.service_name
   integration_type         = "metrics"
   //source_service_name      = each.key
   source_service_name      = var.source_service_name
@@ -74,7 +93,7 @@ resource "aiven_service_integration" "metricsdash" {
   project                  = var.project
   source_service_name      = aiven_grafana.gr.service_name
   integration_type         = "dashboard"
-  destination_service_name = aiven_m3db.metrics.service_name
+  destination_service_name = aiven_thanos.thanos_metrics.service_name
 }
 
 resource "aiven_service_integration_endpoint" "prom" {
