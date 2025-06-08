@@ -1,0 +1,5 @@
+aws_region     = "us-west-2"
+aws_account_id = "123456789012"
+s3_bucket_name = "my-iceberg-bucket"
+external_id    = "your-external-id"
+# snowflake_iam_user_arn = "arn:aws:iam::123456789012:user/snowflake-user" # Set after Snowflake Open Catalog creation
