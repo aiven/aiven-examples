@@ -170,19 +170,7 @@ Adjust the `Resource` values to match your specific S3 bucket name and AWS accou
 
 4. Save the outputs, particularly the `iam_role_arn`, as you'll need it for Snowflake setup.
 
-#### Step 4: Update Terraform After Snowflake Catalog Creation
-1. After creating your Snowflake Open Catalog, you'll receive an IAM user ARN.
-2. Update your `terraform.tfvars` file to include the Snowflake IAM user ARN:
-   ```hcl
-   snowflake_iam_user_arn = "arn:aws:iam::123456789012:user/snowflake-user"
-   ```
-
-3. Apply the updated configuration:
-   ```bash
-   terraform apply
-   ```
-
-This will update the IAM role's trust policy to allow Snowflake to assume the role.
+**Note:** You'll need to return to this section after creating your Snowflake Open Catalog to update the IAM role's trust policy.
 
 ### 2. Snowflake Open Catalog Setup
 
@@ -257,6 +245,25 @@ flowchart LR
 2. Create a name and for privileges select `CATALOG_MANAGE_CONTENT` and any others you need.
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in step 3.
 4. Create a Namespace in your Catalog with the name of your choice (should inherit the principal role about).
+
+#### Step 5: Update AWS Terraform After Snowflake Catalog Creation
+1. After creating your Snowflake Open Catalog, you'll receive an IAM user ARN.
+2. Return to the AWS Terraform directory:
+   ```bash
+   cd terraform/aws_setup
+   ```
+
+3. Update your `terraform.tfvars` file to include the Snowflake IAM user ARN:
+   ```hcl
+   snowflake_iam_user_arn = "arn:aws:iam::123456789012:user/snowflake-user"
+   ```
+
+4. Apply the updated configuration:
+   ```bash
+   terraform apply
+   ```
+
+This will update the IAM role's trust policy to allow Snowflake to assume the role.
 
 ### 3. Aiven Kafka Setup
 
