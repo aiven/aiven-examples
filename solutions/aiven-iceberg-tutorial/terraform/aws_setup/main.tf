@@ -7,25 +7,6 @@ resource "aws_s3_bucket" "iceberg_bucket" {
   bucket = var.s3_bucket_name
 }
 
-# S3 Bucket Versioning
-resource "aws_s3_bucket_versioning" "iceberg_bucket_versioning" {
-  bucket = aws_s3_bucket.iceberg_bucket.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-# S3 Bucket Server Side Encryption
-resource "aws_s3_bucket_server_side_encryption_configuration" "iceberg_bucket_encryption" {
-  bucket = aws_s3_bucket.iceberg_bucket.id
-
-  rule {
-    apply_server_side_encryption_by_default {
-      sse_algorithm = "AES256"
-    }
-  }
-}
-
 # IAM Policy for S3 access
 resource "aws_iam_policy" "snowflake_s3_access" {
   name        = "snowflake_s3_access"
@@ -59,7 +40,6 @@ resource "aws_iam_policy" "snowflake_s3_access" {
       }
     ]
   })
-  tags = var.tags
 }
 
 # Trust policy for IAM role
@@ -104,7 +84,6 @@ resource "aws_iam_role" "snowflake_s3_role" {
   name               = "snowflake_s3_role"
   description        = "Role for Snowflake to access S3 bucket"
   assume_role_policy = jsonencode(local.trust_policy)
-  tags               = var.tags
 }
 
 # Attach policy to role
