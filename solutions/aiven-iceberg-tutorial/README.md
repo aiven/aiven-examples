@@ -7,8 +7,6 @@ This tutorial demonstrates how to build a modern data pipeline that streams data
 3. Managing table metadata through Snowflake Open Catalog
 4. Querying the data using Trino
 
-This architecture provides a scalable, real-time data pipeline with ACID transactions, schema evolution, and efficient querying capabilities.
-
 ```mermaid
 flowchart LR
     subgraph "Data Production"
@@ -108,69 +106,109 @@ flowchart LR
    You'll be prompted to enter your AWS Access Key ID, Secret Access Key, region, and output format. These credentials will be used by Terraform automatically.
 
 #### Required AWS User Permissions
+
 Your AWS user must have the following permissions to run the Terraform configuration:
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "s3:CreateBucket",
-        "s3:ListBucket",
-        "s3:PutBucketPolicy",
-        "iam:CreateRole",
-        "iam:CreatePolicy",
-        "iam:AttachRolePolicy"
-      ],
-      "Resource": [
-        "arn:aws:s3:::your-bucket-name",
-        "arn:aws:s3:::your-bucket-name/*",
-        "arn:aws:iam::your-account-id:role/*",
-        "arn:aws:iam::your-account-id:policy/*"
-      ]
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:CreateRole",
+                "iam:DeleteRole",
+                "iam:GetRole",
+                "iam:PutRolePolicy",
+                "iam:CreatePolicy",
+                "iam:DeleteRolePolicy",
+                "iam:PassRole",
+                "iam:ListRolePolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:TagRole",
+                "iam:CreatePolicy",
+                "iam:DeletePolicy",
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyVersions",
+                "iam:AttachRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:ListInstanceProfilesForRole",
+                "iam:RemoveRoleFromInstanceProfile",
+                "iam:DeleteInstanceProfile"
+            ],
+            "Resource": [
+                "arn:aws:iam::033443074232:role/snowflake_s3_role",
+                "arn:aws:iam::033443074232:policy/snowflake_s3_policy"
+            ]
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:CreateBucket",
+                "s3:DeleteBucket",
+                "s3:GetBucketLocation",
+                "s3:ListBucket",
+                "s3:PutObject",
+                "s3:ListAllMyBuckets",
+                "s3:GetBucketAcl",
+                "s3:PutBucketAcl",
+                "s3:GetBucketPolicy",
+                "s3:PutBucketPolicy",
+                "s3:DeleteBucketPolicy",
+                "s3:GetBucketVersioning",
+                "s3:PutBucketVersioning",
+                "s3:GetBucketWebsite",
+                "s3:PutBucketWebsite",
+                "s3:DeleteBucketWebsite",
+                "s3:GetBucketCors",
+                "s3:PutBucketCors",
+                "s3:GetBucketTagging",
+                "s3:PutBucketTagging",
+                "s3:GetBucketLogging",
+                "s3:PutBucketLogging",
+                "s3:GetBucketNotification",
+                "s3:PutBucketNotification",
+                "s3:GetBucketRequestPayment",
+                "s3:PutBucketRequestPayment",
+                "s3:GetAccelerateConfiguration",
+                "s3:GetLifecycleConfiguration",
+                "s3:GetReplicationConfiguration",
+                "s3:GetEncryptionConfiguration",
+                "s3:GetBucketObjectLockConfiguration",
+                "s3:PutEncryptionConfiguration"
+            ],
+            "Resource": [
+               "arn:aws:s3:::your-bucket-name",
+               "arn:aws:s3:::your-bucket-name/*",
+            ]
+        }
+    ]
 }
 ```
-Adjust the `Resource` values to match your specific S3 bucket name and AWS account ID.
+**Note:** Adjust the `Resource` values to match your specific S3 bucket name, AWS account ID and role/policy name
 
 #### Step 2: Configure AWS Terraform
 1. Navigate to the AWS Terraform directory:
    ```bash
    cd terraform/aws_setup
-   ```
-
-2. Copy the example variables file:
-   ```bash
    cp terraform.tfvars.example terraform.tfvars
    ```
 
-3. Edit `terraform.tfvars` and set your values:
+2. Edit `terraform.tfvars` and set your values:
    - `aws_region`: Your desired AWS region
    - `aws_account_id`: Your AWS account ID
-   - `s3_bucket_name`: Your desired S3 bucket name
-   - `external_id`: A unique identifier for Snowflake trust relationship
+   - `s3_bucket_name`: Your desired S3 bucket name **Note:** Your AWS User must have access to this bucket with the policy above
+   - `external_id`: A unique identifier for Snowflake trust relationship (e.g. 123456)
 
-#### Step 3: Initial Terraform Apply
+#### Step 3: Initial Terraform plan and configuration
 1. Initialize Terraform:
    ```bash
    terraform init
-   ```
-
-2. Review the planned changes:
-   ```bash
    terraform plan
-   ```
-
-3. Apply the configuration:
-   ```bash
    terraform apply
    ```
 
-4. Save the outputs, particularly the `iam_role_arn`, as you'll need it for Snowflake setup.
-
-**Note:** You'll need to return to this section after creating your Snowflake Open Catalog to update the IAM role's trust policy.
+4. Save the outputs, particularly the `iam_role_arn`, as you'll need it for Snowflake setup and **Note:** You'll need to return to this section after creating your Snowflake Open Catalog to update the IAM role's trust policy.
 
 ### 2. Snowflake Open Catalog Setup
 
@@ -196,43 +234,18 @@ flowchart LR
     style H fill:#fbf,stroke:#333,stroke-width:2px
 ```
 
-#### Step 1: Access or Create a Snowflake Open Catalog Account
-1. Sign in as an ORGADMIN or create a new account.
-
-#### Step 2: Create a Catalog Resource in Open Catalog
-1. Click create a Catalog in Snowflake open catalog.
-2. In the Snowflake UI, navigate to Catalogs.
-3. Click "Create Catalog".
-4. Fill in the following details:
+#### Step 1: Create a Catalog Resource in Open Catalog
+1. In the Snowflake UI, navigate to Catalogs and Click `Create Catalog`
+2. Fill in the following details:
    - Name: Choose a name for your catalog (e.g., `ICEBERG_CATALOG`).
    - Storage Provider: Select "S3".
    - Default base location: Enter `s3://<s3-bucket-name>` (e.g., `s3://apache-iceberg-bucket-demo`).
-   - S3 Role ARN: Enter the ARN of the role created by Terraform (output from `terraform apply`).
-   - External Id: Enter the external id from your `terraform.tfvars`.
-5. Click "Create" to finalize the catalog creation.
-6. Click on the new catalog created and under catalog details Copy the `IAM user arn` and edit the `trust relationships` tab in AWS IAM Roles for the snowflake_s3_role. For example:
-   ```json
-   {
-      "Version": "2012-10-17",
-      "Statement": [
-         {
-            "Effect": "Allow",
-            "Principal": {
-               "AWS": "<Replace with Snowflake IAM user arn here>"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {
-               "StringEquals": {
-                  "sts:ExternalId": "<Replace with your external ID from terraform.tfvars>"
-               }
-            }
-         }
-      ]
-   }
-   ```
+   - S3 Role ARN: Enter the `iam_role_arn` of the role created by Terraform (output from `terraform apply`).
+   - External Id: Enter the `external_id` from the `terraform.tfvars`
+3. Click `Create` then under catalog details copy the `IAM user arn` and paste it in the `snowflake_iam_user_arn` variable in `terraform/aws_setup/terraform.tfvars`
 
-#### Step 3: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
-1. In Snowflake Open Catalog main page, click under Connections and click `+ Connection`.
+#### Step 2: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
+1. In Snowflake Open Catalog main page, go to Connections and click `+ Connection`.
 2. Fill in the following details:
    - Name: Choose a name for your connector.
    - Query Engine: Trino.
@@ -240,20 +253,15 @@ flowchart LR
    - Name Principal Role.
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup).
 
-#### Step 4: Attribute roles in your catalog for the connector and Create Namespace
-1. Click under Catalogs, select your Catalog and go to the roles tab. From there press `+ Catalog Role`.
-2. Create a name and for privileges select `CATALOG_MANAGE_CONTENT` and any others you need.
-3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in step 3.
-4. Create a Namespace in your Catalog with the name of your choice (should inherit the principal role about).
+#### Step 3: Attribute roles in your catalog for the connector and Create Namespace
+1. Go to your Catalog under the roles tab and select `+ Catalog Role`.
+2. Create a name and for privileges select `CATALOG_MANAGE_CONTENT` along with any others you need.
+3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in the previous step.
+4. Lastly, create a Namespace in your Catalog
 
-#### Step 5: Update AWS Terraform After Snowflake Catalog Creation
-1. After creating your Snowflake Open Catalog, you'll receive an IAM user ARN.
-2. Return to the AWS Terraform directory:
-   ```bash
-   cd terraform/aws_setup
-   ```
-
-3. Update your `terraform.tfvars` file to include the Snowflake IAM user ARN:
+#### Step 4: Update AWS Terraform After Snowflake Catalog Creation
+1. After creating your Snowflake Open Catalog, retrieve the `IAM user arn` in the catalog details.
+2. Paste the arn in the `snowflake_iam_user_arn` variable in the `terraform.tfvars` file in the AWS Terraform directory:
    ```hcl
    snowflake_iam_user_arn = "arn:aws:iam::123456789012:user/snowflake-user"
    ```
@@ -304,6 +312,9 @@ flowchart LR
    - `iceberg_catalog_scope`: Your Principal Role created in Step 3 of Snowflake Open Catalog Setup (format: PRINCIPAL_ROLE:{your-principal-role-name}).
    - `snowflake_client_id`: Your Snowflake Connector client id.
    - `snowflake_client_secret`: Your Snowflake Connector secret key.
+
+   **Note:** Make sure whatever table you are using in Snowflake Open Catalog exists before running terraform, this avoids possible race conditions.
+
 
 2. **Initialize and Apply Terraform**
    ```bash
@@ -407,11 +418,11 @@ The data pipeline includes a transformation step in Kafka Connect that's crucial
 3. **Resulting Iceberg Table Structure**
    ```sql
    CREATE TABLE product (
-     kId INT,           -- Transformed from message key
-     id INT,           -- From message value
-     name STRING,      -- From message value
-     quantity INT,     -- From message value
-     price DOUBLE      -- From message value
+      name VARCHAR,
+      quantity BIGINT,
+      id BIGINT,
+      price DOUBLE,
+      kId BIGINT
    )
    ```
 
