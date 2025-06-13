@@ -2,41 +2,18 @@
 
 This tutorial demonstrates how to build a modern data pipeline that streams data from Kafka to Iceberg tables, with Snowflake Open Catalog managing metadata and Trino for querying. The system enables real-time data processing and analytics by:
 
-1. Producing JSON data to Kafka topics using a Go application
-2. Using Kafka Connect to stream data to Iceberg tables in S3
-3. Managing table metadata through Snowflake Open Catalog
-4. Querying the data using Trino
+## ✨ Key Features
 
-```mermaid
-flowchart LR
-    subgraph "Data Production"
-        A[Go Producer] -->|Produces JSON| B[Kafka Topic]
-    end
+- 🦀 Real-time data streaming with Aiven for Apache Kafka
+- 🗄 Apache Iceberg tables in AWS S3
+- ❄️ Snowflake Open Catalog for metadata management
+- 🔎 Trino for efficient querying
+- 🛠️ Infrastructure as Code with Terraform
+- 🚀 Go-based Kafka producer
 
-    subgraph "Data Processing"
-        B -->|Consumes| C[Kafka Connect]
-        C -->|Writes| D[Iceberg Tables in S3]
-    end
-
-    subgraph "Data Management"
-        D -->|Metadata| E[Snowflake Open Catalog]
-    end
-
-    subgraph "Data Querying"
-        D -->|Query| F[Trino]
-    end
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#fbb,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-    style F fill:#bff,stroke:#333,stroke-width:2px
-```
+![Data Pipeline Architecture](images/architecture.png)
 
 ## 📑 Table of Contents
-
-- [✨ Key Features](#-key-features)
 - [🛠️ Prerequisites](#️-prerequisites)
 - [🗺️ Detailed Guide](#️-detailed-guide)
   - [1. AWS Setup](#1-aws-setup)
@@ -47,15 +24,6 @@ flowchart LR
 - [🧹 Cleanup](#-cleanup)
 - [📚 Additional Resources](#-additional-resources)
 - [🤝 Contributing](#-contributing)
-
-## ✨ Key Features
-
-- 📊 Real-time data streaming with Apache Kafka
-- ❄️ Apache Iceberg tables in AWS S3
-- 🔍 Snowflake Open Catalog for metadata management
-- 🔎 Trino for efficient querying
-- 🛠️ Infrastructure as Code with Terraform
-- 🚀 Go-based Kafka producer
 
 ## 🛠️ Prerequisites
 
@@ -76,26 +44,6 @@ Before starting, ensure you have:
 ## 🗺️ Detailed Guide
 
 ### 1. AWS Setup
-
-```mermaid
-flowchart LR
-    A[Start] --> B[Configure AWS CLI]
-    B --> C[Configure Terraform]
-    C --> D[Initial Terraform Apply]
-    D --> E[Create Snowflake Catalog]
-    E --> F[Update Terraform]
-    F --> G[Final Terraform Apply]
-    G --> H[End]
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style H fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-    style F fill:#bbf,stroke:#333,stroke-width:2px
-    style G fill:#bbf,stroke:#333,stroke-width:2px
-```
 
 #### Step 1: Configure AWS CLI
 1. Install the AWS CLI if you haven't already.
@@ -137,8 +85,8 @@ Your AWS user must have the following permissions to run the Terraform configura
                 "iam:DeleteInstanceProfile"
             ],
             "Resource": [
-                "arn:aws:iam::033443074232:role/snowflake_s3_role",
-                "arn:aws:iam::033443074232:policy/snowflake_s3_policy"
+                "arn:aws:iam::<account-id>:role/snowflake_s3_role",
+                "arn:aws:iam::<account-id>:policy/snowflake_s3_policy"
             ]
         },
         {
@@ -185,7 +133,6 @@ Your AWS user must have the following permissions to run the Terraform configura
     ]
 }
 ```
-**Note:** Adjust the `Resource` values to match your specific S3 bucket name, AWS account ID and role/policy name
 
 #### Step 2: Configure AWS Terraform
 1. Navigate to the AWS Terraform directory:
@@ -197,7 +144,7 @@ Your AWS user must have the following permissions to run the Terraform configura
 2. Edit `terraform.tfvars` and set your values:
    - `aws_region`: Your desired AWS region
    - `aws_account_id`: Your AWS account ID
-   - `s3_bucket_name`: Your desired S3 bucket name **Note:** Your AWS User must have access to this bucket with the policy above
+   - `s3_bucket_name`: Your desired S3 bucket name
    - `external_id`: A unique identifier for Snowflake trust relationship (e.g. 123456)
 
 #### Step 3: Initial Terraform plan and configuration
@@ -211,28 +158,6 @@ Your AWS user must have the following permissions to run the Terraform configura
 4. Save the outputs, particularly the `iam_role_arn`, as you'll need it for Snowflake setup and **Note:** You'll need to return to this section after creating your Snowflake Open Catalog to update the IAM role's trust policy.
 
 ### 2. Snowflake Open Catalog Setup
-
-```mermaid
-flowchart LR
-    A[Start] --> B[Access Snowflake Open Catalog]
-    B --> C[Create Catalog Resource]
-    C --> D[Configure S3 Connection]
-    D --> E[Create Connector]
-    E --> F[Create Principal Role]
-    F --> G[Create Catalog Role]
-    G --> H[Grant Permissions]
-    H --> I[End]
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style I fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#fbf,stroke:#333,stroke-width:2px
-    style C fill:#fbf,stroke:#333,stroke-width:2px
-    style D fill:#fbf,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-    style F fill:#fbf,stroke:#333,stroke-width:2px
-    style G fill:#fbf,stroke:#333,stroke-width:2px
-    style H fill:#fbf,stroke:#333,stroke-width:2px
-```
 
 #### Step 1: Create a Catalog Resource in Open Catalog
 1. In the Snowflake UI, navigate to Catalogs and Click `Create Catalog`
@@ -275,26 +200,6 @@ This will update the IAM role's trust policy to allow Snowflake to assume the ro
 
 ### 3. Aiven Kafka Setup
 
-```mermaid
-flowchart LR
-    A[Start] --> B[Configure Terraform Variables]
-    B --> C[Initialize Terraform]
-    C --> D[Create Kafka Service]
-    D --> E[Create Kafka Topics]
-    E --> F[Create Kafka Connect]
-    F --> G[Configure Iceberg Sink]
-    G --> H[End]
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style H fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bfb,stroke:#333,stroke-width:2px
-    style C fill:#bfb,stroke:#333,stroke-width:2px
-    style D fill:#bfb,stroke:#333,stroke-width:2px
-    style E fill:#bfb,stroke:#333,stroke-width:2px
-    style F fill:#bfb,stroke:#333,stroke-width:2px
-    style G fill:#bfb,stroke:#333,stroke-width:2px
-```
-
 #### Step 1: Set Up Aiven Services using Terraform
 1. **Configure Terraform Variables**
    ```bash
@@ -302,8 +207,8 @@ flowchart LR
    cp terraform.tfvars.example terraform.tfvars
    ```
    Edit `terraform.tfvars` and set your values:
-   - `aiven_api_token`: Your Aiven API token (Aiven Console https://console.aiven.io/profile/tokens).
-   - `aiven_project_name`: Your Aiven project name (Aiven Console https://console.aiven.io/projects).
+   - `aiven_api_token`: Your Aiven API token in [Aiven Console](https://console.aiven.io/profile/tokens)
+   - `aiven_project_name`: Your Aiven project name in [Aiven Console](https://console.aiven.io/projects)
    - `aws_access_key_id`: Your AWS access key ID.
    - `aws_secret_access_key`: Your AWS secret access key.
    - `snowflake_uri`: Your Snowflake Open Catalog URI. The format may vary depending on your Snowflake account type and region.
@@ -331,27 +236,9 @@ flowchart LR
 
 ### 4. Go Kafka Producer
 
-```mermaid
-flowchart LR
-    A[Go Application] -->|Generate JSON| B[Message]
-    B -->|Add Certs| C[Kafka Client]
-    C -->|Connect| D[Kafka Broker]
-    D -->|Produce| E[Kafka Topic]
-
-    style A fill:#f9f,stroke:#333,stroke-width:2px
-    style B fill:#bbf,stroke:#333,stroke-width:2px
-    style C fill:#bbf,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style E fill:#bbf,stroke:#333,stroke-width:2px
-```
-
 #### Step 1: Set Up and Run the Go Producer
 1. **Certificate Setup**
-   - Create a `certs` directory in your project root:
-     ```bash
-     mkdir certs
-     ```
-   - Download the following certificate files from your Aiven for Kafka Service dashboard:
+   - Create a `certs` directory in your project root and download the following certificate files from your Aiven for Kafka Service dashboard:
      - Navigate to your Kafka service in Aiven Console.
      - Go to the "Connection Information" tab.
      - Download:
@@ -432,23 +319,6 @@ This transformation is essential because:
 - The transformation preserves the key information while maintaining a clean table structure.
 
 ### 5. Query with Trino
-
-```mermaid
-flowchart LR
-    A[Trino CLI] -->|Connect| B[Trino Server]
-    B -->|Query| C[Iceberg Tables]
-    C -->|Read| D[S3 Storage]
-    C -->|Metadata| E[Snowflake Catalog]
-    E -->|Return| B
-    D -->|Return| B
-    B -->|Results| A
-
-    style A fill:#bff,stroke:#333,stroke-width:2px
-    style B fill:#bff,stroke:#333,stroke-width:2px
-    style C fill:#fbb,stroke:#333,stroke-width:2px
-    style D fill:#bbf,stroke:#333,stroke-width:2px
-    style E fill:#fbf,stroke:#333,stroke-width:2px
-```
 
 #### Step 1: Run Trino Container and Execute Query
 1. Navigate to the `trinocontainer` directory.
