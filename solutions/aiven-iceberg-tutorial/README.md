@@ -351,9 +351,9 @@ terraform destroy
 cd ../aiven_setup
 terraform destroy
 
-# Clean up AWS resources
-# - Remove IAM role and policy
-# - Delete S3 bucket
+# Clean up Snowflake resources
+# - Remove table, namespace and catalog
+# - Remove connection and principal role
 ```
 
 ## 📚 Additional Resources
