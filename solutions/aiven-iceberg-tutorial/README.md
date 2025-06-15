@@ -310,7 +310,7 @@ The data pipeline includes a transformation step in Kafka Connect that's crucial
       id BIGINT,
       price DOUBLE,
       kId BIGINT
-   )
+   );
    ```
 
 This transformation is essential because:
@@ -334,7 +334,7 @@ This transformation is essential because:
 5. Run example queries:
    ```sql
    SHOW SCHEMAS FROM iceberg;
-   SELECT * FROM iceberg.spark_demo.product LIMIT 15;
+   SELECT * FROM iceberg.`namespace`.`tablename` LIMIT 15;
    ```
 
 ## 🧹 Cleanup
