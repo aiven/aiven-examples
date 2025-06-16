@@ -44,7 +44,7 @@ Before starting, ensure you have:
 - **Terraform CLI installed**
 </details>
 
-## 1. AWS Setup
+## AWS Setup
 ### Step 1: AWS Checklist
 1. AWS S3 Bucket
 2. An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
@@ -234,7 +234,7 @@ Your AWS user must have the following permissions to run the Terraform configura
 
 </details>
 
-## 2. Snowflake Open Catalog Setup
+## Snowflake Open Catalog Setup
 
 ### Step 1: Create a Catalog Resource in Open Catalog
 <details>
@@ -288,12 +288,29 @@ Your AWS user must have the following permissions to run the Terraform configura
    terraform apply
    ```
 
-This will update the IAM role's trust policy to allow Snowflake to assume the role.
+**This will update the IAM role's trust policy to allow Snowflake to assume the role. If you did not use the terraform setup then you will have to do this manually.**
 </details>
 
-## 3. Aiven Kafka Setup
+## Aiven Kafka Setup
+### Step 1: AWS User Permissions needed for Aiven Kafka Setup
+If you did not use the AWS terraform setup, you will need the following aws user permissions for Aiven for Kafka to connect (see more details in Aiven Docs [here](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector))
+<details>
+<summary>Click to view permissions details</summary>{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "kafka:CreateTopic",
+            ],
+            "Resource": [
+        }
+    ]
+}
+</details>
 
-### Step 1: Set Up Aiven Services using Terraform
+
+### Step 2: Set Up Aiven Services using Terraform
 <details>
 <summary>Click to view Aiven service setup steps</summary>
 
@@ -331,7 +348,7 @@ This will update the IAM role's trust policy to allow Snowflake to assume the ro
    - An Iceberg Sink Connector.
 </details>
 
-## 4. Go Kafka Producer
+## Go Kafka Producer
 
 ### Step 1: Set Up and Run the Go Producer
 <details>
@@ -422,7 +439,7 @@ This transformation is essential because:
 - The transformation preserves the key information while maintaining a clean table structure.
 </details>
 
-## 5. Query with Trino
+## Query with Trino
 
 ### Step 1: Run Trino Container and Execute Query
 <details>
