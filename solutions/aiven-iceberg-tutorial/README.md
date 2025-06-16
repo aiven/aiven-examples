@@ -251,8 +251,6 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Click `Create` then under catalog details copy the `IAM user arn` and paste it in the `snowflake_iam_user_arn` variable in `terraform/aws_setup/terraform.tfvars`
 </details>
 
-<br>
-
 ### Step 2: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
 <details>
 <summary>Click to view connector creation steps</summary>
@@ -266,8 +264,6 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup).
 </details>
 
-<br>
-
 ### Step 3: Attribute roles in your catalog for the connector and Create Namespace
 <details>
 <summary>Click to view role attribution steps</summary>
@@ -277,8 +273,6 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in the previous step.
 4. Lastly, create a Namespace in your Catalog
 </details>
-
-<br>
 
 ### Step 4: Update AWS Terraform After Snowflake Catalog Creation
 <details>
@@ -325,8 +319,6 @@ Your AWS user must have the following permissions to run the Terraform configura
 }
 ```
 </details>
-
-<br>
 
 ### Step 2: Set Up Aiven Services using Terraform
 <details>
@@ -409,8 +401,6 @@ Sent product 2 to partition 0 at offset 1
 All products sent successfully.
 ```
 </details>
-
-<br>
 
 ### Step 2: Understanding the Data Flow and Transformations
 <details>
