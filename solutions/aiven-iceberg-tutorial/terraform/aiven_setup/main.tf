@@ -35,7 +35,7 @@ resource "aiven_kafka_topic" "product_topic" {
 resource "aiven_kafka_topic" "control_topic" {
   project      = var.aiven_project_name
   service_name = aiven_kafka.iceberg_kafka.service_name
-  topic_name   = "iceberg-control"
+  topic_name   = var.iceberg_control_topic
   partitions   = 3
   replication  = 2
 }
@@ -71,9 +71,8 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "name": "${aiven_kafka.iceberg_kafka.service_name}-iceberg-sink"
     "iceberg.tables" = var.iceberg_catalog_tables_config
     "iceberg.tables.auto-create-enabled" = "true"
-    "iceberg.catalog" = var.iceberg_catalog_name
     "iceberg.control.topic" = var.iceberg_control_topic
-    "iceberg.control.commit.interval-ms" = "1000"
+    "iceberg.control.commit.interval-ms" = "500"
     "iceberg.control.commit.timeout-ms" = "20000"
     "connector.class" = "org.apache.iceberg.connect.IcebergSinkConnector"
     "tasks.max" = "2"
@@ -91,15 +90,15 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "iceberg.catalog.uri" = var.iceberg_catalog_uri
     "iceberg.catalog.warehouse" = var.iceberg_catalog_name
     "iceberg.kafka.bootstrap.servers" = aiven_kafka.iceberg_kafka.service_uri
-    "iceberg.kafka.security.protocol" = "SSL"
-    "iceberg.kafka.ssl.key.password" = "password"
-    "iceberg.kafka.ssl.keystore.location" = "/run/aiven/keys/public.keystore.p12"
-    "iceberg.kafka.ssl.keystore.password" = "password"
-    "iceberg.kafka.ssl.keystore.type" = "PKCS12"
-    "iceberg.kafka.ssl.truststore.location" = "/run/aiven/keys/public.truststore.jks"
-    "iceberg.kafka.ssl.truststore.password" = "password"
     "key.converter.schemas.enable" = "false"
     "iceberg.catalog.client.region" = var.iceberg_catalog_region
+    "iceberg.kafka.security.protocol" = "SSL"
+    "iceberg.kafka.ssl.key.password" = "password"
+    "iceberg.kafka.ssl.keystore.location"=  "/run/aiven/keys/public.keystore.p12"
+    "iceberg.kafka.ssl.keystore.password" = "password"
+    "iceberg.kafka.ssl.keystore.type" =  "PKCS12"
+    "iceberg.kafka.ssl.truststore.location" = "/run/aiven/keys/public.truststore.jks"
+    "iceberg.kafka.ssl.truststore.password" ="password"
     "iceberg.catalog.s3.path-style-access" = "true"
     "consumer.override.auto.offset.reset" = "earliest"
     "iceberg.kafka.auto.offset.reset" = "earliest"

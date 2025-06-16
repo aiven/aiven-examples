@@ -1,0 +1,5 @@
+aws_region     = "<your-aws-region>"
+aws_account_id = "<your-aws-account-id>"
+s3_bucket_name = "<your-s3-bucket>"
+external_id    = "<your-external-id>"
+# snowflake_iam_user_arn = "arn:aws:iam::<your-account-id>:user/snowflake-user" # Set after Snowflake Open Catalog creation
