@@ -14,15 +14,15 @@ This tutorial demonstrates how to build a modern data pipeline that streams data
 ![Data Pipeline Architecture](images/architecture.png)
 
 ## 📑 Table of Contents
-- [🛠️ Prerequisites](#️-prerequisites)
-- [AWS Setup](#1-aws-setup)
-- [Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
-- [Aiven Kafka Setup](#3-aiven-kafka-setup)
-- [Go Kafka Producer](#4-go-kafka-producer)
-- [Query with Trino](#5-query-with-trino)
-- [🧹 Cleanup](#-cleanup)
-- [📚 Additional Resources](#-additional-resources)
-- [🤝 Contributing](#-contributing)
+- [🛠️ Prerequisites](#prerequisites)
+- [AWS Setup](#aws-setup)
+- [Snowflake Open Catalog Setup](#snowflake-open-catalog-setup)
+- [Aiven Kafka Setup](#aiven-kafka-setup)
+- [Go Kafka Producer](#go-kafka-producer)
+- [Query with Trino](#query-with-trino)
+- [🧹 Cleanup](#cleanup)
+- [📚 Additional Resources](#additional-resources)
+- [🤝 Contributing](#contributing)
 
 ## 🛠️ Prerequisites
 
@@ -46,8 +46,8 @@ Before starting, ensure you have:
 
 ## AWS Setup
 ### Step 1: AWS Checklist
-1. AWS S3 Bucket
-2. An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
+* AWS S3 Bucket
+* An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
    <details>
    <summary>Click to view policy details</summary>
 
@@ -85,7 +85,7 @@ Before starting, ensure you have:
    }
    ```
    </details>
-3. An AWS Role snowflake_S3_role with trust entity relationship
+* An AWS Role snowflake_S3_role with trust entity relationship
    <details>
    <summary>Click to view trust relationship details</summary>
 
@@ -110,13 +110,12 @@ Before starting, ensure you have:
    ```
    </details>
 
-<br>
+> **⚠️ Note:** If you already have these then skip to step Snowflake Open Catalog Setup.
 
-**Note: If you already have these then skip to step Snowflake Open Catalog Setup.**
 
-### Step 2: Running AWS Terraform Setup
+### Step 2: AWS Terraform Setup
 <details>
-<summary>AWS Terraform</summary>
+<summary>Click to view AWS terraform setup steps</summary>
 
 
 #### Step 1: Configure AWS CLI
@@ -234,6 +233,8 @@ Your AWS user must have the following permissions to run the Terraform configura
 
 </details>
 
+<br>
+
 ## Snowflake Open Catalog Setup
 
 ### Step 1: Create a Catalog Resource in Open Catalog
@@ -250,6 +251,8 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Click `Create` then under catalog details copy the `IAM user arn` and paste it in the `snowflake_iam_user_arn` variable in `terraform/aws_setup/terraform.tfvars`
 </details>
 
+<br>
+
 ### Step 2: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
 <details>
 <summary>Click to view connector creation steps</summary>
@@ -263,6 +266,8 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup).
 </details>
 
+<br>
+
 ### Step 3: Attribute roles in your catalog for the connector and Create Namespace
 <details>
 <summary>Click to view role attribution steps</summary>
@@ -272,6 +277,8 @@ Your AWS user must have the following permissions to run the Terraform configura
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in the previous step.
 4. Lastly, create a Namespace in your Catalog
 </details>
+
+<br>
 
 ### Step 4: Update AWS Terraform After Snowflake Catalog Creation
 <details>
@@ -283,7 +290,7 @@ Your AWS user must have the following permissions to run the Terraform configura
    snowflake_iam_user_arn = "arn:aws:iam::123456789012:user/snowflake-user"
    ```
 
-4. Apply the updated configuration:
+3. Apply the updated configuration:
    ```bash
    terraform apply
    ```
@@ -291,24 +298,35 @@ Your AWS user must have the following permissions to run the Terraform configura
 **This will update the IAM role's trust policy to allow Snowflake to assume the role. If you did not use the terraform setup then you will have to do this manually.**
 </details>
 
+<br>
+
 ## Aiven Kafka Setup
 ### Step 1: AWS User Permissions needed for Aiven Kafka Setup
-If you did not use the AWS terraform setup, you will need the following aws user permissions for Aiven for Kafka to connect (see more details in Aiven Docs [here](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector))
+
+> **⚠️ Note:** If you did not use the AWS terraform setup, you will need the following aws user permissions for Aiven for Kafka to connect (see more details in Aiven Docs [here](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector))
+
 <details>
-<summary>Click to view permissions details</summary>{
+<summary>Click to view permissions details</summary>
+
+```json
+{
     "Version": "2012-10-17",
     "Statement": [
         {
             "Effect": "Allow",
             "Action": [
-                "kafka:CreateTopic",
+                "kafka:CreateTopic"
             ],
             "Resource": [
+                "arn:aws:kafka:*:*:cluster/*"
+            ]
         }
     ]
 }
+```
 </details>
 
+<br>
 
 ### Step 2: Set Up Aiven Services using Terraform
 <details>
@@ -333,7 +351,6 @@ If you did not use the AWS terraform setup, you will need the following aws user
 
    **Note:** Make sure whatever table you are using in Snowflake Open Catalog exists before running terraform, this avoids possible race conditions.
 
-
 2. **Initialize and Apply Terraform**
    ```bash
    terraform init
@@ -348,8 +365,9 @@ If you did not use the AWS terraform setup, you will need the following aws user
    - An Iceberg Sink Connector.
 </details>
 
-## Go Kafka Producer
+<br>
 
+## Go Kafka Producer
 ### Step 1: Set Up and Run the Go Producer
 <details>
 <summary>Click to view Go producer setup steps</summary>
@@ -391,6 +409,8 @@ Sent product 2 to partition 0 at offset 1
 All products sent successfully.
 ```
 </details>
+
+<br>
 
 ### Step 2: Understanding the Data Flow and Transformations
 <details>
@@ -439,8 +459,9 @@ This transformation is essential because:
 - The transformation preserves the key information while maintaining a clean table structure.
 </details>
 
-## Query with Trino
+<br>
 
+## Query with Trino
 ### Step 1: Run Trino Container and Execute Query
 <details>
 <summary>Click to view Trino setup and query steps</summary>
@@ -461,6 +482,8 @@ This transformation is essential because:
    SELECT * FROM iceberg.`namespace`.`tablename` LIMIT 15;
    ```
 </details>
+
+<br>
 
 ## 🧹 Cleanup
 
