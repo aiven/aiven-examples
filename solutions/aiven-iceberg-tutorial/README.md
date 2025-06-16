@@ -15,17 +15,19 @@ This tutorial demonstrates how to build a modern data pipeline that streams data
 
 ## 📑 Table of Contents
 - [🛠️ Prerequisites](#️-prerequisites)
-- [🗺️ Detailed Guide](#️-detailed-guide)
-  - [1. AWS Setup](#1-aws-setup)
-  - [2. Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
-  - [3. Aiven Kafka Setup](#3-aiven-kafka-setup)
-  - [4. Go Kafka Producer](#4-go-kafka-producer)
-  - [5. Query with Trino](#5-query-with-trino)
+- [AWS Setup](#1-aws-setup)
+- [Snowflake Open Catalog Setup](#2-snowflake-open-catalog-setup)
+- [Aiven Kafka Setup](#3-aiven-kafka-setup)
+- [Go Kafka Producer](#4-go-kafka-producer)
+- [Query with Trino](#5-query-with-trino)
 - [🧹 Cleanup](#-cleanup)
 - [📚 Additional Resources](#-additional-resources)
 - [🤝 Contributing](#-contributing)
 
 ## 🛠️ Prerequisites
+
+<details>
+<summary>Click to view prerequisites</summary>
 
 Before starting, ensure you have:
 
@@ -40,10 +42,80 @@ Before starting, ensure you have:
 - **Go Development Environment**
 
 - **Terraform CLI installed**
+</details>
 
-## 🗺️ Detailed Guide
+## 1. AWS Setup
+### Step 1: AWS Checklist
+<details>
+<summary>An AWS Role snowflake_S3_role with snowflake_S3_access (policy)</summary>
 
-### 1. AWS Setup
+```json
+{
+    "Statement": [
+        {
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:GetObjectVersion",
+                "s3:DeleteObject",
+                "s3:DeleteObjectVersion"
+            ],
+            "Effect": "Allow",
+            "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>/*"
+        },
+        {
+            "Action": [
+                "s3:ListBucket",
+                "s3:GetBucketLocation"
+            ],
+            "Condition": {
+                "StringLike": {
+                    "s3:prefix": [
+                        "*"
+                    ]
+                }
+            },
+            "Effect": "Allow",
+            "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>"
+        }
+    ],
+    "Version": "2012-10-17"
+}
+```
+</details>
+
+<details>
+<summary>An AWS Role snowflake_S3_role with trust entity relationship</summary>
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "<your_snowflake_catalog_arn>"
+            },
+            "Action": "sts:AssumeRole",
+            "Condition": {
+                "StringEquals": {
+                    "sts:ExternalId": "<your-external-id>"
+                }
+            }
+        }
+    ]
+}
+```
+</details>
+
+<br>
+
+**Note: If you already have these then skip to step Snowflake Open Catalog Setup.** 
+
+### Step 2: Running AWS Terraform Setup
+<details>
+<summary>AWS Terraform</summary>
+
 
 #### Step 1: Configure AWS CLI
 1. Install the AWS CLI if you haven't already.
@@ -64,6 +136,7 @@ Your AWS user must have the following permissions to run the Terraform configura
             "Effect": "Allow",
             "Action": [
                 "iam:CreateRole",
+                "iam:CreatePolicy",
                 "iam:DeleteRole",
                 "iam:GetRole",
                 "iam:PutRolePolicy",
@@ -86,7 +159,7 @@ Your AWS user must have the following permissions to run the Terraform configura
             ],
             "Resource": [
                 "arn:aws:iam::<account-id>:role/snowflake_s3_role",
-                "arn:aws:iam::<account-id>:policy/snowflake_s3_policy"
+                "arn:aws:iam::<account-id>:policy/snowflake_s3_access"
             ]
         },
         {
@@ -156,6 +229,8 @@ Your AWS user must have the following permissions to run the Terraform configura
    ```
 
 4. Save the outputs, particularly the `iam_role_arn`, as you'll need it for Snowflake setup and **Note:** You'll need to return to this section after creating your Snowflake Open Catalog to update the IAM role's trust policy.
+
+</details>
 
 ### 2. Snowflake Open Catalog Setup
 
@@ -336,6 +411,8 @@ This transformation is essential because:
    SHOW SCHEMAS FROM iceberg;
    SELECT * FROM iceberg.`namespace`.`tablename` LIMIT 15;
    ```
+
+</details>
 
 ## 🧹 Cleanup
 
