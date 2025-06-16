@@ -21,8 +21,7 @@ This tutorial demonstrates how to build a modern data pipeline that streams data
 - [Go Kafka Producer](#go-kafka-producer)
 - [Query with Trino](#query-with-trino)
 - [🧹 Cleanup](#cleanup)
-- [📚 Additional Resources](#additional-resources)
-- [🤝 Contributing](#contributing)
+- [Helpful Resources - 📚](#helpful-resources)
 
 ## 🛠️ Prerequisites
 
@@ -46,7 +45,7 @@ Before starting, ensure you have:
 
 ## AWS Setup
 ### Step 1: AWS Checklist
-* AWS S3 Bucket
+* An AWS S3 Bucket
 * An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
    <details>
    <summary>Click to view policy details</summary>
@@ -494,13 +493,9 @@ terraform destroy
 # - Remove connection and principal role
 ```
 
-## 📚 Additional Resources
-
+## Helpful Resources - 📚
+- [Aiven Iceberg Sink Connector Documentation](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector)
 - [Apache Iceberg Documentation](https://iceberg.apache.org/docs/latest/)
 - [Snowflake Open Catalog Documentation](https://docs.snowflake.com/en/user-guide/catalog-overview)
 - [Trino Documentation](https://trino.io/docs/current/)
 - [Aiven Documentation](https://docs.aiven.io/)
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
