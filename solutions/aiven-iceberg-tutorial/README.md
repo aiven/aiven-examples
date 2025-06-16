@@ -46,71 +46,73 @@ Before starting, ensure you have:
 
 ## 1. AWS Setup
 ### Step 1: AWS Checklist
-<details>
-<summary>An AWS Role snowflake_S3_role with snowflake_S3_access (policy)</summary>
+1. AWS S3 Bucket
+2. An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
+   <details>
+   <summary>Click to view policy details</summary>
 
-```json
-{
-    "Statement": [
-        {
-            "Action": [
-                "s3:PutObject",
-                "s3:GetObject",
-                "s3:GetObjectVersion",
-                "s3:DeleteObject",
-                "s3:DeleteObjectVersion"
-            ],
-            "Effect": "Allow",
-            "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>/*"
-        },
-        {
-            "Action": [
-                "s3:ListBucket",
-                "s3:GetBucketLocation"
-            ],
-            "Condition": {
-                "StringLike": {
-                    "s3:prefix": [
-                        "*"
-                    ]
-                }
-            },
-            "Effect": "Allow",
-            "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>"
-        }
-    ],
-    "Version": "2012-10-17"
-}
-```
-</details>
+   ```json
+   {
+       "Statement": [
+           {
+               "Action": [
+                   "s3:PutObject",
+                   "s3:GetObject",
+                   "s3:GetObjectVersion",
+                   "s3:DeleteObject",
+                   "s3:DeleteObjectVersion"
+               ],
+               "Effect": "Allow",
+               "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>/*"
+           },
+           {
+               "Action": [
+                   "s3:ListBucket",
+                   "s3:GetBucketLocation"
+               ],
+               "Condition": {
+                   "StringLike": {
+                       "s3:prefix": [
+                           "*"
+                       ]
+                   }
+               },
+               "Effect": "Allow",
+               "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>"
+           }
+       ],
+       "Version": "2012-10-17"
+   }
+   ```
+   </details>
+3. An AWS Role snowflake_S3_role with trust entity relationship
+   <details>
+   <summary>Click to view trust relationship details</summary>
 
-<details>
-<summary>An AWS Role snowflake_S3_role with trust entity relationship</summary>
-
-```json
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "<your_snowflake_catalog_arn>"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {
-                "StringEquals": {
-                    "sts:ExternalId": "<your-external-id>"
-                }
-            }
-        }
-    ]
-}
-```
-</details>
+   ```json
+   {
+       "Version": "2012-10-17",
+       "Statement": [
+           {
+               "Effect": "Allow",
+               "Principal": {
+                   "AWS": "<your_snowflake_catalog_arn>"
+               },
+               "Action": "sts:AssumeRole",
+               "Condition": {
+                   "StringEquals": {
+                       "sts:ExternalId": "<your-external-id>"
+                   }
+               }
+           }
+       ]
+   }
+   ```
+   </details>
 
 <br>
 
-**Note: If you already have these then skip to step Snowflake Open Catalog Setup.** 
+**Note: If you already have these then skip to step Snowflake Open Catalog Setup.**
 
 ### Step 2: Running AWS Terraform Setup
 <details>
@@ -232,9 +234,12 @@ Your AWS user must have the following permissions to run the Terraform configura
 
 </details>
 
-### 2. Snowflake Open Catalog Setup
+## 2. Snowflake Open Catalog Setup
 
-#### Step 1: Create a Catalog Resource in Open Catalog
+### Step 1: Create a Catalog Resource in Open Catalog
+<details>
+<summary>Click to view catalog creation steps</summary>
+
 1. In the Snowflake UI, navigate to Catalogs and Click `Create Catalog`
 2. Fill in the following details:
    - Name: Choose a name for your catalog (e.g., `ICEBERG_CATALOG`).
@@ -243,8 +248,12 @@ Your AWS user must have the following permissions to run the Terraform configura
    - S3 Role ARN: Enter the `iam_role_arn` of the role created by Terraform (output from `terraform apply`).
    - External Id: Enter the `external_id` from the `terraform.tfvars`
 3. Click `Create` then under catalog details copy the `IAM user arn` and paste it in the `snowflake_iam_user_arn` variable in `terraform/aws_setup/terraform.tfvars`
+</details>
 
-#### Step 2: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
+### Step 2: Create a Connector, Principal, and Principal Roles in Snowflake Open Catalog
+<details>
+<summary>Click to view connector creation steps</summary>
+
 1. In Snowflake Open Catalog main page, go to Connections and click `+ Connection`.
 2. Fill in the following details:
    - Name: Choose a name for your connector.
@@ -252,14 +261,22 @@ Your AWS user must have the following permissions to run the Terraform configura
    - Enable Create New Principal Role.
    - Name Principal Role.
 3. Click `Create` and record Client ID and Client Secret (we will use this in the terraform setup).
+</details>
 
-#### Step 3: Attribute roles in your catalog for the connector and Create Namespace
+### Step 3: Attribute roles in your catalog for the connector and Create Namespace
+<details>
+<summary>Click to view role attribution steps</summary>
+
 1. Go to your Catalog under the roles tab and select `+ Catalog Role`.
 2. Create a name and for privileges select `CATALOG_MANAGE_CONTENT` along with any others you need.
 3. Under the Roles tab you should see your catalog role, click `Grant to Principal Role` and select the catalog role you just created and assign it to the principal role you created in the previous step.
 4. Lastly, create a Namespace in your Catalog
+</details>
 
-#### Step 4: Update AWS Terraform After Snowflake Catalog Creation
+### Step 4: Update AWS Terraform After Snowflake Catalog Creation
+<details>
+<summary>Click to view AWS Terraform update steps</summary>
+
 1. After creating your Snowflake Open Catalog, retrieve the `IAM user arn` in the catalog details.
 2. Paste the arn in the `snowflake_iam_user_arn` variable in the `terraform.tfvars` file in the AWS Terraform directory:
    ```hcl
@@ -272,10 +289,14 @@ Your AWS user must have the following permissions to run the Terraform configura
    ```
 
 This will update the IAM role's trust policy to allow Snowflake to assume the role.
+</details>
 
-### 3. Aiven Kafka Setup
+## 3. Aiven Kafka Setup
 
-#### Step 1: Set Up Aiven Services using Terraform
+### Step 1: Set Up Aiven Services using Terraform
+<details>
+<summary>Click to view Aiven service setup steps</summary>
+
 1. **Configure Terraform Variables**
    ```bash
    cd terraform/aiven_setup
@@ -308,10 +329,14 @@ This will update the IAM role's trust policy to allow Snowflake to assume the ro
    - Two Kafka topics: `product` and `iceberg-control`.
    - A Kafka Connect service named `iceberg-connect`.
    - An Iceberg Sink Connector.
+</details>
 
-### 4. Go Kafka Producer
+## 4. Go Kafka Producer
 
-#### Step 1: Set Up and Run the Go Producer
+### Step 1: Set Up and Run the Go Producer
+<details>
+<summary>Click to view Go producer setup steps</summary>
+
 1. **Certificate Setup**
    - Create a `certs` directory in your project root and download the following certificate files from your Aiven for Kafka Service dashboard:
      - Navigate to your Kafka service in Aiven Console.
@@ -348,8 +373,11 @@ Sent product 2 to partition 0 at offset 1
 ...
 All products sent successfully.
 ```
+</details>
 
-#### Step 2: Understanding the Data Flow and Transformations
+### Step 2: Understanding the Data Flow and Transformations
+<details>
+<summary>Click to view data flow details</summary>
 
 The data pipeline includes a transformation step in Kafka Connect that's crucial for proper Iceberg table structure:
 
@@ -392,10 +420,14 @@ This transformation is essential because:
 - Iceberg tables need all data in the value portion.
 - Message keys are typically used for partitioning in Kafka but aren't automatically included in the table.
 - The transformation preserves the key information while maintaining a clean table structure.
+</details>
 
-### 5. Query with Trino
+## 5. Query with Trino
 
-#### Step 1: Run Trino Container and Execute Query
+### Step 1: Run Trino Container and Execute Query
+<details>
+<summary>Click to view Trino setup and query steps</summary>
+
 1. Navigate to the `trinocontainer` directory.
 2. Inside `trinocontainer/trino/etc/catalog/iceberg.properties` and update the values.
 3. Start the Trino service:
@@ -411,7 +443,6 @@ This transformation is essential because:
    SHOW SCHEMAS FROM iceberg;
    SELECT * FROM iceberg.`namespace`.`tablename` LIMIT 15;
    ```
-
 </details>
 
 ## 🧹 Cleanup
