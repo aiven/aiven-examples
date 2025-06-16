@@ -155,6 +155,7 @@ Your AWS user must have the following permissions to run the Terraform configura
                 "iam:DetachRolePolicy",
                 "iam:ListInstanceProfilesForRole",
                 "iam:RemoveRoleFromInstanceProfile",
+                "iam:UpdateAssumeRolePolicy",
                 "iam:DeleteInstanceProfile"
             ],
             "Resource": [
@@ -306,12 +307,27 @@ Your AWS user must have the following permissions to run the Terraform configura
     "Version": "2012-10-17",
     "Statement": [
         {
+            "Sid": "S3Access",
             "Effect": "Allow",
             "Action": [
-                "kafka:CreateTopic"
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetBucketLocation",
+                "s3:AbortMultipartUpload",
+                "s3:ListMultipartUploadParts"
             ],
             "Resource": [
-                "arn:aws:kafka:*:*:cluster/*"
+                "arn:aws:s3:::<your-s3-bucket>/*"
+            ]
+        },
+        {
+            "Sid": "S3ListBucket",
+            "Effect": "Allow",
+            "Action": "s3:ListBucket",
+            "Resource": [
+                "arn:aws:s3:::<your-s3-bucket>"
             ]
         }
     ]
@@ -331,8 +347,8 @@ Your AWS user must have the following permissions to run the Terraform configura
    Edit `terraform.tfvars` and set your values:
    - `aiven_api_token`: Your Aiven API token in [Aiven Console](https://console.aiven.io/profile/tokens)
    - `aiven_project_name`: Your Aiven project name in [Aiven Console](https://console.aiven.io/projects)
-   - `aws_access_key_id`: Your AWS access key ID.
-   - `aws_secret_access_key`: Your AWS secret access key.
+   - `aws_access_key_id`: Your AWS access key ID with the necesarry permissions (see step 1 above).
+   - `aws_secret_access_key`: Your AWS secret access key with the necesarry permissions (see step 1 above).
    - `snowflake_uri`: Your Snowflake Open Catalog URI. The format may vary depending on your Snowflake account type and region.
      Common format: https://{account-id}.{region}.snowflakecomputing.com/polaris/api/catalog
      For more details and alternative formats, refer to [Snowflake's Open Catalog documentation](https://docs.snowflake.com/en/sql-reference/sql/create-catalog-integration-open-catalog).
