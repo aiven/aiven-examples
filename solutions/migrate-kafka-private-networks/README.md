@@ -1,5 +1,7 @@
 # Overview
-The repo is a migration accelerator to get facilitate migrating external Kafka clusters onto an Aiven Kafka Cluster. 
+This repository provides a comprehensive migration accelerator designed to streamline the process of moving existing Kafka clusters to an Aiven Kafka environment. It offers a structured approach covering discovery, infrastructure provisioning, replication setup, monitoring, and validation. This accelerator utilizes external endpoint connections and multiple migration flows to migration topics in parallel.
+
+--- 
 
 # Table of Contents
 1. Discovery
@@ -10,37 +12,51 @@ The repo is a migration accelerator to get facilitate migrating external Kafka c
 
 --------------------------------
 
-# Discovery
-When migrating an existing kafka cluster to Aiven, 
-To get an detailed report of the current source system navigate to /source-cluster-discovery-utility 
+## 1. Discovery
+The discovery tool assists in generating a detailed report of your current source Kafka system. This initial step is crucial for understanding the existing cluster's configuration and data landscape before migration.
 
-* For Aiven source clusters create a client.properties file  and include `--command-config <client.properties path>` into the broker specific commands
-* Update broker information where `<BOOTSTRAP-SERVER>:<PORT>` 
-* run `sh source-kafka-discovery.sh`
+- Navigate to the discovery utility directory: /source-cluster-discovery-utility
+- **For Aiven Source Clusters:** A `client.properties file` is required to specify connection information. Ensure you include `--command-config <client.properties path>` in the broker-specific commands.
+- Update broker information, replacing <BOOTSTRAP-SERVER>:<PORT> with your source cluster's details.
+- Execute the discovery script:
+    ```bash 
+    sh source-kafka-discovery.sh
+    ```
 
-# Infrastructure Setup
-To set up the new Aiven Kafka and MirrorMaker 2 (mm2) clusters, navigate to /infra-integration-setup
-![Infrastructure Setup Diagram](./ReadMeResources/infrastructureSetupDiagram.png)
-The infrastructure setup will create a destination kafka cluster, a MirrorMaker2 service, and at least one external endpoint for the source kafka cluster and one external endpoint for the new destination kafka cluster. 
-* Each replication flow created in the migration flow step will require its own endpoint so this can be scaled out. 
+-----------
 
-To run terraform:
-`terraform init 
- terraform apply`
+## 2. Infrastructure Setup
+This phase focuses on provisioning the necessary Aiven services: the destination Kafka cluster and the MirrorMaker 2 (MM2) service. It also establishes the required external endpoints for both the source and destination Kafka clusters.
 
- **Required Information for infrasture setup**
- 1. Aiven API Token
- 2. project name
- 3. service name prefix
- 4. Destination kafka cloud name
- 5. MirrorMaker2 plan name
- 6.  Source cluster uri
- 7. source kafka cluster name
- 8. destination kafka cluster name
+The infrastructure setup will create:
 
-# Migration Flow setup
+- A destination Aiven Kafka service.
+- An Aiven MirrorMaker 2 service.
+- At least one external endpoint for the source Kafka cluster.
+- At least one external endpoint for the new destination Kafka cluster.
+
+**Note:** Each replication flow defined in the "Migration Replication Setup" step will necessitate its own dedicated external endpoint, allowing for scalable migration operations.
+
+To provision the infrastructure using Terraform:
+
+```bash
+terraform init
+terraform apply
+```
+Required Information for Infrastructure Setup:
+
+- Aiven API Token
+- Aiven Project Name
+- Service Name Prefix (for new Aiven services)
+- Destination Kafka Cloud Name
+- MirrorMaker 2 Plan Name
+- Source Kafka Cluster URI
+- Destination Kafka Cluster Name
+
+
+# 3. Migration Replication setup
 Now that the services for the migration are spun up, the mirror maker service gets setup to replicate the source Kafka cluster information on the new Destination kafka cluster.
-![Migration Flow Setup Diagram](./ReadMeResources/migrationFlowSetupDiagram.png)
+
 
 **Required Information for infrasture setup**
 1. Aiven API Token
@@ -56,9 +72,15 @@ Multiple migration flows can be spun up to migrate groups of topics in parallel.
 
 
 
-# Observability Setup
+# 4. Observability Setup
 Once the migration of data starts, spinning up the observability solution will allow service monitoring in the interem. 
 
-# Consumer Validation
+1. navigate to `/mm2-migration-observability`
+2. Update variable file 
+2. run `terraform init`
+3. run `terraform apply --var-file="<VAR FILE NAME>>`
+4. Once services are spun up, navigate to the grafana dashboard to see migraiton metrics. 
+
+# 5. Consumer Validation
 Goal/Outcome : Offset sync tool inspects source and target cluster and compares the consumer group states. The tool emits the result as CSV.
 more information found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
