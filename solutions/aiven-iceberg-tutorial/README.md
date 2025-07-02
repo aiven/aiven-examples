@@ -44,11 +44,11 @@ Before starting, ensure you have:
 </details>
 
 ## AWS Setup
-> **⚠️ Note:** Documentation on the necessary AWS resources for snowflake open catalog connection to S3[HERE](https://other-docs.snowflake.com/en/opencatalog/create-catalog#create-a-catalog-using-amazon-simple-storage-service-amazon-s3).
-If you have access to create these manually or scripted, feel free to use that and skip to the Snowflake Open Catalog Setup Section! However below is a terraform approach to setting up all the resources outlined in that document.
+> **⚠️ Note:** Documentation on the necessary AWS resources for snowflake open catalog connection to S3 [HERE](https://other-docs.snowflake.com/en/opencatalog/create-catalog#create-a-catalog-using-amazon-simple-storage-service-amazon-s3).
+If you have access to create these manually feel free to use that and skip to the Snowflake Open Catalog Setup Section! However below is a terraform approach to setting up all the resources outlined in that document.
 
 ### AWS Terraform Helper
-This terraform will help automatically create the needed resources in AWS. It will:
+This terraform will help automatically create the needed resources in AWS, it will:
 1) Create S3 bucket
 2) Create IAM Policies and Roles needed for snowflake open catalog connection
 <details>
