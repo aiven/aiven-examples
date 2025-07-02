@@ -44,91 +44,20 @@ Before starting, ensure you have:
 </details>
 
 ## AWS Setup
-Snowflake has great documentation on the necessary AWS resources for snowflake open catalog connection to S3 [HERE](https://other-docs.snowflake.com/en/opencatalog/create-catalog#create-a-catalog-using-amazon-simple-storage-service-amazon-s3)
-* An AWS S3 Bucket
-* An AWS Role snowflake_S3_role with snowflake_S3_access (policy)
-   <details>
-   <summary>Click to view policy details</summary>
+> **⚠️ Note:** Documentation on the necessary AWS resources for snowflake open catalog connection to S3[HERE](https://other-docs.snowflake.com/en/opencatalog/create-catalog#create-a-catalog-using-amazon-simple-storage-service-amazon-s3).
+If you have access to create these manually or scripted, feel free to use that and skip to the Snowflake Open Catalog Setup Section! However below is a terraform approach to setting up all the resources outlined in that document.
 
-   ```json
-   {
-       "Statement": [
-           {
-               "Action": [
-                   "s3:PutObject",
-                   "s3:GetObject",
-                   "s3:GetObjectVersion",
-                   "s3:DeleteObject",
-                   "s3:DeleteObjectVersion"
-               ],
-               "Effect": "Allow",
-               "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>/*"
-           },
-           {
-               "Action": [
-                   "s3:ListBucket",
-                   "s3:GetBucketLocation"
-               ],
-               "Condition": {
-                   "StringLike": {
-                       "s3:prefix": [
-                           "*"
-                       ]
-                   }
-               },
-               "Effect": "Allow",
-               "Resource": "arn:aws:s3:::<your-iceberg-bucket-name>"
-           }
-       ],
-       "Version": "2012-10-17"
-   }
-   ```
-   </details>
-* An AWS Role snowflake_S3_role with trust entity relationship
-   <details>
-   <summary>Click to view trust relationship details</summary>
-
-   ```json
-   {
-       "Version": "2012-10-17",
-       "Statement": [
-           {
-               "Effect": "Allow",
-               "Principal": {
-                   "AWS": "<your_snowflake_catalog_arn>"
-               },
-               "Action": "sts:AssumeRole",
-               "Condition": {
-                   "StringEquals": {
-                       "sts:ExternalId": "<your-external-id>"
-                   }
-               }
-           }
-       ]
-   }
-   ```
-   </details>
-
-> **⚠️ Note:** If you already have these then skip to step Snowflake Open Catalog Setup.
-
-
-### Step 2: AWS Terraform Helper
+### AWS Terraform Helper
 This terraform will help automatically create the needed resources in AWS. It will:
 1) Create S3 bucket
 2) Create IAM Policies and Roles needed for snowflake open catalog connection
-3) 
 <details>
 <summary>Click to view AWS terraform setup steps</summary>
 
 
 #### Step 1: Configure AWS CLI & User
 1. Install the AWS CLI if you haven't already.
-2. Run the following command to configure your AWS credentials:
-   ```bash
-   aws configure
-   ```
-   You'll be prompted to enter your AWS Access Key ID, Secret Access Key, region, and output format. These credentials will be used by Terraform automatically.
-3. You must have an AWS user with the following permissions to run the Terraform configuration:
+2. Ensure you have an AWS user with the following permissions:
 ```json
 {
     "Version": "2012-10-17",
@@ -208,6 +137,13 @@ This terraform will help automatically create the needed resources in AWS. It wi
     ]
 }
 ```
+3. Create and retrieve the AWS Access Key ID, Secret Access Key associated with the user
+4. Run the following command to configure your AWS credentials:
+   ```bash
+   aws configure
+   ```
+   You'll be prompted to enter your AWS Access Key ID, Secret Access Key, region, and output format. These credentials will be used by Terraform automatically.
+
 
 #### Step 2: Configure AWS Terraform
 1. Navigate to the AWS Terraform directory:
