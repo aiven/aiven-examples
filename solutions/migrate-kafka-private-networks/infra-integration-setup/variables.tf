@@ -3,15 +3,7 @@ variable "aiven_api_token" {
   type        = string
 }
 
-variable "aiven_source_project_name" {
-  type = string
-}
-
-variable "aiven_destination_project_name" {
-  type = string
-}
-
-variable "kafka_source_name" {
+variable "aiven_project_name" {
   type = string
 }
 variable "service_prefix" {
