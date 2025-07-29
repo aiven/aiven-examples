@@ -13,7 +13,7 @@ This repository provides a comprehensive migration accelerator designed to strea
 --------------------------------
 
 ## 1. Discovery
-The discovery tool assists in generating a detailed report of your current source Kafka system. This initial step is crucial for understanding the existing cluster's configuration and data landscape before migration.
+The discovery tool assists in generating a detailed report of your current source Kafka system. This initial step is crucial for understanding the existing cluster's configuration and data landscape before migration. Resulting files identify consumer groups and topics that are active.
 
 - Navigate to the discovery utility directory: /source-cluster-discovery-utility
 - **For Aiven Source Clusters:** A `client.properties file` is required to specify connection information. Ensure you include `--command-config <client.properties path>` in the broker-specific commands.
@@ -26,14 +26,13 @@ The discovery tool assists in generating a detailed report of your current sourc
 -----------
 
 ## 2. Infrastructure Setup
-This phase focuses on provisioning the necessary Aiven services: the destination Kafka cluster and the MirrorMaker 2 (MM2) service. It also establishes the required external endpoints for both the source and destination Kafka clusters.
+This phase focuses on provisioning the necessary Aiven services: the destination Kafka cluster and the MirrorMaker 2 (MM2) service. It also establishes the required external endpoints for the source Kafka cluster. The endpoint abstracts the source kakfa connection as well as facilitates the setup for migration if multiple replication streams are being used in parallel. 
 
 The infrastructure setup will create:
 
 - A destination Aiven Kafka service.
 - An Aiven MirrorMaker 2 service.
 - At least one external endpoint for the source Kafka cluster.
-- At least one external endpoint for the new destination Kafka cluster.
 
 **Note:** Each replication flow defined in the "Migration Replication Setup" step will necessitate its own dedicated external endpoint, allowing for scalable migration operations.
 
@@ -41,7 +40,7 @@ To provision the infrastructure using Terraform:
 
 ```bash
 terraform init
-terraform apply
+terraform apply --var-file="<file name>"
 ```
 Required Information for Infrastructure Setup:
 
@@ -82,5 +81,5 @@ Once the migration of data starts, spinning up the observability solution will a
 4. Once services are spun up, navigate to the grafana dashboard to see migraiton metrics. 
 
 # 5. Consumer Validation
-Goal/Outcome : Offset sync tool inspects source and target cluster and compares the consumer group states. The tool emits the result as CSV.
+THe  Offset Syncronization tool inspects the source and target clusters and compares the consumer group states. The tool emits the results to comfirm the offsets have been successfully synced up between clusters.
 more information found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
