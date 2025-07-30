@@ -1,0 +1,6 @@
+aiven_api_token="<AIVEN_API_TOKEN>"
+aiven_project_name="<AIVEN_PROJECT_NAME>"
+destination_kafka_service="<AIVEN_KAFKA_SERVICE_NAME>"
+external_source_aiven_kafka_endpoint_id_rf3_set1="<AIVEN_PROJECT_NAME/SOURCE_EXTERNAL_ENDPOINT_ID>"
+destination_kafka_endpoint_id="<AIVEN_PROJECT_NAME/DESTINATION_EXTERNAL_ENDPOINT_ID>"
+aiven-labs-mm2-rf3-set1="<MIRRORMAKER_SERVICE_NAME>"
