@@ -1,0 +1,8 @@
+aiven_api_token="<Aiven API Token>"
+aiven_project_name="<Aiven Project Name>"
+service_prefix="<optional prefix for services being created>"
+cloud_name_primary = "<Cloud region>"
+mm2_plan_cluster_2 = "<Plan type for mm2>"
+aiven_source_bootstrap_url = "<Bootstrap url for source Kafka Cluster>"
+kafka_source_name = "<Name of source kafka>"
+dest_kafka_plan = "<Plan type for Kafka>"
