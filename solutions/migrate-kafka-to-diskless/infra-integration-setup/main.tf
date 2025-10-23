@@ -9,8 +9,14 @@ resource "aiven_kafka" "destination_kafka_1" {
   kafka_user_config {
     kafka_rest      = true
     kafka_connect   = false
-    schema_registry = true
-    kafka_version   = "3.8"
+    schema_registry = false
+    kafka_version   = "4.0"
+    kafka_diskless {
+      enabled = true
+    }
+    tiered_storage {
+      enabled = true
+    }
 
     kafka {
       default_replication_factor = 3
@@ -22,7 +28,7 @@ resource "aiven_kafka" "destination_kafka_1" {
       kafka_rest    = false
       kafka_connect = false
       schema_registry = false
-      prometheus = true
+      prometheus = false
       kafka = false
     }
 
@@ -30,19 +36,19 @@ resource "aiven_kafka" "destination_kafka_1" {
       leader_eligibility = false
     }
   }
-  
 }
 
+/*
 resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name_primary
   plan         = var.mm2_plan_cluster_2
   service_name = "${var.service_prefix}-mm2-rf3-set1"
-
+*/
   /*kafka_mirrormaker_user_config {
     ip_filter = ["0.0.0.0/0"]
   } */
-
+/*
   kafka_mirrormaker_user_config {
     kafka_mirrormaker {
       refresh_groups_enabled = true
@@ -59,6 +65,7 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
     }
   }
 }
+*/
 
 # resource "aiven_kafka_mirrormaker" "mm2-cluster3" {
 #   project      = var.aiven_project_name
@@ -86,6 +93,8 @@ resource "aiven_kafka_mirrormaker" "mm2-cluster2" {
 #     }
 #   }
 # }
+
+/*
 resource "time_sleep" "wait_mm2_readiness" {
   depends_on = [
     aiven_kafka.destination_kafka_1,
@@ -93,6 +102,7 @@ resource "time_sleep" "wait_mm2_readiness" {
   ]
   create_duration = "120s"
 }
+*/
 
 /*
 // Aiven Kafka External Endpoint as a pre-req to create service integration for mm2
@@ -107,6 +117,7 @@ resource "aiven_service_integration_endpoint" "aiven_external_endpoint_1"
     security_protocol = "PLAINTEXT"
   }
 } */
+
 data aiven_project source_project {
   project = var.aiven_project_name
 }
@@ -117,6 +128,8 @@ data aiven_project source_project {
 //////----------
 // AIVEN KAFKA EXTERNAL ENDPOINT for allowing more than 1 destination service integration for more than 1 replication flows
 //// ----------
+
+/*
 resource "aiven_service_integration_endpoint" "aiven_kafka_destination_endpoint" {
   depends_on = [time_sleep.wait_mm2_readiness]
   endpoint_name = "aiven_kafka_destination_endpoint"
@@ -140,13 +153,14 @@ resource "aiven_service_integration_endpoint" "aiven_kafka_source_endpoint" {
   endpoint_type = "external_kafka"
     external_kafka_user_config {
     bootstrap_servers = var.aiven_source_bootstrap_url
-    security_protocol = "SSL"
-    ssl_ca_cert = file("./security/ca.pem")
-    ssl_client_key = file("./security/service.key")
-    ssl_client_cert = file("./security/service.cert")
-    ssl_endpoint_identification_algorithm = "https"
+    security_protocol = "PLAINTEXT"
+    //ssl_ca_cert = file("./security/ca.pem")
+    //ssl_client_key = file("./security/service.key")
+    //ssl_client_cert = file("./security/service.cert")
+    //ssl_endpoint_identification_algorithm = "https"
   }
 } 
+*/
 
 /*resource "aiven_service_integration_endpoint" "aiven_kafka_source_endpoint"
 {
