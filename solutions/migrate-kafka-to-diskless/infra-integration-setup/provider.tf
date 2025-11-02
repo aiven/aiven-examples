@@ -2,7 +2,7 @@ terraform {
   required_providers {
     aiven = {
       source = "aiven/aiven"
-      version = "4.46.0"
+      version = "4.46.1"
     }
     time = {
       source = "hashicorp/time"
