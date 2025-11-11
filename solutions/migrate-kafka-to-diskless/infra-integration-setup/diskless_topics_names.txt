@@ -1,0 +1,4 @@
+logging-topic
+metrics-topic
+product-topic
+mock-motorcycle-data
