@@ -75,6 +75,8 @@ resource "aiven_kafka" "kafka" {
   plan         = var.kafka_plan_name
   service_name = "${var.service_name_prefix}kafka"
   kafka_user_config {
+    kafka_connect   = false
+    schema_registry = true
     kafka_version = "4.0"
     kafka_rest = true
     tiered_storage {
@@ -82,6 +84,9 @@ resource "aiven_kafka" "kafka" {
     }
     kafka {
       auto_create_topics_enable = true
+      default_replication_factor = 3
+      min_insync_replicas = 2
+      message_max_bytes = 100001200
     }
     kafka_diskless {
       enabled = true
