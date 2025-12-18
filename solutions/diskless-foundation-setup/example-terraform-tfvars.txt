@@ -1,0 +1,7 @@
+project_name = "your-aiven-project-name"
+aiven_api_token = "aa...."  # Or set AIVEN_API_TOKEN environment variable
+
+# Optional (defaults shown)
+cloud_name = "your_byoc_region_id"
+kafka_plan_name = "business-8-inkless"
+service_name_prefix = "assign-a-prefix"
