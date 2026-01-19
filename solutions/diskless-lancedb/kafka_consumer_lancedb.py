@@ -2,7 +2,7 @@
 Kafka Consumer for Aiven Kafka Diskless Topics with LanceDB Integration
 
 This script consumes messages from Aiven Kafka Diskless topics and writes
-them to LanceDB for vector storage and search.
+them to a Local LanceDB for vector storage and search.
 """
 
 import os
