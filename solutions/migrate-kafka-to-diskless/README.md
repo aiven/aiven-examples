@@ -415,7 +415,6 @@ To destroy all resources created by this migration accelerator:
 
 - [Aiven Kafka Documentation](https://docs.aiven.io/docs/products/kafka)
 - [Aiven Terraform Provider Documentation](https://registry.terraform.io/providers/aiven/aiven/latest/docs)
-- [Kafka Diskless Storage Best Practices](https://docs.aiven.io/docs/products/kafka/concepts/diskless-storage)
 - [MirrorMaker 2 Documentation](https://docs.aiven.io/docs/products/kafka/howto/mirrormaker-2)
 - [Diskless Foundation Setup](../diskless-foundation-setup/README.md) - For setting up new diskless topics from scratch
 
