@@ -164,4 +164,5 @@ terraform destroy
 
 - [Aiven Kafka Documentation](https://docs.aiven.io/docs/products/kafka)
 - [Aiven Terraform Provider Documentation](https://registry.terraform.io/providers/aiven/aiven/latest/docs)
-- [Kafka Diskless Storage Best Practices](https://docs.aiven.io/docs/products/kafka/concepts/diskless-storage)
+- [Kafka Diskless Topics Architecture](https://aiven.io/docs/products/kafka/diskless/concepts/diskless-topics-architecture)
+- [Inkless FAQs](https://github.com/aiven/inkless/blob/main/docs/inkless/FAQ.md)
