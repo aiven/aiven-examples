@@ -1,7 +1,7 @@
 import lancedb
 
 db = lancedb.connect(
-  uri="db://demo-1-s6g8co",
+  uri="db://uri",
   api_key="sk_...",
   region="us-east-1"
 )
