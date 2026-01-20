@@ -84,10 +84,22 @@ The setup configures Kafka with:
 - **Kafka REST API**: Enabled
 - **Kafka Connect**: Disabled
 - **Tiered Storage**: Enabled
+- **Follower Fetching**: Enabled
 - **Diskless Storage**: Enabled
 - **Auto-create Topics**: Enabled
 - **Default Replication Factor**: 3
 - **Min In-Sync Replicas**: 2
+
+#### Follower Fetching
+
+Follower fetching is enabled in this configuration to optimize performance for diskless topics. When enabled, Kafka followers can fetch data from other followers in addition to the leader, which:
+
+- **Reduces leader load**: Distributes read load across multiple brokers
+- **Improves throughput**: Allows followers to fetch from the nearest available replica
+- **Enhances availability**: Provides better fault tolerance and recovery capabilities
+- **Optimizes for diskless storage**: Particularly beneficial for diskless topics where data is stored in object storage
+
+This feature is configured in the Terraform setup via the `follower_fetching` block with `enabled = true` in the Kafka user configuration.
 
 ### Topic Configuration
 
@@ -159,6 +171,7 @@ terraform destroy
 - For the classic topics, the default replication factor is set to 3 for high availability
 - For the Diskless topics, the replication factor is always going to be set as 1 because it directly writes to Object Storage for high durability
 - Tiered storage is enabled to efficiently manage data lifecycle
+- Follower fetching is enabled to improve performance and reduce leader load, which is particularly beneficial for diskless topics
 
 ## Additional Resources
 
