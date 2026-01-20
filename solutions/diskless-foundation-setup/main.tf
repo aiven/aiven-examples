@@ -82,6 +82,9 @@ resource "aiven_kafka" "kafka" {
     tiered_storage {
       enabled = true
     }
+    follower_fetching{
+      enabled = true
+    }
     kafka {
       auto_create_topics_enable = true
       default_replication_factor = 3
