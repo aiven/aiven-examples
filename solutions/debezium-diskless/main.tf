@@ -88,7 +88,7 @@ resource "aiven_kafka" "kafka" {
   service_name = "${var.service_name_prefix}kafka"
   kafka_user_config {
     kafka_version = "4.0"
-    kafka_rest = true
+    kafka_rest    = true
     tiered_storage {
       enabled = true
     }
@@ -130,20 +130,8 @@ resource "aiven_service_integration" "kafka_connect_integration" {
   destination_service_name = aiven_kafka_connect.kafka_connect.service_name
 }
 
-resource "aiven_kafka_topic" "diskless_debezium_topic" {
-  project      = var.project_name
-  service_name = aiven_kafka.kafka.service_name
-  topic_name   = "inkless.public.${var.table_name}"
-  partitions   = 3
-  replication  = 1
-
-  config {
-    diskless_enable = true
-  }
-}
-
 resource "aiven_kafka_connector" "kafka-pg-debezium-source-connector" {
-  depends_on     = [aiven_service_integration.kafka_connect_integration, aiven_kafka_topic.diskless_debezium_topic]
+  depends_on     = [aiven_service_integration.kafka_connect_integration]
   project        = var.project_name
   service_name   = aiven_kafka_connect.kafka_connect.service_name
   connector_name = "debezium-connector"
@@ -162,7 +150,12 @@ resource "aiven_kafka_connector" "kafka-pg-debezium-source-connector" {
     "publication.name"            = "dbz_publication"
     "publication.autocreate.mode" = "all_tables"
     "_aiven.restart.on.failure"   = "true"
-    "topic.prefix"          = "inkless"
+    "topic.prefix"                = "inkless"
+
+    # Enable diskless for auto created topics
+    "topic.creation.default.diskless.enable"    = "true"
+    "topic.creation.default.partitions"         = "3"
+    "topic.creation.default.replication.factor" = "1"
   }
 }
 
@@ -199,7 +192,7 @@ output "postgres_service_uri" {
 
 output "topic_name" {
   description = "Name of the Kafka topic"
-  value       = aiven_kafka_topic.diskless_debezium_topic.topic_name
+  value       = "inkless.public.${var.table_name}"
 }
 
 output "table_name" {
