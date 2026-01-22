@@ -239,9 +239,35 @@ def consumer_thread(
         # Create Kafka consumer
         consumer = Consumer(config)
 
+        print(f"[Consumer] ✅ Connected to Kafka")
+
+        # Wait until the topic exists (Debezium may auto-create with delay)
+        topic_wait_timeout = 180  # seconds
+        poll_interval = 2  # seconds
+        deadline = time.time() + topic_wait_timeout
         print(
-            f"[Consumer] ✅ Connected to Kafka, subscribing to topic '{topic_name}'..."
+            f"[Consumer] ⏳ Waiting for topic '{topic_name}' to be created (up to {topic_wait_timeout}s)..."
         )
+        while True:
+            try:
+                md = consumer.list_topics(topic=topic_name, timeout=5.0)
+                tmd = md.topics.get(topic_name)
+                if tmd is not None and getattr(tmd, "error", None) is None and len(tmd.partitions) > 0:
+                    print(
+                        f"[Consumer] ✅ Topic '{topic_name}' is available with {len(tmd.partitions)} partition(s)."
+                    )
+                    break
+            except Exception:
+                # Treat any transient error as topic-not-ready and retry
+                pass
+
+            if time.time() >= deadline:
+                raise TimeoutError(
+                    f"Topic '{topic_name}' not found/ready after {topic_wait_timeout}s"
+                )
+            time.sleep(poll_interval)
+
+        print(f"[Consumer] Subscribing to topic '{topic_name}'...")
         consumer.subscribe([topic_name])
 
         message_count = 0
@@ -413,8 +439,8 @@ def main():
         "-n",
         "--num-messages",
         type=int,
-        default=1000,
-        help="Number of messages to insert and consume (default: 1000)",
+        default=500,
+        help="Number of messages to insert and consume (default: 500)",
     )
     parser.add_argument(
         "-b",

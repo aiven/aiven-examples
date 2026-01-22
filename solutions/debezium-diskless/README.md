@@ -59,7 +59,7 @@ The solution provisions:
 Run the test script to validate the replication:
 
 ```bash
-# Use defaults (1000 messages, batch size 100)
+# Use defaults (500 messages, batch size 100)
 python test.py
 
 # Customize number of messages
