@@ -91,6 +91,14 @@ resource "aiven_kafka" "kafka" {
       min_insync_replicas = 2
       message_max_bytes = 100001200
     }
+    kafka_authentication_methods {
+      certificate = true
+      sasl        = true # Enable SASL authentication
+    }
+    kafka_sasl_mechanisms {
+      scram_sha_256 = true
+      scram_sha_512 = true
+    }
     kafka_diskless {
       enabled = true
     }
