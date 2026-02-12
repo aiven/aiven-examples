@@ -1,29 +1,39 @@
-# Collect linux distribution
-cat /etc/*-release > linux_distribution
+#!/bin/bash
 
-# Collect kernel version
-uname -r > kernel_version
+# --- Configuration ---
+BOOTSTRAP_SERVER="${KAFKA_BOOTSTRAP_SERVER:-localhost:9092}"
+KAFKA_BIN_DIR="${KAFKA_BIN_DIR:-/opt/kafka/bin}"
+OUTPUT_DIR="${OUTPUT_DIR:-./output}"
 
-# Collect CPU metadata
-lscpu > cpu_info
+# Create Output Directory if it doesn't exist
+if [ ! -d "$OUTPUT_DIR" ]; then
+    mkdir -p $OUTPUT_DIR
+fi
 
-# Collect Memory metadata
-cat /proc/meminfo > mem_info
+# --- Data Collection ---
 
-# Collect kernel settings
-sysctl -a > kernel_settings
+# 1. Local System Info (No Kafka connection needed)
+$KAFKA_BIN_DIR/kafka-configs.sh --version > "$OUTPUT_DIR/kafka_version.txt"
+cat /etc/*-release > "$OUTPUT_DIR/linux_distribution.txt"
+uname -r > "$OUTPUT_DIR/kernel_version.txt"
+lscpu > "$OUTPUT_DIR/cpu_info.txt"
+cat /proc/meminfo > "$OUTPUT_DIR/mem_info.txt"
+sysctl -a > "$OUTPUT_DIR/kernel_settings.txt"
+getconf -a > "$OUTPUT_DIR/kernel_compile_options.txt"
 
-# Collect kernel compile options
-getconf -a > kernel_compile_options
+echo "Collecting Kafka broker configurations..."
+$KAFKA_BIN_DIR/kafka-configs.sh --describe --bootstrap-server $BOOTSTRAP_SERVER --entity-type brokers --all > "$OUTPUT_DIR/kafka_broker_configs.txt"
 
-# Collect all kafka broker configs
-./bin/kafka-configs.sh --describe --bootstrap-server <STRIMZI-BOOTSTRAP-SERVER>:<STRIMZI-PORT> --entity-type brokers --all > kafka_broker_configs.txt
+echo "Collecting Consumer Groups from cluster..."
+$KAFKA_BIN_DIR/kafka-consumer-groups.sh --all-groups --describe --bootstrap-server $BOOTSTRAP_SERVER --timeout 180000 > "$OUTPUT_DIR/consumer_groups_source.txt"
 
-#Collect all Consumer Groups from cluster
-./kafka-consumer-groups.sh --all-groups --describe --bootstrap-server <STRIMZI-BOOTSTRAP-SERVER>:<STRIMZI-PORT> --timeout 180000 > consumer_groups_source.txt
+echo "Collecting Consumer Group States from cluster..."
+$KAFKA_BIN_DIR/kafka-consumer-groups.sh --all-groups --describe --state --bootstrap-server $BOOTSTRAP_SERVER --timeout 180000 > "$OUTPUT_DIR/consumer_groups_state_source.txt"
 
-# Collect all Consumer Group States from cluster
-./bin/kafka-consumer-groups.sh --all-groups --describe --state --bootstrap-server <STRIMZI-BOOTSTRAP-SERVER>:<STRIMZI-PORT> --timeout 180000 > consumer_groups_state_source.txt
+echo "Collecting Topic Details from cluster..."
+$KAFKA_BIN_DIR/kafka-topics.sh --describe --bootstrap-server $BOOTSTRAP_SERVER > "$OUTPUT_DIR/topics_list_source.txt"
 
-# Collect all Topic Details from Cluster
-./bin/kafka-topics.sh --describe --bootstrap-server <STRIMZI-BOOTSTRAP-SERVER>:<STRIMZI-PORT> --timeout 180000 > topics_list_source.txt
+echo "Collecting Topic Offsets from cluster..."
+$KAFKA_BIN_DIR/kafka-log-dirs.sh --describe --bootstrap-server $BOOTSTRAP_SERVER | grep "logDirs" > "$OUTPUT_DIR/topics_offsets_source.json"
+
+echo "Source cluster discovery utility completed successfully."

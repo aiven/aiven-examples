@@ -1,0 +1,4 @@
+secrets/*
+output/*
+bin/*
+docker-compose.yaml
