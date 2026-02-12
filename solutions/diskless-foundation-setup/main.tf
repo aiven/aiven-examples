@@ -53,6 +53,13 @@ variable "service_name_prefix" {
   default     = "demo-diskless-"
 }
 
+variable "additional_disk_space" {
+  description = "Additional Disk space in increments of 30 GBs"
+  type        = string
+  default     = "30GiB"
+}
+
+
 # Data sources
 data "aiven_project" "project" {
   project = var.project_name
@@ -74,6 +81,7 @@ resource "aiven_kafka" "kafka" {
   cloud_name   = var.cloud_name
   plan         = var.kafka_plan_name
   service_name = "${var.service_name_prefix}kafka"
+  additional_disk_space = var.additional_disk_space
   kafka_user_config {
     kafka_connect   = false
     schema_registry = true
