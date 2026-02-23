@@ -5,3 +5,4 @@ aiven_api_token = "aa...."  # Or set AIVEN_API_TOKEN environment variable
 cloud_name = "your_byoc_region_id"
 kafka_plan_name = "business-8-inkless"
 service_name_prefix = "assign-a-prefix"
+additional_disk_space = "30GiB" ## this should be in multiplication of 30GiB
