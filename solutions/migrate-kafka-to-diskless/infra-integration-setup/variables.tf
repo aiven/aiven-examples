@@ -25,6 +25,14 @@ variable "aiven_source_bootstrap_url" {
   type = string
 }
 
+variable "kafka_source_name" {
+  type = string
+}
+
 variable "dest_kafka_plan" {
+  type = string
+}
+
+variable "diskless_topics_file"{
   type = string
 }
