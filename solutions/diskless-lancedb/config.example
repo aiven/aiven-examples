@@ -1,0 +1,16 @@
+# Aiven Kafka Configuration
+KAFKA_BOOTSTRAP_SERVERS=your-kafka-service.aivencloud.com:24949
+KAFKA_CERT_FOLDER=./certs
+KAFKA_TOPIC_NAME=diskless-topic
+KAFKA_GROUP_ID=lancedb-consumer-group
+KAFKA_RACK=rack-1  # Optional: for AZ-aware clients
+
+# Producer Configuration
+NUM_MESSAGES=10
+MESSAGE_DELAY=1.0  # seconds between messages
+
+# Consumer & LanceDB Configuration
+BATCH_SIZE=100  # Number of messages to batch before writing to LanceDB
+VECTOR_DIM=128  # Dimension of vectors to create
+LANCEDB_PATH=./lancedb_data
+LANCEDB_TABLE_NAME=kafka_messages
