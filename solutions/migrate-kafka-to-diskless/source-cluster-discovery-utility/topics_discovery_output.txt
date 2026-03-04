@@ -1,0 +1,18 @@
+Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	TopicId: ueQGsjXIQn2Iipi_vIjn_w	PartitionCount: 8	ReplicationFactor: 2	Configs: flush.ms=60000,max.message.bytes=33554432,unclean.leader.election.enable=true,retention.bytes=107374182400
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 0	Leader: 5	Replicas: 5,7	Isr: 5,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 1	Leader: 7	Replicas: 7,6	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 2	Leader: 6	Replicas: 6,7	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 3	Leader: 7	Replicas: 7,6	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 4	Leader: 7	Replicas: 7,6	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 5	Leader: 7	Replicas: 7,6	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 6	Leader: 6	Replicas: 6,1	Isr: 6,1	Elr: 	LastKnownElr: 
+	Topic: AA_INPUT_PAYLOAD_VPN_IP_QUALITY_GEOLOCATION_TEST	Partition: 7	Leader: 5	Replicas: 5,2	Isr: 5,2	Elr: 	LastKnownElr: 
+Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	TopicId: A8QzKI19RHe86nhKzOEqxg	PartitionCount: 8	ReplicationFactor: 2	Configs: flush.ms=60000,max.message.bytes=33554432,unclean.leader.election.enable=true,retention.bytes=107374182400
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 0	Leader: 7	Replicas: 7,1	Isr: 7,1	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 1	Leader: 1	Replicas: 1,2	Isr: 2,1	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 2	Leader: 2	Replicas: 2,3	Isr: 3,2	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 3	Leader: 3	Replicas: 3,4	Isr: 3,4	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 4	Leader: 4	Replicas: 4,5	Isr: 5,4	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 5	Leader: 5	Replicas: 5,6	Isr: 6,5	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 6	Leader: 6	Replicas: 6,7	Isr: 6,7	Elr: 	LastKnownElr: 
+	Topic: AA_PAYLOAD_SHEPHERD_PUBLISHED_CONFIG	Partition: 7	Leader: 2	Replicas: 2,6	Isr: 6,2	Elr: 	LastKnownElr: 
