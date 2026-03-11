@@ -1,177 +1,129 @@
-# Source Cluster Discovery Utility
+# Cluster Throughput Discovery
 
-This utility collects comprehensive information from a Kafka source cluster to aid in migration planning. It gathers system information, Kafka broker configurations, consumer groups, topics, and offsets.
+This utility estimates average throughput of your Kafka cluster by sampling consumer group offsets twice over a configurable interval and computing messages/sec and bytes/sec per group (when you set average message size).
 
 ## Overview
 
-The discovery utility consists of three main scripts, each designed for different authentication methods:
+The script uses Kafka's `kafka-consumer-groups.sh` to take two snapshots of consumer group offsets, then computes offset deltas to derive approximate consumption rate per group and total cluster consumption. For clusters that use SSL or SASL, you provide a client config file (`config.properties`) and point the script at it.
 
-- **`source-kafka-discovery.sh`** - Plaintext connection (no authentication)
-- **`source-kafka-discovery-cert.sh`** - Certificate-based authentication (mTLS)
-- **`source-kafka-discovery-sasl.sh`** - SASL authentication (SCRAM-SHA-512)
-
-When Kafka CLI tools are not installed locally, use the Docker wrappers (they run the same logic inside an `apache/kafka:latest` container and mount the current directory so output appears in `./output`):
-
-- **`docker-source-kafka-discovery.sh`** - Plaintext
-- **`docker-source-kafka-discovery-cert.sh`** - mTLS (certificate paths must be relative to the script directory)
-- **`docker-source-kafka-discovery-sasl.sh`** - SASL (requires `KAFKA_USER` and `KAFKA_PASS`)
+**Recommended way to run:** use the provided Docker image so you don't need Kafka CLI tools installed locally.
 
 ## Prerequisites
 
-- Kafka CLI tools installed (typically in `/opt/kafka/bin`)
-- Network access to the Kafka cluster
-- Appropriate authentication credentials (if using SSL or SASL)
+- Docker (to build and run the container)
+- Network access to your Kafka cluster
+- For secured clusters: CA and client credentials (certificates or SASL username/password) and a `config.properties` file (see below)
 
-## Usage
+## Running via Docker
 
-### Plaintext Connection (No Authentication)
+### 1. Build the image
 
-For clusters without authentication:
-
-```bash
-./source-kafka-discovery.sh
-```
-
-Or with custom bootstrap server:
+From the `kafka-throughput-discovery` directory:
 
 ```bash
-KAFKA_BOOTSTRAP_SERVER="localhost:9092" ./source-kafka-discovery.sh
+docker build -t kafka-throughput-discovery .
 ```
 
-**Docker (no local Kafka CLI)**
+### 2. Prepare client config (SSL or SASL clusters only)
+
+If your cluster uses **plaintext** (no auth), you can skip this step and only set `BOOTSTRAP_SERVER` when running the container.
+
+For **SSL (mTLS)** or **SASL**:
+
+1. Copy the example config and edit it:
+
+   ```bash
+   cp config.properties.example config.properties
+   ```
+
+2. In `config.properties`, **pick one** of the three options (SSL with JKS/PKCS12, SASL over TLS, or SASL plaintext) and uncomment the matching block. Replace placeholders with your CA path, keystore/truststore paths and passwords, or SASL username/password.  
+   You do **not** set `bootstrap.servers` in this file — the script uses the `BOOTSTRAP_SERVER` environment variable.
+
+3. **Paths inside the container:** when running with Docker, the script reads `config.properties` from a mounted path (e.g. `/config/config.properties`). Any paths in `config.properties` (e.g. `ssl.truststore.location`, `ssl.keystore.location`, `ssl.truststore.location`) must be valid **inside** the container. So use paths like `/config/ca.pem`, `/config/client.truststore.jks`, etc., and mount the directory that contains both `config.properties` and the cert files (see below).
+
+### 3. Run the container
+
+**Plaintext cluster (no auth):**
 
 ```bash
-KAFKA_BOOTSTRAP_SERVER="kafka.example.com:9092" ./docker-source-kafka-discovery.sh
+docker run --rm \
+  -e BOOTSTRAP_SERVER="your-bootstrap.example.com:9092" \
+  -e AVG_MESSAGE_BYTES=1024 \
+  -v "$(pwd)/output:/output" \
+  kafka-throughput-discovery
 ```
 
-### Certificate Authentication (mTLS)
-
-For clusters using certificate-based authentication:
+**Secured cluster (SSL or SASL):** mount the directory that contains `config.properties` and your certs (e.g. `ca.pem`, `client.truststore.jks`, `client.keystore.p12`) and pass the config path and bootstrap server:
 
 ```bash
-KAFKA_BOOTSTRAP_SERVER="kafka.example.com:12693" \
-  CA_PATH="./ca.pem" \
-  CLIENT_CERT_PATH="./server.cert" \
-  CLIENT_KEY_PATH="./server.key" \
-  ./source-kafka-discovery-cert.sh
+docker run --rm \
+  -e BOOTSTRAP_SERVER="your-bootstrap.example.com:9093" \
+  -e KAFKA_CLIENT_CONFIG=/config/config.properties \
+  -e AVG_MESSAGE_BYTES=1024 \
+  -v "$(pwd)/output:/output" \
+  -v "$(pwd):/config:ro" \
+  kafka-throughput-discovery
 ```
 
-**Docker (no local Kafka CLI)**  
-Certificate paths must be relative to the script directory (e.g. `./ca.pem`, `secrets/server.cert`). Files must exist in that directory.
+If you keep config and certs in a subfolder (e.g. `./config/`), mount that folder as `/config` and put `config.properties` and certs inside it:
 
 ```bash
-KAFKA_BOOTSTRAP_SERVER="kafka.example.com:9092" \
-  CA_PATH=secrets/ca.pem \
-  CLIENT_CERT_PATH=secrets/server.cert \
-  CLIENT_KEY_PATH=secrets/server.key \
-  ./docker-source-kafka-discovery-cert.sh
+docker run --rm \
+  -e BOOTSTRAP_SERVER="your-bootstrap.example.com:9093" \
+  -e KAFKA_CLIENT_CONFIG=/config/config.properties \
+  -e AVG_MESSAGE_BYTES=1024 \
+  -v "$(pwd)/output:/output" \
+  -v "$(pwd)/config:/config:ro" \
+  kafka-throughput-discovery
 ```
 
-**Required Files:**
+Results are written to `/output` inside the container; with `-v "$(pwd)/output:/output"` they appear in `./output` on your host.
 
-- `ca.pem` - CA certificate (default: `./ca.pem`)
-- `server.cert` - Client certificate (default: `./server.cert`)
-- `server.key` - Client private key (default: `./server.key`)
+## Config.properties additions
 
-### SASL Authentication (SCRAM-SHA-512)
+The script passes your client config to Kafka CLI tools via `--command-config`. Create `config.properties` from `config.properties.example` and add **one** of the following, depending on how your cluster is secured.
 
-For clusters using SASL/SCRAM authentication:
+- **SSL (client cert in keystore):** set `security.protocol=SSL`, `ssl.truststore.*` and `ssl.keystore.*` (and `ssl.key.password` if needed). Use paths like `/config/client.truststore.jks` and `/config/client.keystore.p12` when running with Docker and mounting your dir as `/config`.
+- **SASL over TLS:** set `security.protocol=SASL_SSL`, `ssl.truststore.location` (e.g. `/config/ca.pem`), `sasl.mechanism` (e.g. `SCRAM-SHA-256`), and `sasl.jaas.config` with your username and password.
+- **SASL plaintext:** set `security.protocol=SASL_PLAINTEXT`, `sasl.mechanism`, and `sasl.jaas.config` (only on trusted networks).
 
-```bash
-KAFKA_USER="avnadmin" \
-  KAFKA_PASS="your-password" \
-  KAFKA_BOOTSTRAP_SERVER="kafka.example.com:9092" \
-  CA_PATH=secrets/ca.pem \
-  ./source-kafka-discovery-sasl.sh
-```
+Do **not** add `bootstrap.servers` in `config.properties`; the script sets the broker list via `BOOTSTRAP_SERVER`.
 
-**Docker (no local Kafka CLI)**  
-`KAFKA_USER` and `KAFKA_PASS` are required (no defaults).
+## Environment variables
 
-```bash
-KAFKA_BOOTSTRAP_SERVER="kafka.example.com:9092" \
-  KAFKA_USER="my-user" \
-  KAFKA_PASS="my-password" \
-  CA_PATH=secrets/ca.pem \
-  ./docker-source-kafka-discovery-sasl.sh
-```
-
-**Required Files:**
-
-- `ca.pem` - CA certificate (default: `./ca.pem`)
-
-## Configuration Options
-
-All scripts support the following environment variables:
-
-| Variable                 | Default          | Description                                  |
-| ------------------------ | ---------------- | -------------------------------------------- |
-| `KAFKA_BOOTSTRAP_SERVER` | `localhost:9092` | Kafka bootstrap server address               |
-| `KAFKA_BIN_DIR`          | `/opt/kafka/bin` | Path to Kafka CLI tools directory            |
-| `OUTPUT_DIR`             | `./output`       | Directory where collected data will be saved |
-
-### Certificate Script Additional Options
-
-| Variable           | Default         | Description                     |
-| ------------------ | --------------- | ------------------------------- |
-| `CA_PATH`          | `./ca.pem`      | Path to CA certificate file     |
-| `CLIENT_CERT_PATH` | `./server.cert` | Path to client certificate file |
-| `CLIENT_KEY_PATH`  | `./server.key`  | Path to client private key file |
-
-### SASL Script Additional Options
-
-| Variable     | Default    | Description                 |
-| ------------ | ---------- | --------------------------- |
-| `KAFKA_USER` | `admin`    | SASL username               |
-| `KAFKA_PASS` | `password` | SASL password               |
-| `CA_PATH`    | `./ca.pem` | Path to CA certificate file |
+| Variable               | Default       | Description |
+| ---------------------- | ------------- | ----------- |
+| `BOOTSTRAP_SERVER`     | (none; set it)| Kafka bootstrap server (host:port). |
+| `OUTPUT_DIR`           | `/output`     | Directory for output files (use `/output` in Docker and mount it). |
+| `KAFKA_CLIENT_CONFIG`  | (none)        | Path to client config file for SSL/SASL (e.g. `/config/config.properties` in Docker). |
+| `SAMPLE_INTERVAL_SEC`  | `10`          | Seconds between the two offset samples. |
+| `TIMEOUT_MS`           | `300000`      | Timeout in ms for consumer group commands. |
+| `AVG_MESSAGE_BYTES`    | `0`           | Average message size in bytes; bytes/sec = messages/sec × this value. Set this for bytes/sec in the output. |
 
 ## Output
 
-All collected data is saved to the `OUTPUT_DIR` (default: `./output`).
+All files are written to `OUTPUT_DIR` (with Docker, typically `./output` on the host):
 
-### System information (plaintext and SASL scripts only)
+- `consumer_groups_offsets_sample1.txt` / `consumer_groups_offsets_sample2.txt` — raw offset snapshots
+- `throughput_by_group.csv` — per-group messages delta, messages/sec, and bytes/sec (when `AVG_MESSAGE_BYTES` is set)
+- `throughput_summary.txt` — human-readable summary and total cluster consumption (messages/sec and bytes/sec when `AVG_MESSAGE_BYTES` is set)
 
-- `kafka_version.txt` - Kafka version information
-- `linux_distribution.txt` - Linux distribution details
-- `kernel_version.txt` - Kernel version
-- `cpu_info.txt` - CPU information
-- `mem_info.txt` - Memory information
-- `kernel_settings.txt` - Kernel settings (sysctl)
-- `kernel_compile_options.txt` - Kernel compile options
+## Running without Docker
 
-The certificate script (`source-kafka-discovery-cert.sh`) only writes `kafka_version.txt`, `cpu_info.txt`, and `mem_info.txt` for system info.
-
-### Kafka cluster information
-
-- `kafka_broker_configs.txt` - Broker configurations
-- `consumer_groups_source.txt` - Consumer groups details
-- `consumer_groups_state_source.txt` - Consumer groups state (plaintext and SASL only; not produced by the cert script)
-- `topics_list_source.txt` - Topic details and configurations
-- `topics_offsets_source.json` - Topic offsets and log directory information
-
-## Running a local Kafka (for testing)
-
-A `docker-compose.yaml` is provided to start a single-node Kafka (plaintext on port 9092). Use it to test the discovery scripts without a real cluster:
+If you have Kafka CLI tools installed (e.g. under `/opt/kafka/bin`), you can run the script directly:
 
 ```bash
-docker compose up -d
-# Wait for the broker to be healthy, then:
-KAFKA_BOOTSTRAP_SERVER="localhost:9092" ./source-kafka-discovery.sh
-# or
-KAFKA_BOOTSTRAP_SERVER="localhost:9092" ./docker-source-kafka-discovery.sh
+export BOOTSTRAP_SERVER="your-bootstrap.example.com:9092"
+export AVG_MESSAGE_BYTES=1024
+# For SSL/SASL:
+export KAFKA_CLIENT_CONFIG=/path/to/config.properties
+./cluster-throughput-discovery.sh
 ```
 
-## Notes
-
-- The certificate script (`source-kafka-discovery-cert.sh`) validates that the client certificate and key match before proceeding, standardizes PEMs, and builds a combined keystore for the Kafka CLI.
-- All scripts create the output directory automatically if it doesn't exist.
-- Temporary configuration files are automatically cleaned up on script exit.
-- The scripts use a timeout of 180 seconds (3 minutes) for consumer group operations.
+Run from a directory that contains the script and where `./bin` has the Kafka scripts, or adapt the script to use your `KAFKA_BIN_DIR`.
 
 ## Troubleshooting
 
-1. **Certificate validation errors**: Ensure your certificate and key files match and are in PEM format
-2. **Connection timeouts**: Verify the `KAFKA_BOOTSTRAP_SERVER` address and port are correct
-3. **Authentication failures**: Double-check credentials and certificate paths
-4. **Missing Kafka tools**: Ensure `KAFKA_BIN_DIR` points to the correct directory containing Kafka CLI tools
+- **Connection timeouts:** Check `BOOTSTRAP_SERVER` and that the container can reach the cluster (firewall, VPN).
+- **SSL/SASL errors:** Ensure `config.properties` uses paths that exist inside the container (e.g. `/config/ca.pem`) and that the mounted volume contains those files. Verify credentials and CA match the cluster.
+- **Empty or missing throughput_by_group.csv:** Ensure there are active consumer groups and that offsets advance between the two samples; increase `SAMPLE_INTERVAL_SEC` if needed.
