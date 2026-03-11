@@ -2,14 +2,13 @@
 #
 # Cluster Throughput Discovery Script
 # Uses Kafka binary scripts to estimate average throughput from consumer group
-# offset deltas (messages/sec per group). Optionally can run producer/consumer
-# perf tests if a test topic is provided.
+# offset deltas (messages/sec per group; bytes/sec when AVG_MESSAGE_BYTES is set).
 #
 # Usage:
 #   export BOOTSTRAP_SERVER="your-bootstrap:9092"
 #   ./cluster-throughput-discovery.sh
 # Optional: SAMPLE_INTERVAL_SEC=15 (default 10) to sample consumer offsets over 15s
-# Optional: TEST_TOPIC="perf-test" to run producer/consumer perf tests (requires topic)
+# Optional: AVG_MESSAGE_BYTES=1024 to get bytes/sec in output
 #
 
 set -e
@@ -20,6 +19,13 @@ TIMEOUT_MS="${TIMEOUT_MS:-300000}"
 SAMPLE_INTERVAL_SEC="${SAMPLE_INTERVAL_SEC:-10}"
 # Optional: average message size in bytes; when set, bytes/sec = messages_per_sec * AVG_MESSAGE_BYTES
 AVG_MESSAGE_BYTES="${AVG_MESSAGE_BYTES:-0}"
+
+# #region agent log
+DEBUG_LOG="/Users/maja.schermuly/aiven/aiven-examples/solutions/kafka-throughput-discovery/.cursor/debug-a277fa.log"
+[ -d "$(dirname "$DEBUG_LOG")" ] || DEBUG_LOG="$OUTPUT_DIR/debug-a277fa.log"
+_debug_log() { echo "{\"sessionId\":\"a277fa\",\"location\":\"cluster-throughput-discovery.sh:$1\",\"message\":\"$2\",\"data\":{$3},\"timestamp\":$(($(date +%s)*1000)),\"hypothesisId\":\"$4\"}" >> "$DEBUG_LOG"; }
+_debug_log "22" "AVG_MESSAGE_BYTES and OUTPUT_DIR" "\"AVG_MESSAGE_BYTES\":\"$AVG_MESSAGE_BYTES\",\"OUTPUT_DIR\":\"$OUTPUT_DIR\"" "A,E"
+# #endregion
 
 # Optional: path to client security config (SSL/SASL) for --command-config
 COMMAND_CONFIG_ARGS=()
@@ -73,6 +79,12 @@ if command -v awk >/dev/null 2>&1 && [ -f "$S1" ] && [ -f "$S2" ]; then
   ' "$S1" "$S2" 2>/dev/null > "$OUTPUT_DIR/throughput_by_group.csv" || true
 fi
 
+# #region agent log
+csv_exists="false"; [ -f "$OUTPUT_DIR/throughput_by_group.csv" ] && csv_exists="true"
+csv_lines=0; [ -f "$OUTPUT_DIR/throughput_by_group.csv" ] && csv_lines=$(wc -l < "$OUTPUT_DIR/throughput_by_group.csv")
+_debug_log "76" "after awk: csv exists and line count" "\"csv_exists\":$csv_exists,\"csv_lines\":$csv_lines\"" "B,C"
+# #endregion
+
 {
   echo "Throughput discovery summary — $(date -Iseconds 2>/dev/null || date)"
   echo "Bootstrap server: $BOOTSTRAP_SERVER"
@@ -84,8 +96,15 @@ fi
     echo "---"
     TOTAL_MPS=$(awk -F, 'NR>1 && $3>0 { sum += $3 } END { print sum+0 }' "$OUTPUT_DIR/throughput_by_group.csv")
     echo "Total cluster consumption: ${TOTAL_MPS} messages/sec"
+    # #region agent log
+    _bytes_check_nonnumeric=0; [ -n "$AVG_MESSAGE_BYTES" ] && [ "$AVG_MESSAGE_BYTES" -gt 0 ] 2>/dev/null || _bytes_check_nonnumeric=1
+    _debug_log "92" "summary bytes branch" "\"AVG_MESSAGE_BYTES\":\"$AVG_MESSAGE_BYTES\",\"bytes_branch_taken\":$((1-_bytes_check_nonnumeric))" "D"
+    # #endregion
     if [ -n "$AVG_MESSAGE_BYTES" ] && [ "$AVG_MESSAGE_BYTES" -gt 0 ] 2>/dev/null; then
-      TOTAL_BPS=$(awk -F, 'NR>1 && $4 ~ /^[0-9]+$/ { sum += $4 } END { print sum+0 }' "$OUTPUT_DIR/throughput_by_group.csv")
+      TOTAL_BPS=$(awk -F, 'NR>1 && $4 ~ /^[0-9]+\.?[0-9]*$/ { sum += $4+0 } END { print sum+0 }' "$OUTPUT_DIR/throughput_by_group.csv")
+      # #region agent log
+      _debug_log "96" "bytes/sec computed" "\"TOTAL_BPS\":\"$TOTAL_BPS\"" "D"
+      # #endregion
       echo "Total cluster consumption: ${TOTAL_BPS} bytes/sec (avg message size: ${AVG_MESSAGE_BYTES} bytes)"
     fi
   else
@@ -97,43 +116,3 @@ fi
 } > "$THROUGHPUT_SUMMARY"
 
 echo "Done. Throughput summary: $THROUGHPUT_SUMMARY"
-
-# --- Optional: producer/consumer perf test (if TEST_TOPIC set and scripts exist) ---
-if [ -n "${TEST_TOPIC:-}" ]; then
-  if [ -f ./bin/kafka-producer-perf-test.sh ]; then
-    echo "Running producer perf test on topic: $TEST_TOPIC (10k messages, 1KB each)..."
-    if [ -n "${KAFKA_CLIENT_CONFIG:-}" ] && [ -f "$KAFKA_CLIENT_CONFIG" ]; then
-      ./bin/kafka-producer-perf-test.sh \
-        --topic "$TEST_TOPIC" \
-        --num-records 10000 \
-        --record-size 1024 \
-        --throughput 10000 \
-        --producer.config "$KAFKA_CLIENT_CONFIG" \
-        > "$OUTPUT_DIR/producer_perf_test.txt" 2>&1 || true
-    else
-      ./bin/kafka-producer-perf-test.sh \
-        --topic "$TEST_TOPIC" \
-        --num-records 10000 \
-        --record-size 1024 \
-        --throughput 10000 \
-        --producer-props bootstrap.servers="$BOOTSTRAP_SERVER" \
-        > "$OUTPUT_DIR/producer_perf_test.txt" 2>&1 || true
-    fi
-  fi
-  if [ -f ./bin/kafka-consumer-perf-test.sh ]; then
-    echo "Running consumer perf test on topic: $TEST_TOPIC..."
-    if [ -n "${KAFKA_CLIENT_CONFIG:-}" ] && [ -f "$KAFKA_CLIENT_CONFIG" ]; then
-      ./bin/kafka-consumer-perf-test.sh \
-        --topic "$TEST_TOPIC" \
-        --consumer.config "$KAFKA_CLIENT_CONFIG" \
-        --messages 10000 \
-        > "$OUTPUT_DIR/consumer_perf_test.txt" 2>&1 || true
-    else
-      ./bin/kafka-consumer-perf-test.sh \
-        --topic "$TEST_TOPIC" \
-        --bootstrap-server "$BOOTSTRAP_SERVER" \
-        --messages 10000 \
-        > "$OUTPUT_DIR/consumer_perf_test.txt" 2>&1 || true
-    fi
-  fi
-fi
