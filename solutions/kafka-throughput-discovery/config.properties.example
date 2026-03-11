@@ -1,0 +1,43 @@
+# Kafka client config example — copy to config.properties and adjust for your cluster.
+# The scripts pass --bootstrap-server themselves; you do not need bootstrap.servers here
+# (set BOOTSTRAP_SERVER in the environment or when running Docker).
+#
+# With Docker: mount your directory so the container sees the file and certs.
+#   Option A: mount repo root:  -v "$(pwd):/config:ro"  → use paths /config/config.properties, /config/ca.pem, etc.
+#   Option B: mount a folder:   -v "$(pwd)/config:/config:ro"  → put this file and certs under ./config/ and use /config/... in paths below.
+# Then set:  -e KAFKA_CLIENT_CONFIG=/config/config.properties
+#
+# Pick ONE of the following blocks to match how your Kafka cluster expects to be connected.
+# Get exact protocol, CA, and credentials from your provider (e.g. cloud console → Connection info).
+
+
+# =============================================================================
+# OPTION 1: SSL with JKS/PKCS12 (TLS + client cert in a keystore)
+# =============================================================================
+# security.protocol=SSL
+# ssl.truststore.type=JKS
+# ssl.truststore.location=/config/client.truststore.jks
+# ssl.truststore.password=YOUR_TRUSTSTORE_PASSWORD
+# ssl.keystore.type=PKCS12
+# ssl.keystore.location=/config/client.keystore.p12
+# ssl.keystore.password=YOUR_KEYSTORE_PASSWORD
+# ssl.key.password=YOUR_KEY_PASSWORD
+
+# =============================================================================
+# OPTION 2: SASL over TLS (username/password, encrypted) — e.g. SCRAM or PLAIN over SSL
+# =============================================================================
+# security.protocol=SASL_SSL
+# ssl.truststore.type=PEM
+# ssl.truststore.location=/config/ca.pem
+# sasl.mechanism=SCRAM-SHA-256
+# sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="YOUR_USERNAME" password="YOUR_PASSWORD";
+# Or for PLAIN: sasl.mechanism=PLAIN and PlainLoginModule in sasl.jaas.config
+
+# =============================================================================
+# OPTION 3: SASL PLAINTEXT (username/password, no TLS — use only on trusted networks)
+# =============================================================================
+# security.protocol=SASL_PLAINTEXT
+# sasl.mechanism=PLAIN
+# sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="YOUR_USERNAME" password="YOUR_PASSWORD";
+
+
