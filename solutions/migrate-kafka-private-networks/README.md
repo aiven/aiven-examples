@@ -66,7 +66,7 @@ Now that the services for the migration are spun up, the mirror maker service ge
 6. Destination Kafka external endpoint id
 7. MirrorMaker2 service name
 
-* To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
+To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
 Multiple migration flows can be spun up to migrate groups of topics in parallel.
 
 
