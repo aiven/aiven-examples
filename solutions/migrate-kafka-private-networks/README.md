@@ -54,16 +54,16 @@ Required Information for Infrastructure Setup:
 
 
 # 3. Migration Replication setup
-Now that the services for the migration are spun up, the mirror maker service gets setup to replicate the source Kafka cluster information on the new Destination kafka cluster.
+Now that the services for the migration are spun up, the mirror maker service gets setup to replicate the source Kafka cluster information on the new Destination Kafka cluster.
 
 
 **Required Information for infrasture setup**
 1. Aiven API Token
 2. Aiven project name
-3. source kafka service name
-4. destination kafka service name
-5. source kafka external endpoint id
-6. destination kafka external endpoint id
+3. source Kafka service name
+4. destination Kafka service name
+5. source Kafka external endpoint id
+6. destination Kafka external endpoint id
 7. MirrorMaker2 service name
 
 * To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
@@ -81,5 +81,5 @@ Once the migration of data starts, spinning up the observability solution will a
 4. Once services are spun up, navigate to the grafana dashboard to see migraiton metrics. 
 
 # 5. Consumer Validation
-THe  Offset Syncronization tool inspects the source and target clusters and compares the consumer group states. The tool emits the results to comfirm the offsets have been successfully synced up between clusters.
-more information found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
+The  Offset Syncronization tool inspects the source and target clusters and compares the consumer group states. The tool emits the results to comfirm the offsets have been successfully synced up between clusters.
+More information can be found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
