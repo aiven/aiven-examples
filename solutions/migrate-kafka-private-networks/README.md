@@ -60,10 +60,10 @@ Now that the services for the migration are spun up, the mirror maker service ge
 **Required Information for infrasture setup**
 1. Aiven API Token
 2. Aiven project name
-3. source Kafka service name
-4. destination Kafka service name
-5. source Kafka external endpoint id
-6. destination Kafka external endpoint id
+3. Source Kafka service name
+4. Destination Kafka service name
+5. Source Kafka external endpoint id
+6. Destination Kafka external endpoint id
 7. MirrorMaker2 service name
 
 * To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
@@ -74,10 +74,10 @@ Multiple migration flows can be spun up to migrate groups of topics in parallel.
 # 4. Observability Setup
 Once the migration of data starts, spinning up the observability solution will allow service monitoring in the interem. 
 
-1. navigate to `/mm2-migration-observability`
+1. Navigate to `/mm2-migration-observability`
 2. Update variable file 
-2. run `terraform init`
-3. run `terraform apply --var-file="<VAR FILE NAME>>`
+2. Run `terraform init`
+3. Run `terraform apply --var-file="<VAR FILE NAME>>`
 4. Once services are spun up, navigate to the grafana dashboard to see migraiton metrics. 
 
 # 5. Consumer Validation
