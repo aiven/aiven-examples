@@ -54,19 +54,19 @@ Required Information for Infrastructure Setup:
 
 
 # 3. Migration Replication setup
-Now that the services for the migration are spun up, the mirror maker service gets setup to replicate the source Kafka cluster information on the new Destination kafka cluster.
+Now that the services for the migration are spun up, the mirror maker service gets setup to replicate the source Kafka cluster information on the new Destination Kafka cluster.
 
 
 **Required Information for infrasture setup**
 1. Aiven API Token
 2. Aiven project name
-3. source kafka service name
-4. destination kafka service name
-5. source kafka external endpoint id
-6. destination kafka external endpoint id
+3. Source Kafka service name
+4. Destination Kafka service name
+5. Source Kafka external endpoint id
+6. Destination Kafka external endpoint id
 7. MirrorMaker2 service name
 
-* To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
+To get external endpoint Ids, you can run `avn service integration-endpoint-list --project <project name>` in the Aiven CLI
 Multiple migration flows can be spun up to migrate groups of topics in parallel.
 
 
@@ -74,12 +74,12 @@ Multiple migration flows can be spun up to migrate groups of topics in parallel.
 # 4. Observability Setup
 Once the migration of data starts, spinning up the observability solution will allow service monitoring in the interem. 
 
-1. navigate to `/mm2-migration-observability`
+1. Navigate to `/mm2-migration-observability`
 2. Update variable file 
-2. run `terraform init`
-3. run `terraform apply --var-file="<VAR FILE NAME>>`
+2. Run `terraform init`
+3. Run `terraform apply --var-file="<VAR FILE NAME>>`
 4. Once services are spun up, navigate to the grafana dashboard to see migraiton metrics. 
 
 # 5. Consumer Validation
-THe  Offset Syncronization tool inspects the source and target clusters and compares the consumer group states. The tool emits the results to comfirm the offsets have been successfully synced up between clusters.
-more information found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
+The  Offset Syncronization tool inspects the source and target clusters and compares the consumer group states. The tool emits the results to comfirm the offsets have been successfully synced up between clusters.
+More information can be found in the [ReadMe here](./mm2-offset-consumer-groups-validation/README.md). 
