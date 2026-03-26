@@ -105,7 +105,7 @@ resource "aiven_kafka_mirrormaker" "mm2_schema_replication_1" {
   }
 }
 
-#create MM2 for Spoke to Hub Schema Replication
+#create MM2 for Spoke to Hub Data Replication
 resource "aiven_kafka_mirrormaker" "mm2_data_replication_spoke_1" {
   project      = var.aiven_project_name
   cloud_name   = var.cloud_name_hub
