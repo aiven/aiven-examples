@@ -18,14 +18,23 @@ resource "aiven_kafka" "hub_kafka" {
     tiered_storage {
       enabled = true
     }
-
+    follower_fetching{
+      enabled = true
+    }
     kafka {
       auto_create_topics_enable = true
       default_replication_factor = 3
       min_insync_replicas = 2
       message_max_bytes = 100001200
     }
-
+    kafka_authentication_methods {
+      certificate = true
+      sasl        = true # Enable SASL authentication
+    }
+    kafka_sasl_mechanisms {
+      scram_sha_256 = true
+      scram_sha_512 = true
+    }
     public_access {
       kafka_rest    = false
       kafka_connect = false
@@ -60,14 +69,23 @@ resource "aiven_kafka" "spoke_kafka_1" {
     tiered_storage {
       enabled = true
     }
-
+    follower_fetching{
+      enabled = true
+    }
     kafka {
       auto_create_topics_enable = true
       default_replication_factor = 3
       min_insync_replicas = 2
       message_max_bytes = 100001200
     }
-
+    kafka_authentication_methods {
+      certificate = true
+      sasl        = true # Enable SASL authentication
+    }
+    kafka_sasl_mechanisms {
+      scram_sha_256 = true
+      scram_sha_512 = true
+    }
     public_access {
       kafka_rest    = false
       kafka_connect = false
