@@ -122,6 +122,7 @@ resource "aiven_kafka_topic" "diskless_example_topic" {
 
   config {
     diskless_enable = true
+    retention_ms = 1209600000
   }
 }
 
