@@ -1,0 +1,4 @@
+aiven_api_token                                = "<Aiven API Token>"
+aiven_project_name                             = "<Aiven Project Name>"
+external_source_aiven_kafka_endpoint_id_euw1 = "<project-name/external-kafka-endpoint-uuid-for-hub>"
+# external_source_aiven_kafka_endpoint_id_use1 = "<optional; not used by current main.tf>"
