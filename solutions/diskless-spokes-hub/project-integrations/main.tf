@@ -14,7 +14,7 @@ locals {
     try(local.external_kafka_creds["sasl_plain_username"], null),
     try(local.external_kafka_creds["username"], null),
     "",
-  ))
+  ))  
   sasl_password = trimspace(coalesce(
     try(local.external_kafka_creds["sasl_plain_password"], null),
     try(local.external_kafka_creds["password"], null),
@@ -80,3 +80,36 @@ resource "aiven_service_integration_endpoint" "aiven_kafka_source_example" {
     ssl_endpoint_identification_algorithm = "https"
   }
 }
+
+/*resource "aiven_service_integration_endpoint" "aiven_kafka_spoke_endpoint"
+{
+  endpoint_name = "aiven_kafka_source_endpoint"
+  project = var.aiven_project_name
+  endpoint_type = "external_kafka"
+    external_kafka_user_config {
+    bootstrap_servers = data.aiven_kafka.spoke_kafka_1.service_uri
+    security_protocol = "SASL_SSL"
+    sasl_mechanism = "SCRAM-SHA-256"
+    sasl_plain_username = data.aiven_kafka.spoke_kafka_1.username
+    sasl_plain_password = data.aiven_kafka.spoke_kafka_1.password
+    ssl_ca_cert = data.aiven_kafka.spoke_kafka.ca_cert
+    ssl_endpoint_identification_algorithm = "https"
+  }
+}*/
+
+
+/*resource "aiven_service_integration_endpoint" "aiven_kafka_hub_endpoint"
+{
+  endpoint_name = "aiven_kafka_source_endpoint"
+  project = var.aiven_project_name
+  endpoint_type = "external_kafka"
+    external_kafka_user_config {
+    bootstrap_servers = data.aiven_kafka.hub_kafka.service_uri
+    security_protocol = "SASL_SSL"
+    sasl_mechanism = "SCRAM-SHA-256"
+    sasl_plain_username = data.aiven_kafka.hub_kafka.username
+    sasl_plain_password = data.aiven_kafka.hub_kafka.password
+    ssl_ca_cert = data.aiven_kafka.hub_kafka.ca_cert
+    ssl_endpoint_identification_algorithm = "https"
+  }
+}*/
