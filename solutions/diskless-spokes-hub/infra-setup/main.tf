@@ -11,7 +11,7 @@ resource "aiven_kafka" "hub_kafka" {
     kafka_rest      = true
     kafka_connect   = false
     schema_registry = true
-    kafka_version   = "4.0"
+    kafka_version   = "4.1"
     kafka_diskless {
       enabled = true
     }
@@ -62,7 +62,7 @@ resource "aiven_kafka" "spoke_kafka_1" {
     kafka_rest      = true
     kafka_connect   = false
     schema_registry = true
-    kafka_version   = "4.0"
+    kafka_version   = "4.1"
     kafka_diskless {
       enabled = true
     }
