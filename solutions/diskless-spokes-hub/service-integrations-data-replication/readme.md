@@ -43,13 +43,15 @@ flowchart LR
   EP -->|"mm2-hub-svc-integration-data-destination\ncluster_alias: aiven-hub-data-destination-cluster"| MM2
 ```
 
-After both integrations exist, MM2’s internal replication pipelines can mirror **data topics** (subject to the MM2 service’s own `kafka_mirrormaker_user_config` from infra—refresh groups/topics, checkpoints, etc.) between the aliased clusters.
+After both integrations exist, `aiven_mirrormaker_replication_flow.spoke_to_hub_data` mirrors **spoke → hub** data topics between the aliased clusters. The `data_replication_topics` variable controls which topic regexes are included. The flow uses `IdentityReplicationPolicy` to preserve topic names, enables exactly-once delivery by default, and keeps internal / replica / Connect topics out through `replication_topics_blacklist`.
 
 ### What `main.tf` defines
 
 1. **`mm2-spoke-svc-integration-data-source-1`** — MM2 **source** is the **spoke** Aiven Kafka service (`source_service_name = aiven_kafka.spoke_kafka_1.service_name`). Producer-oriented `kafka_mirrormaker_user_config` (batch size, linger, buffer memory, max request size) matches the pattern used elsewhere in this solution for MM2 throughput tuning.
 
 2. **`mm2-hub-svc-integration-data-destination`** — MM2 **source** is the **hub** cluster reached through the **`external_kafka`** integration endpoint (`source_endpoint_id = var.external_source_aiven_kafka_endpoint_id_euw1`). The resource name says “destination” in the sense of **hub-as-destination in the overall hub/spoke story**; in MM2 terms it is still a **source cluster attachment** to the MM2 service (another `cluster_alias`).
+
+3. **`spoke_to_hub_data`** — MM2 replication flow from `aiven-spoke-data-source-cluster-1` to `aiven-hub-data-destination-cluster`. Configure `data_replication_topics` with the business topic regexes you want to land in the hub.
 
 Official reference: [aiven_service_integration](https://registry.terraform.io/providers/aiven/aiven/latest/docs/resources/service_integration).
 
@@ -72,10 +74,14 @@ Same as [`../infra-setup/readme.md`](../infra-setup/readme.md#provider-requireme
 | `aiven_project_name` | yes | Aiven project for all integrations |
 | `external_source_aiven_kafka_endpoint_id_euw1` | yes | Endpoint ID for the **hub**-side MM2 source on `mm2-hub-svc-integration-data-destination` |
 | `external_source_aiven_kafka_endpoint_id_use1` | no | Optional; same naming as schema-replication. Defaults to `null` and is **not used** by current `main.tf` |
+| `data_replication_topics` | yes | Java regex list for spoke → hub data topics; replace the placeholders in `variables-example.tfvars.examples` with the business topic patterns you want to replicate |
+| `replication_topics_blacklist` | no | Java regex list for topics excluded from replication; defaults to internal, replica, `__*`, and Connect topics |
+| `data_replication_exactly_once_delivery_enabled` | no | Enables exactly-once delivery on the data flow; defaults to `true` |
+| `data_replication_factor` | no | Replication factor for MM2 internal topics used by the flow; defaults to `3` |
 
 ## Example tfvars
 
-Copy [`variables-example.tfvars.examples`](variables-example.tfvars.examples) to a local `*.tfvars` file, fill in values, and **do not commit** secrets.
+Copy [`variables-example.tfvars.examples`](variables-example.tfvars.examples) to a local `*.tfvars` file, replace the `data_replication_topics` placeholders with Java regexes for your business topics, fill in the remaining values, and **do not commit** secrets.
 
 ## Usage
 
