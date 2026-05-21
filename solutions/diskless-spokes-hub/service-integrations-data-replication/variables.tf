@@ -22,9 +22,8 @@ variable "external_source_aiven_kafka_endpoint_id_use1" {
 }
 
 variable "data_replication_topics" {
-  description = "Java regular expressions for telemetry/business data topics to replicate from spoke to hub. Keep this list narrow to avoid mirroring internal or non-telemetry topics."
+  description = "Java regular expressions for business data topics to replicate from spoke to hub. Keep this list narrow to avoid mirroring unrelated topics."
   type        = list(string)
-  default     = ["telemetry\\..*", "cdip\\..*"]
 }
 
 variable "replication_topics_blacklist" {

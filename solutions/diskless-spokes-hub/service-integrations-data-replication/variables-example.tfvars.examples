@@ -4,8 +4,8 @@ external_source_aiven_kafka_endpoint_id_euw1 = "<project-name/external-kafka-end
 # external_source_aiven_kafka_endpoint_id_use1 = "<optional; not used by current main.tf>"
 
 data_replication_topics = [
-  "telemetry\\..*",
-  "cdip\\..*"
+  "<business-topic-regex-1>",
+  "<business-topic-regex-2>"
 ]
 
 replication_topics_blacklist = [
