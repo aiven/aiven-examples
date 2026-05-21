@@ -16,6 +16,7 @@ This directory’s **`provider.tf`** matches **[`../infra-setup/provider.tf`](..
 
 1. **`mm2-hub-svc-integration-schema-source`** — MM2 source is the **hub Aiven Kafka service** (`source_service_name`), appropriate when MM2 and the hub are in the same connectivity context.
 2. **`mm2-spoke-svc-integration-schema-destination`** — MM2 source is the **`external_kafka` endpoint** (`source_endpoint_id` = `external_source_aiven_kafka_endpoint_id_use1`), for a spoke or external cluster reached via the registered endpoint.
+3. **`hub_to_spoke_schema`** — MM2 replication flow from `aiven-hub-schema-produce-cluster` to `aiven-spoke-schema-receiver-cluster`. It defaults to the `_schemas` topic, uses `IdentityReplicationPolicy` to preserve the topic name, enables exactly-once delivery, and excludes internal / replica / Connect topics.
 
 Official reference: [aiven_service_integration](https://registry.terraform.io/providers/aiven/aiven/latest/docs/resources/service_integration).
 
@@ -38,6 +39,10 @@ Same as [`../infra-setup/readme.md`](../infra-setup/readme.md#provider-requireme
 | `aiven_project_name` | yes | Aiven project for all integrations |
 | `external_source_aiven_kafka_endpoint_id_use1` | yes | Endpoint ID for the spoke-side MM2 source on `mm2-spoke-svc-integration-schema-destination` |
 | `external_source_aiven_kafka_endpoint_id_euw1` | no | Optional; same naming as data-replication. Defaults to `null` and is **not used** by current `main.tf` |
+| `schema_replication_topics` | no | Java regex list for hub → spoke schema topics; defaults to `_schemas` |
+| `replication_topics_blacklist` | no | Java regex list for topics excluded from replication; defaults to internal, replica, `__*`, and Connect topics |
+| `schema_replication_exactly_once_delivery_enabled` | no | Enables exactly-once delivery on the schema flow; defaults to `true` |
+| `schema_replication_factor` | no | Replication factor for MM2 internal topics used by the flow; defaults to `3` |
 
 ## Example tfvars
 

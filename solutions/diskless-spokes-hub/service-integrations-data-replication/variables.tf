@@ -20,3 +20,33 @@ variable "external_source_aiven_kafka_endpoint_id_use1" {
   default     = null
   nullable    = true
 }
+
+variable "data_replication_topics" {
+  description = "Java regular expressions for telemetry/business data topics to replicate from spoke to hub. Keep this list narrow to avoid mirroring internal or non-telemetry topics."
+  type        = list(string)
+  default     = ["telemetry\\..*", "cdip\\..*"]
+}
+
+variable "replication_topics_blacklist" {
+  description = "Java regular expressions for topics excluded from MM2 replication flows."
+  type        = list(string)
+  default     = [".*[\\-\\.]internal", ".*\\.replica", "__.*", "connect.*"]
+}
+
+variable "replication_config_properties_exclude" {
+  description = "Topic configuration properties and regular expressions that MM2 should not replicate."
+  type        = list(string)
+  default     = ["follower\\.replication\\.throttled\\.replicas", "leader\\.replication\\.throttled\\.replicas", "message\\.timestamp\\.difference\\.max\\.ms", "message\\.timestamp\\.type"]
+}
+
+variable "data_replication_exactly_once_delivery_enabled" {
+  description = "Enable exactly-once delivery for the spoke-to-hub data replication flow."
+  type        = bool
+  default     = true
+}
+
+variable "data_replication_factor" {
+  description = "Replication factor used for MM2 internal topics created for the data replication flow."
+  type        = number
+  default     = 3
+}
