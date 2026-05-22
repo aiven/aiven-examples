@@ -1,0 +1,98 @@
+# Iceberg Sink Connector Configuration
+# Copy this file to terraform.tfvars and fill in your actual values
+
+# =============================================================================
+# REQUIRED: Aiven Configuration
+# =============================================================================
+
+# Aiven API token (get from https://console.aiven.io/account/tokens)
+# Can be provided in two ways:
+
+# METHOD 1: Environment Variable
+# Set this environment variable before running terraform:
+# export AIVEN_API_TOKEN="your-aiven-api-token-here"
+# The tchupp/env provider will automatically read this via data sources:
+aiven_api_token = ""
+
+# METHOD 2: Direct Configuration
+# Uncomment and fill in the token directly:
+# aiven_api_token = "your-aiven-api-token-here"
+
+# Aiven project name where services will be created
+project_name = "my-aiven-project"
+
+# =============================================================================
+# REQUIRED: AWS S3 Configuration
+# =============================================================================
+
+# AWS credentials can be provided in two ways:
+
+# METHOD 1: Environment Variables
+# Set these environment variables before running terraform:
+# export AWS_ACCESS_KEY_ID="your-aws-access-key-id"
+# export AWS_SECRET_ACCESS_KEY="your-aws-secret-access-key"
+# The tchupp/env provider will automatically read these via data sources:
+aws_access_key_id = ""
+aws_secret_access_key = ""
+
+# METHOD 2: Direct Configuration
+# Uncomment and fill in the credentials directly:
+# aws_access_key_id = "your-aws-access-key-id"
+# aws_secret_access_key = "your-aws-secret-access-key"
+
+# S3 bucket name for Iceberg warehouse storage
+s3_bucket_name = "my-iceberg-warehouse"
+
+# AWS role ARN to assume for S3 access (RECOMMENDED - more secure than direct credentials)
+# 
+# SECURITY BENEFIT: Using IAM assume role means you don't expose your AWS credentials.
+# Instead, Aiven uses their own IAM user to assume your role and get temporary credentials.
+# This provides:
+# - No long-term AWS access keys in your config
+# - Automatic credential rotation
+# - Full audit trail in AWS CloudTrail
+#
+# SETUP REQUIRED: Contact Aiven support to get your unique IAM user and External ID,
+# then create a cross-account role in your AWS account that trusts Aiven's IAM user.
+# See: https://aiven.io/docs/products/kafka/kafka-connect/howto/s3-iam-assume-role
+#
+# Leave empty to use direct AWS credentials (less secure fallback)
+
+aws_role_arn = ""
+
+# As alternative consider using Aiven's secret providers to store
+# sensitive configuration values in external secret managers:
+# - AWS Secrets Manager
+# - HashiCorp Vault
+#
+# This allows you to reference secrets in connector configs without storing
+# them in plain text. See: https://aiven.io/docs/products/kafka/kafka-connect/howto/configure-secret-providers
+#
+# Example: Instead of aws_access_key_id = "AKIA...", you would use:
+# aws_access_key_id = "${secret:aws-secrets-manager:my-secret-name:access-key-id}"
+
+
+# AWS region for S3 operations (must match your S3 bucket region)
+# aws_region = "eu-west-1"
+
+# =============================================================================
+# OPTIONAL: Customize the setup (uncomment and modify as needed)
+# =============================================================================
+
+# Cloud name for the services (e.g., google-europe-west1, aws-us-east-1)
+# cloud_name = "google-europe-west1"
+
+# Plan name for the services (e.g., startup-4, business-8)
+# plan_name = "startup-4"
+
+# Prefix for service names to ensure uniqueness
+# service_name_prefix = "iceberg-sink"
+
+# S3 prefix for Iceberg warehouse organization
+# s3_prefix = "connect-iceberg-sink"
+
+# Kafka topic name for the Iceberg sink connector
+# topic_name = "test_iceberg_topic"
+
+# Iceberg table name that will be created automatically
+# table_name = "test-table" 
