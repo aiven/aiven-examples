@@ -1,0 +1,31 @@
+apiVersion: aiven.io/v1alpha1
+kind: PostgreSQL
+metadata:
+  name: demo-pg
+spec:
+  authSecretRef:
+    name: aiven-token
+    key: token
+
+  # The Aiven free tier plan is "hobbyist". It is a single-node instance
+  # with no backups or high-availability. It is suitable for development
+  # and demonstration purposes only.
+  plan: hobbyist
+
+  # Set to the Aiven project you want the service created in.
+  project: YOUR_AIVEN_PROJECT
+
+  # Pick any cloud and region. The free tier is available across providers.
+  # Examples:
+  #   google-europe-west1
+  #   aws-eu-west-1
+  #   azure-germanywestcentral
+  cloudName: YOUR_CLOUD_AND_REGION
+
+  # The operator writes connection details into this Secret once the
+  # service is running. The app Deployment reads from it.
+  connInfoSecretTarget:
+    name: demo-pg-connection
+    prefix: PG_
+    annotations: {}
+    labels: {}

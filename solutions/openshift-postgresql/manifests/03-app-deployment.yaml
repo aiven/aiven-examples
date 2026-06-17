@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-app
+  template:
+    metadata:
+      labels:
+        app: demo-app
+    spec:
+      containers:
+        - name: demo-app
+          # Replace with your own image if you build and push the app/ directory.
+          image: docker.io/hughevansone/openshift-aiven-pg-demo:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  # This Secret is created automatically by the Aiven Operator
+                  # once the PostgreSQL service reaches the RUNNING state.
+                  name: demo-pg-connection
+                  key: PG_DATABASE_URI
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          securityContext:
+            # Do not set runAsUser — OpenShift assigns a UID from the
+            # namespace's uid-range annotation at runtime. Hardcoding a UID
+            # here will be rejected by the restricted SCC on most clusters.
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-app
+spec:
+  selector:
+    app: demo-app
+  ports:
+    - port: 80
+      targetPort: 8000
+---
+# OpenShift Route exposes the Service externally.
+# On plain Kubernetes, replace this with an Ingress resource.
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: demo-app
+spec:
+  to:
+    kind: Service
+    name: demo-app
+  port:
+    targetPort: 8000
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

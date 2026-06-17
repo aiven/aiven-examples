@@ -20,7 +20,9 @@ This repository provides complete solution examples using one or more Aiven serv
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 | **temporalio**                   | Example code for how to integrate `Temporal.io <https://temporal.io/>`_ with Aiven MySQL, Postgres, Opensearch, Cassandra.             |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
-| **node-replacement-monitoring**  | Script for monitoring service node replacements.                                                                                       | 
+| **node-replacement-monitoring**  | Script for monitoring service node replacements.                                                                                       |
++----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
+| **openshift-postgresql**         | Connect an application running on OpenShift to Aiven for PostgreSQL, using either the Aiven console or the Aiven Operator for Kubernetes. |
 +----------------------------------+----------------------------------------------------------------------------------------------------------------------------------------+
 
 Contact
