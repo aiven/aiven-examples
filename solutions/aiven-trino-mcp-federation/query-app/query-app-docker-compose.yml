@@ -51,6 +51,11 @@ services:
       OAUTH_MODE: native
       OAUTH_PROVIDER: hmac
       JWT_SECRET: ${MCP_JWT_SECRET:-}
+      # The HMAC validator REQUIRES an audience (and issuer); without OIDC_AUDIENCE
+      # it logs "audience is required" and rejects all tokens. query-agent must mint
+      # JWTs whose aud/iss claims match these exact values.
+      OIDC_AUDIENCE: ${MCP_JWT_AUDIENCE:-trino-mcp}
+      OIDC_ISSUER: ${MCP_JWT_ISSUER:-aiven-query-agent}
     # This is the externally-reachable surface for query-agent.
     ports:
       - "9097:9097"
