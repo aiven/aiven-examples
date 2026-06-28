@@ -29,11 +29,14 @@ services:
     image: ghcr.io/tuannvm/mcp-trino:latest
     container_name: mcp-trino
     depends_on:
-      - trino
+      # mcp-trino tests its Trino connection once at startup and exits on failure,
+      # so wait for Trino to be healthy (its image ships a healthcheck), not merely started.
+      trino:
+        condition: service_healthy
     environment:
       # --- MCP transport: HTTP (StreamableHTTP), endpoint /mcp ---
       MCP_TRANSPORT: http
-      HTTP_PORT: "9097"
+      MCP_PORT: "9097"
       # --- Trino connection (internal compose hostname) ---
       TRINO_HOST: trino
       TRINO_PORT: "8080"

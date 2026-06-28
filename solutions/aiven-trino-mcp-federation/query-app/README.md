@@ -64,7 +64,7 @@ Quick check with the Trino CLI:
 ```bash
 docker exec -it trino trino
 trino> SHOW SCHEMAS FROM iceberg;
-trino> SELECT count(*) FROM iceberg.<namespace>.order;
+trino> SELECT count(*) FROM iceberg.<namespace>.orders;
 ```
 
 ## Smoke test
@@ -75,7 +75,7 @@ running container:
 ```bash
 ./smoke-test.sh                       # catalogs + schemas in iceberg
 ./smoke-test.sh <namespace>           # + tables in that namespace
-./smoke-test.sh <namespace> <table>   # + SELECT count(*) (default table: order)
+./smoke-test.sh <namespace> <table>   # + SELECT count(*) (default table: orders)
 ```
 
 ## Deploy to Aiven Apps (eu-west-1)

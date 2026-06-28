@@ -7,7 +7,7 @@
 # Usage:
 #   ./smoke-test.sh                     # catalogs + schemas in `iceberg`
 #   ./smoke-test.sh <namespace>         # + tables in that namespace
-#   ./smoke-test.sh <namespace> <table> # + SELECT count(*) on that table (default table: order)
+#   ./smoke-test.sh <namespace> <table> # + SELECT count(*) on that table (default table: orders)
 #
 # Env:
 #   TRINO_CONTAINER  docker container name (default: trino)
@@ -37,7 +37,7 @@ if [ -n "$NS" ]; then
   echo "==> Tables in iceberg.\"$NS\""
   run "SHOW TABLES FROM iceberg.\"$NS\""
 
-  TABLE="${2:-order}"
+  TABLE="${2:-orders}"
   echo "==> Row count of iceberg.\"$NS\".\"$TABLE\" (reads data files from S3)"
   run "SELECT count(*) AS orders FROM iceberg.\"$NS\".\"$TABLE\""
 else
