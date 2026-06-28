@@ -1,0 +1,6 @@
+# Secrets — real connection values live in Aiven Apps env vars, never in git.
+.env
+
+# Build output
+/live-orders
+/bin/

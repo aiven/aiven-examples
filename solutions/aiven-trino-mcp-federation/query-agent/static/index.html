@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>query-agent — ask the live orders</title>
+  <style>
+    :root { --bg:#0f1419; --panel:#1a2029; --accent:#ff5c35; --text:#e6e6e6; --muted:#8a94a6; --code:#0b0e13; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+           background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
+    header { padding:14px 20px; border-bottom:1px solid #2a313c; }
+    header h1 { font-size:16px; margin:0; font-weight:600; }
+    header p { margin:4px 0 0; color:var(--muted); font-size:12px; }
+    #log { flex:1; overflow-y:auto; padding:20px; display:flex; flex-direction:column; gap:14px; }
+    .msg { max-width:820px; padding:12px 16px; border-radius:10px; line-height:1.5; white-space:pre-wrap; }
+    .user { align-self:flex-end; background:var(--accent); color:#fff; }
+    .bot { align-self:flex-start; background:var(--panel); }
+    .err { align-self:flex-start; background:#3a1d1d; color:#ffb4a8; }
+    .sql { align-self:flex-start; max-width:820px; width:100%; }
+    .sql details { background:var(--code); border:1px solid #2a313c; border-radius:8px; padding:8px 12px; }
+    .sql summary { cursor:pointer; color:var(--muted); font-size:12px; }
+    .sql pre { margin:8px 0 0; overflow-x:auto; font-size:12.5px; color:#9ed0ff; }
+    .tool { color:var(--muted); font-size:11px; margin-top:6px; }
+    form { display:flex; gap:10px; padding:16px 20px; border-top:1px solid #2a313c; }
+    input { flex:1; padding:12px 14px; border-radius:8px; border:1px solid #2a313c; background:var(--panel); color:var(--text); font-size:14px; }
+    button { padding:12px 20px; border:0; border-radius:8px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+    button:disabled { opacity:.5; cursor:default; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔎 query-agent</h1>
+    <p>Ask in plain English about the live orders — the agent writes the SQL and runs it on Trino.</p>
+  </header>
+  <div id="log">
+    <div class="msg bot">Try: “How many orders in the last hour?” · “Top 5 products by total revenue” · “Average order amount by status”</div>
+  </div>
+  <form id="form">
+    <input id="input" autocomplete="off" placeholder="Ask about the orders…" />
+    <button id="send" type="submit">Ask</button>
+  </form>
+
+  <script>
+    const log = document.getElementById("log");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+    const send = document.getElementById("send");
+
+    function add(cls, text) {
+      const d = document.createElement("div");
+      d.className = "msg " + cls;
+      d.textContent = text;
+      log.appendChild(d);
+      log.scrollTop = log.scrollHeight;
+      return d;
+    }
+
+    function addSql(calls) {
+      if (!calls || !calls.length) return;
+      const wrap = document.createElement("div");
+      wrap.className = "sql";
+      const det = document.createElement("details");
+      const sum = document.createElement("summary");
+      sum.textContent = `SQL / tools the agent ran (${calls.length})`;
+      det.appendChild(sum);
+      for (const c of calls) {
+        const label = document.createElement("div");
+        label.className = "tool";
+        label.textContent = "▸ " + (c.tool || "tool");
+        det.appendChild(label);
+        if (c.sql) {
+          const pre = document.createElement("pre");
+          pre.textContent = c.sql;
+          det.appendChild(pre);
+        }
+      }
+      wrap.appendChild(det);
+      log.appendChild(wrap);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const q = input.value.trim();
+      if (!q) return;
+      add("user", q);
+      input.value = "";
+      send.disabled = true;
+      const thinking = add("bot", "Thinking…");
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: q }),
+        });
+        const data = await res.json();
+        if (!res.ok || data.error) {
+          thinking.remove();
+          add("err", data.error || ("Request failed: " + res.status));
+        } else {
+          thinking.textContent = data.answer || "(no answer)";
+          addSql(data.tool_calls);
+        }
+      } catch (err) {
+        thinking.remove();
+        add("err", String(err));
+      } finally {
+        send.disabled = false;
+        input.focus();
+      }
+    });
+  </script>
+</body>
+</html>

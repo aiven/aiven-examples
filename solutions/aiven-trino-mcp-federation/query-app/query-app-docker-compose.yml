@@ -1,0 +1,53 @@
+# query-app: Trino + co-located Trino MCP server.
+#
+# Trino queries Iceberg-on-S3 through Snowflake Open Catalog; mcp-trino exposes
+# Trino to the query-agent over MCP (StreamableHTTP at /mcp). All secrets are
+# injected via environment variables (Aiven Apps env/secrets; local .env) — see
+# .env.example. Nothing sensitive is baked into the config files or image.
+
+services:
+  trino:
+    # Pin to a specific Trino release for reproducibility (e.g. trinodb/trino:476).
+    image: trinodb/trino:latest
+    container_name: trino
+    volumes:
+      - ./trino/etc:/etc/trino:ro
+    environment:
+      # Expanded by Trino's ${ENV:...} syntax in catalog/iceberg.properties.
+      ICEBERG_CATALOG_URI: ${ICEBERG_CATALOG_URI}
+      ICEBERG_OAUTH_CREDENTIAL: ${ICEBERG_OAUTH_CREDENTIAL}
+      ICEBERG_OAUTH_SCOPE: ${ICEBERG_OAUTH_SCOPE}
+      ICEBERG_WAREHOUSE: ${ICEBERG_WAREHOUSE}
+    # Trino is internal: only mcp-trino talks to it over the compose network.
+    # Expose 8080 locally for CLI/debugging; can be dropped in production.
+    ports:
+      - "8080:8080"
+    user: "trino"
+
+  mcp-trino:
+    # Pin to a released tag for reproducibility (check the repo's releases).
+    image: ghcr.io/tuannvm/mcp-trino:latest
+    container_name: mcp-trino
+    depends_on:
+      - trino
+    environment:
+      # --- MCP transport: HTTP (StreamableHTTP), endpoint /mcp ---
+      MCP_TRANSPORT: http
+      HTTP_PORT: "9097"
+      # --- Trino connection (internal compose hostname) ---
+      TRINO_HOST: trino
+      TRINO_PORT: "8080"
+      TRINO_SCHEME: http
+      TRINO_USER: trino
+      TRINO_CATALOG: iceberg
+      # --- Auth on the exposed MCP endpoint (HMAC-signed JWT) ---
+      # Local dev: leave MCP_OAUTH_ENABLED=false. For the exposed Aiven Apps
+      # deployment set it true and provide a strong MCP_JWT_SECRET; query-agent
+      # presents a JWT signed with the same secret.
+      OAUTH_ENABLED: ${MCP_OAUTH_ENABLED:-false}
+      OAUTH_MODE: native
+      OAUTH_PROVIDER: hmac
+      JWT_SECRET: ${MCP_JWT_SECRET:-}
+    # This is the externally-reachable surface for query-agent.
+    ports:
+      - "9097:9097"

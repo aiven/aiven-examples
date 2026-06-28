@@ -1,0 +1,8 @@
+# Secrets — real values (incl. Bedrock keys) live in Aiven Apps env vars, never in git.
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/

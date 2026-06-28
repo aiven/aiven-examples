@@ -1,0 +1,6 @@
+# Pin to the versions you tested with after the first successful install
+# (`pip freeze`). Floors below are intentionally loose for a template.
+strands-agents>=1.0.0
+mcp>=1.9.0
+fastapi>=0.115
+uvicorn[standard]>=0.30

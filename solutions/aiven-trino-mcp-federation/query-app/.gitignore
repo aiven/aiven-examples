@@ -1,0 +1,5 @@
+# Secrets — real values live in Aiven Apps env vars, never in git.
+.env
+
+# Trino local data dir, if mounted during dev.
+trino/data/
