@@ -1,6 +1,6 @@
 # 🚀 Kafka to Iceberg on S3 with Snowflake Open Catalog & Trino
 
-This tutorial demonstrates how to build a modern data pipeline that streams data from Kafka to Iceberg tables, with Snowflake Open Catalog managing metadata and Trino for querying. The system enables real-time data processing and analytics by:
+This tutorial demonstrates how to build a modern data pipeline that streams data from Kafka to Iceberg tables, with Snowflake Open Catalog managing metadata and Trino for querying. The use case streams **ecommerce orders** as master data — each order is captured the moment it is placed and lands in real time in the Iceberg data lake, where analysts can query it through Snowflake or Trino. The system enables real-time data processing and analytics by:
 
 ## ✨ Key Features
 
@@ -297,7 +297,7 @@ Your AWS user must have the following permissions to run the Terraform configura
 ## Aiven Kafka Setup
 ### Step 1: AWS User Permissions needed for Aiven Kafka Setup
 
-> **⚠️ Note:** If you did not use the AWS terraform setup, you will need the following aws user permissions for Aiven for Kafka to connect (see more details in Aiven Docs [here](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector))
+> **⚠️ Required (even with the Terraform setup):** The Iceberg Sink Connector writes data files to S3 using the **static AWS keys** you provide in `aws_access_key_id` / `aws_secret_access_key` (`terraform/aiven_setup/terraform.tfvars`). That IAM **user** must be granted the S3 permissions below on your bucket. The AWS Terraform in `terraform/aws_setup` only creates the **Snowflake catalog role** (`snowflake_s3_role`) — it does **not** manage this connector user's policy. If the user lacks `s3:PutObject`, table creation appears to succeed (the catalog writes the empty table metadata via its own role) but data commits fail with `403 ... not authorized to perform: s3:PutObject`, and the connector task dies. See Aiven Docs [here](https://aiven.io/docs/products/kafka/kafka-connect/howto/iceberg-sink-connector).
 
 <details>
 <summary>Click to view permissions details</summary>
@@ -367,7 +367,7 @@ Your AWS user must have the following permissions to run the Terraform configura
 
    This will create:
    - A Kafka service named `iceberg-kafka`.
-   - Two Kafka topics: `product` and `iceberg-control`.
+   - Two Kafka topics: `order` and `iceberg-control`.
    - A Kafka Connect service named `iceberg-connect`.
    - An Iceberg Sink Connector.
 </details>
@@ -402,18 +402,20 @@ Your AWS user must have the following permissions to run the Terraform configura
    ./aiven-iceberg-tutorial
    ```
 
+   > **⚠️ Produce *while* the connector is running.** The Iceberg sink's consumer effectively starts at **latest** (the managed Kafka Connect override policy may ignore `consumer.override.auto.offset.reset=earliest`). Records that are already in the topic *before* the connector/tasks start are skipped — so make sure the connector is in `RUNNING` state first, then run the producer. If you produced earlier and see no data landing, simply re-run the producer.
+
 The application will:
-- Generate 15 mock product records.
-- Send each product to the Kafka topic with a unique key.
+- Generate 15 mock order records.
+- Send each order to the Kafka topic with a unique key.
 - Log the partition and offset for each message sent.
 
 You should see output similar to:
 ```
 Starting Kafka producer...
-Sent product 1 to partition 0 at offset 0
-Sent product 2 to partition 0 at offset 1
+Sent order 1 to partition 0 at offset 0
+Sent order 2 to partition 0 at offset 1
 ...
-All products sent successfully.
+All orders sent successfully.
 ```
 </details>
 
@@ -429,14 +431,17 @@ The data pipeline includes a transformation step in Kafka Connect that's crucial
      // Key
      {
        "keyId": 10,
-       "keyCode": "P1"
+       "keyCode": "O1"
      }
      // Value
      {
-       "id": 1,
-       "name": "Product 1",
-       "quantity": 50,
-       "price": 29.99
+       "orderId": 1,
+       "customerId": 42,
+       "product": "Headphones",
+       "quantity": 2,
+       "amount": 59.98,
+       "status": "PAID",
+       "orderDate": "2026-06-28T10:15:30Z"
      }
      ```
 
@@ -449,11 +454,14 @@ The data pipeline includes a transformation step in Kafka Connect that's crucial
 
 3. **Resulting Iceberg Table Structure**
    ```sql
-   CREATE TABLE product (
-      name VARCHAR,
+   CREATE TABLE orders (
+      orderId BIGINT,
+      customerId BIGINT,
+      product VARCHAR,
       quantity BIGINT,
-      id BIGINT,
-      price DOUBLE,
+      amount DOUBLE,
+      status VARCHAR,
+      orderDate VARCHAR,
       kId BIGINT
    );
    ```
@@ -486,6 +494,7 @@ This transformation is essential because:
    SHOW SCHEMAS FROM iceberg;
    SELECT * FROM iceberg.`namespace`.`tablename` LIMIT 15;
    ```
+   > **💡 Tip:** We recommend using the plural form for the table name, for example `order` → `orders`. And if the table name happens to be a reserved SQL keyword (like `order`), wrap it in quotes when querying, e.g. `SELECT * FROM iceberg.`namespace`.`order` LIMIT 15;`
 </details>
 
 <br>

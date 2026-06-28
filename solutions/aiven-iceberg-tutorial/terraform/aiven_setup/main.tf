@@ -35,10 +35,10 @@ resource "aiven_kafka" "iceberg_kafka" {
 }
 
 # Create Kafka Topics (1 for use case and 1 for control)
-resource "aiven_kafka_topic" "product_topic" {
+resource "aiven_kafka_topic" "order_topic" {
   project      = var.aiven_project_name
   service_name = aiven_kafka.iceberg_kafka.service_name
-  topic_name   = "product"
+  topic_name   = "order"
   partitions   = 3
   replication  = 2
 }
@@ -83,13 +83,13 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "iceberg.tables" = var.iceberg_catalog_tables_config
     "iceberg.tables.auto-create-enabled" = "true"
     "iceberg.control.topic" = var.iceberg_control_topic
-    "iceberg.control.commit.interval-ms" = "500"
+    "iceberg.control.commit.interval-ms" = "2000"
     "iceberg.control.commit.timeout-ms" = "20000"
     "connector.class" = "org.apache.iceberg.connect.IcebergSinkConnector"
-    "tasks.max" = "2"
+    "tasks.max" = "1"
     "key.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "value.converter" = "org.apache.kafka.connect.json.JsonConverter"
-    "topics" = "product"
+    "topics" = "order"
     "transforms" = "k2v"
     "transforms.k2v.type" = "io.aiven.kafka.connect.transforms.KeyToValue"
     "transforms.k2v.key.fields" = "keyId"

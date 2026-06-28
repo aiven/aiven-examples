@@ -28,33 +28,47 @@ func mustGetenv(key string) string {
 	return v
 }
 
-type ProductKey struct {
+type OrderKey struct {
 	KeyId   int    `json:"keyId"`
 	KeyCode string `json:"keyCode"`
 }
 
-type Product struct {
-	ID       int     `json:"id"`
-	Name     string  `json:"name"`
-	Quantity int     `json:"quantity"`
-	Price    float64 `json:"price"`
+// Order represents an ecommerce order placed by a customer. This is the master
+// data we stream in real time into the Iceberg data lake.
+type Order struct {
+	OrderID    int     `json:"orderId"`
+	CustomerID int     `json:"customerId"`
+	Product    string  `json:"product"`
+	Quantity   int     `json:"quantity"`
+	Amount     float64 `json:"amount"`
+	Status     string  `json:"status"`    // PENDING, PAID, SHIPPED, DELIVERED, CANCELLED
+	OrderDate  string  `json:"orderDate"` // RFC3339 timestamp
 }
 
-// generateMockProducts creates a specified number of mock product instances
-func generateMockProducts(count int) []Product {
-	products := make([]Product, count)
+// generateMockOrders creates a specified number of mock ecommerce orders.
+func generateMockOrders(count int) []Order {
+	orders := make([]Order, count)
 	rand := rand.New(rand.NewSource(time.Now().UnixNano()))
 
+	products := []string{"Laptop", "Headphones", "Keyboard", "Monitor", "Webcam", "Mouse", "Desk Chair", "USB-C Cable"}
+	statuses := []string{"PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"}
+
 	for i := 0; i < count; i++ {
-		products[i] = Product{
-			ID:       i + 1,
-			Name:     fmt.Sprintf("Product %d", i+1),
-			Quantity: rand.Intn(100) + 1,
-			Price:    float64(5+rand.Intn(95)) + rand.Float64(),
+		quantity := rand.Intn(5) + 1
+		unitPrice := float64(5+rand.Intn(495)) + rand.Float64()
+
+		orders[i] = Order{
+			OrderID:    i + 1,
+			CustomerID: rand.Intn(1000) + 1,
+			Product:    products[rand.Intn(len(products))],
+			Quantity:   quantity,
+			Amount:     float64(quantity) * unitPrice,
+			Status:     statuses[rand.Intn(len(statuses))],
+			OrderDate:  time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour).Format(time.RFC3339),
 		}
 	}
 
-	return products
+	return orders
 }
 
 func main() {
@@ -90,15 +104,15 @@ func main() {
 	}
 	defer producer.Close()
 
-	// Generate mock products
-	mockProducts := generateMockProducts(15)
+	// Generate mock orders
+	mockOrders := generateMockOrders(15)
 
-	// Send each product to Kafka with a key
-	for _, product := range mockProducts {
+	// Send each order to Kafka with a key
+	for _, order := range mockOrders {
 		// Create a key for the message
-		key := ProductKey{
-			KeyId:   product.ID * 10, // Example key ID generation
-			KeyCode: fmt.Sprintf("P%d", product.ID),
+		key := OrderKey{
+			KeyId:   order.OrderID * 10, // Example key ID generation
+			KeyCode: fmt.Sprintf("O%d", order.OrderID),
 		}
 
 		keyBytes, err := json.Marshal(key)
@@ -106,13 +120,13 @@ func main() {
 			log.Fatalf("Failed to marshal key: %v", err)
 		}
 
-		valueBytes, err := json.Marshal(product)
+		valueBytes, err := json.Marshal(order)
 		if err != nil {
-			log.Fatalf("Failed to marshal product: %v", err)
+			log.Fatalf("Failed to marshal order: %v", err)
 		}
 
 		msg := &sarama.ProducerMessage{
-			Topic: "product",
+			Topic: "order",
 			Key:   sarama.ByteEncoder(keyBytes),
 			Value: sarama.ByteEncoder(valueBytes),
 		}
@@ -122,8 +136,8 @@ func main() {
 			log.Fatalf("Failed to send message: %v", err)
 		}
 
-		log.Printf("Sent product %d to partition %d at offset %d", product.ID, partition, offset)
+		log.Printf("Sent order %d to partition %d at offset %d", order.OrderID, partition, offset)
 	}
 
-	log.Println("All products sent successfully.")
+	log.Println("All orders sent successfully.")
 }
