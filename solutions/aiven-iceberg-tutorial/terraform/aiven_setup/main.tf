@@ -19,7 +19,18 @@ resource "aiven_kafka" "iceberg_kafka" {
   service_name = var.aiven_kafka_name
 
   kafka_user_config {
-    kafka_version = "3.8"
+    kafka_version = "3.9"
+
+    # Enable both cert (mTLS, used by the connector + Go producer) and SASL.
+    # SASL must be enabled for the Let's Encrypt public CA cert below.
+    kafka_authentication_methods {
+      certificate = true
+      sasl        = true
+    }
+
+    # Serve a publicly-trusted Let's Encrypt CA certificate on the SASL listener,
+    # so SASL_SSL clients can validate the broker without the Aiven project CA.
+    letsencrypt_sasl = true
   }
 }
 
