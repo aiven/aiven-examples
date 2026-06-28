@@ -47,6 +47,8 @@ Thumbs.db
 *.test
 *.out
 go.work
+# Compiled producer binary (matches the module name)
+/aiven-iceberg-tutorial
 
 # IDE
 .idea/

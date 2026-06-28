@@ -2,7 +2,6 @@ package main
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -13,7 +12,21 @@ import (
 	"github.com/IBM/sarama"
 )
 
-const KafkaBrokerAddress = "<your-kafka-broker-address>"
+// Kafka connection settings are read from environment variables:
+//
+//	KAFKA_SERVICE_URI - SASL_SSL broker address from the Aiven Console
+//	                    (Service > Connection information, authentication "SASL").
+//	                    NOTE: a different port than the certificate/mTLS endpoint,
+//	                    e.g. kafka-iceberg-demo.a.aivencloud.com:12345
+//	KAFKA_USERNAME    - Kafka SASL username (e.g. avnadmin)
+//	KAFKA_PASSWORD    - Kafka SASL password
+func mustGetenv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("Required environment variable %s is not set", key)
+	}
+	return v
+}
 
 type ProductKey struct {
 	KeyId   int    `json:"keyId"`
@@ -47,38 +60,29 @@ func generateMockProducts(count int) []Product {
 func main() {
 	log.Println("Starting Kafka producer...")
 
-	// Set up TLS configuration
-	certFile := "./certs/service.cert"
-	keyFile := "./certs/service.key"
-	caFile := "./certs/ca.pem"
-
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		log.Fatalf("Failed to load client certificate/key: %v", err)
-	}
-
-	caCert, err := os.ReadFile(caFile)
-	if err != nil {
-		log.Fatalf("Failed to read CA certificate: %v", err)
-	}
-
-	caCertPool := x509.NewCertPool()
-	if !caCertPool.AppendCertsFromPEM(caCert) {
-		log.Fatalf("Failed to append CA certificate")
-	}
-
-	tlsConfig := &tls.Config{
-		Certificates:       []tls.Certificate{cert},
-		RootCAs:            caCertPool,
-		InsecureSkipVerify: false,
-	}
+	brokerAddress := mustGetenv("KAFKA_SERVICE_URI")
+	username := mustGetenv("KAFKA_USERNAME")
+	password := mustGetenv("KAFKA_PASSWORD")
 
 	config := sarama.NewConfig()
-	config.Net.TLS.Enable = true
-	config.Net.TLS.Config = tlsConfig
 	config.Producer.Return.Successes = true
 
-	brokers := []string{KafkaBrokerAddress}
+	// TLS with an empty config uses the system root CA pool, which already trusts
+	// the Let's Encrypt CA serving the broker's SASL_SSL listener. No project CA
+	// (ca.pem) or client certificate/key needed.
+	config.Net.TLS.Enable = true
+	config.Net.TLS.Config = &tls.Config{}
+
+	// SASL authentication over TLS (SASL_SSL) using SCRAM-SHA-512.
+	config.Net.SASL.Enable = true
+	config.Net.SASL.Mechanism = sarama.SASLTypeSCRAMSHA512
+	config.Net.SASL.User = username
+	config.Net.SASL.Password = password
+	config.Net.SASL.SCRAMClientGeneratorFunc = func() sarama.SCRAMClient {
+		return &XDGSCRAMClient{HashGeneratorFcn: SHA512}
+	}
+
+	brokers := []string{brokerAddress}
 
 	producer, err := sarama.NewSyncProducer(brokers, config)
 	if err != nil {

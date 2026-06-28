@@ -379,26 +379,26 @@ Your AWS user must have the following permissions to run the Terraform configura
 <details>
 <summary>Click to view Go producer setup steps</summary>
 
-1. **Certificate Setup**
-   - Create a `certs` directory in your project root and download the following certificate files from your Aiven for Kafka Service dashboard:
-     - Navigate to your Kafka service in Aiven Console.
-     - Go to the "Connection Information" tab.
-     - Download:
-       - `ca.pem`: The CA certificate.
-       - `service.cert`: The service certificate.
-       - `service.key`: The service private key.
-   - Place these files in the `certs` directory.
+1. **Configure connection via environment variables**
+   - The producer connects over **SASL_SSL** using the broker's **Let's Encrypt** public certificate, so no `ca.pem` / client certificate download is required — Go trusts the public CA via the system trust store.
+   - Copy the example env file and fill in your values:
+     ```bash
+     cp .env.example .env
+     # edit .env, then:
+     source .env
+     ```
+   - Set the following (from the Aiven Console: **Service > Connection information**, with authentication set to **SASL**):
+     - `KAFKA_SERVICE_URI`: the **SASL_SSL** broker address (a different port than the certificate/mTLS endpoint), e.g. `kafka-iceberg-demo.a.aivencloud.com:12345`.
+     - `KAFKA_USERNAME`: Kafka SASL username (e.g. `avnadmin`).
+     - `KAFKA_PASSWORD`: Kafka SASL password.
+   - The `.env` file is git-ignored so your credentials are not committed.
 
-2. **Configure Kafka Broker Address**
-   - Open `main.go` in your editor.
-   - Locate the `KafkaBrokerAddress` constant (around line 16).
-   - Replace `<your-kafka-broker-address>` with your Aiven Kafka Service URI.
-     - You can find this in your Aiven Console under the Kafka service's "Connection Information" tab.
-     - It will look something like: `kafka-iceberg-demo.a.aivencloud.com:12345`.
+   > **Note:** This requires SASL authentication and the Let's Encrypt SASL certificate to be enabled on the Kafka service (set in `terraform/aiven_setup/main.tf` via `kafka_authentication_methods.sasl = true` and `letsencrypt_sasl = true`).
 
-3. **Build and Run**
+2. **Build and Run**
    ```bash
    go build
+   source .env   # if not already sourced
    ./aiven-iceberg-tutorial
    ```
 
