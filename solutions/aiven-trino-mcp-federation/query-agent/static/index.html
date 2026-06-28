@@ -17,6 +17,8 @@
     .user { align-self:flex-end; background:var(--accent); color:#fff; }
     .bot { align-self:flex-start; background:var(--panel); }
     .err { align-self:flex-start; background:#3a1d1d; color:#ffb4a8; }
+    .msg .ts { font-size:10px; margin-top:6px; color:var(--muted); }
+    .user .ts { color:rgba(255,255,255,.75); text-align:right; }
     .sql { align-self:flex-start; max-width:820px; width:100%; }
     .sql details { background:var(--code); border:1px solid #2a313c; border-radius:8px; padding:8px 12px; }
     .sql summary { cursor:pointer; color:var(--muted); font-size:12px; }
@@ -47,10 +49,21 @@
     const input = document.getElementById("input");
     const send = document.getElementById("send");
 
+    function fmtTime(d) {
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    }
+
     function add(cls, text) {
       const d = document.createElement("div");
       d.className = "msg " + cls;
-      d.textContent = text;
+      const body = document.createElement("div");
+      body.className = "body";
+      body.textContent = text;
+      const ts = document.createElement("div");
+      ts.className = "ts";
+      ts.textContent = fmtTime(new Date());
+      d.appendChild(body);
+      d.appendChild(ts);
       log.appendChild(d);
       log.scrollTop = log.scrollHeight;
       return d;
@@ -99,7 +112,8 @@
           thinking.remove();
           add("err", data.error || ("Request failed: " + res.status));
         } else {
-          thinking.textContent = data.answer || "(no answer)";
+          thinking.querySelector(".body").textContent = data.answer || "(no answer)";
+          thinking.querySelector(".ts").textContent = fmtTime(new Date());
           addSql(data.tool_calls);
         }
       } catch (err) {

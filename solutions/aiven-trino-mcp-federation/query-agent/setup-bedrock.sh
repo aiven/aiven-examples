@@ -3,7 +3,7 @@
 # setup-bedrock.sh — provision the IAM identity query-agent uses to call
 # Amazon Bedrock (Claude) from Aiven Apps.
 #
-# Context (see ../PLAN-SIMPLIFIED.md):
+# Context:
 #   - query-agent runs on Aiven Apps (eu-west-1), OUTSIDE AWS, so it cannot use
 #     an instance role. It authenticates to Bedrock with long-lived IAM keys.
 #   - Bedrock model access is auto-enabled on first invocation (the old

@@ -7,8 +7,7 @@ by real SQL — no SQL written by you. A long-running app streams orders into
 Trino through the **Trino MCP** server. Everything runs on **Aiven Apps**.
 
 > This solution builds on [`aiven-iceberg-tutorial`](../aiven-iceberg-tutorial/)
-> for the Kafka → Iceberg pipeline and reuses its Snowflake Open Catalog. See
-> [`PLAN-SIMPLIFIED.md`](PLAN-SIMPLIFIED.md) for the full design and decisions.
+> for the Kafka → Iceberg pipeline and reuses its Snowflake Open Catalog.
 
 ## ✨ What's inside
 
@@ -47,7 +46,7 @@ run read-only `SELECT`) → Trino reads Iceberg via Open Catalog → answer + th
 > **Regions (Path A):** the apps and Bedrock run in **eu-west-1** (where Aiven
 > Apps on AWS is available); the S3 bucket + Open Catalog stay in **us-west-2**.
 > Trino reads S3 cross-region — correct, just higher latency. This is why
-> `query-app` pins `s3.region=us-west-2`. Details in [`PLAN-SIMPLIFIED.md`](PLAN-SIMPLIFIED.md).
+> `query-app` pins `s3.region=us-west-2`.
 >
 > **Freshness:** orders reach Iceberg through the Kafka→Iceberg sink, which
 > commits on an interval, so the agent queries *near*-real-time data.

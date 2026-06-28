@@ -2,7 +2,7 @@
 
 A long-running Kafka producer that continuously streams mock ecommerce orders
 at a configurable rate until stopped. It's the "live" data source for the
-[aiven-trino-mcp-federation](../PLAN-SIMPLIFIED.md) demo:
+[aiven-trino-mcp-federation](../README.md) demo:
 
 ```
 live-orders ──► Aiven Kafka ──(Kafka Connect: Iceberg sink)──► Iceberg / S3 ──► Trino
