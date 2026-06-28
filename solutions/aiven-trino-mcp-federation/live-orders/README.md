@@ -59,6 +59,17 @@ pure producer). Deploy it to Aiven Apps as a **long-running worker** (via the
 `live-orders-docker-compose.yml` recipe) and supply the environment variables
 above in the Aiven Apps configuration.
 
+## Tests
+
+Unit tests (no Kafka needed — the produce path uses sarama's mock producer):
+
+```bash
+go test ./...
+```
+
+Covers order generation invariants, the rate→interval math, message
+construction, and a mocked produce round-trip.
+
 ## Notes
 
 - **Connection:** SASL_SSL + SCRAM-SHA-512, trusting the public Let's Encrypt CA

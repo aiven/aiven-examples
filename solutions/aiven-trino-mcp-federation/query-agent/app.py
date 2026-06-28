@@ -22,6 +22,8 @@ from strands.models import BedrockModel
 from strands.tools.mcp import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 
+from helpers import auth_headers, extract_sql
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("query-agent")
 
@@ -50,7 +52,17 @@ How to work:
   concrete numbers you retrieved. Do not paste raw tool output verbatim.
 """
 
-model = BedrockModel(model_id=BEDROCK_MODEL_ID, region_name=AWS_REGION)
+_model = None
+
+
+def get_model() -> BedrockModel:
+    """Lazily build the Bedrock model so importing this module needs no AWS
+    credentials (keeps the app unit-testable)."""
+    global _model
+    if _model is None:
+        _model = BedrockModel(model_id=BEDROCK_MODEL_ID, region_name=AWS_REGION)
+    return _model
+
 
 app = FastAPI(title="query-agent")
 STATIC_DIR = Path(__file__).parent / "static"
@@ -62,23 +74,8 @@ class ChatRequest(BaseModel):
 
 def _make_mcp_client() -> MCPClient:
     """Build an MCP client for the Trino MCP server, with optional JWT auth."""
-    headers = {"Authorization": f"Bearer {TRINO_MCP_JWT}"} if TRINO_MCP_JWT else None
+    headers = auth_headers(TRINO_MCP_JWT)
     return MCPClient(lambda: streamablehttp_client(TRINO_MCP_URL, headers=headers))
-
-
-def _extract_sql(messages: list) -> list:
-    """Pull the SQL/tool calls the agent made out of the conversation, so the UI
-    can show what actually ran against Trino."""
-    calls = []
-    for msg in messages:
-        for block in msg.get("content", []) or []:
-            tool_use = block.get("toolUse") if isinstance(block, dict) else None
-            if not tool_use:
-                continue
-            inp = tool_use.get("input") or {}
-            sql = inp.get("query") or inp.get("sql")
-            calls.append({"tool": tool_use.get("name"), "sql": sql, "input": inp})
-    return calls
 
 
 @app.get("/healthz")
@@ -99,10 +96,10 @@ def chat(req: ChatRequest):
         mcp_client = _make_mcp_client()
         with mcp_client:
             tools = mcp_client.list_tools_sync()
-            agent = Agent(model=model, tools=tools, system_prompt=SYSTEM_PROMPT)
+            agent = Agent(model=get_model(), tools=tools, system_prompt=SYSTEM_PROMPT)
             result = agent(req.message)
             answer = str(result)
-            sql_calls = _extract_sql(agent.messages)
+            sql_calls = extract_sql(agent.messages)
         return {"answer": answer, "tool_calls": sql_calls}
     except Exception as exc:  # surface a friendly error to the UI
         log.exception("chat failed")

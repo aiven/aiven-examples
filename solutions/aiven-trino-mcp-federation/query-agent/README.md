@@ -73,6 +73,20 @@ Deploy `query-agent-docker-compose.yml` and supply the variables above as
 env/secrets. Point `TRINO_MCP_URL` at query-app's externally-exposed MCP URL and
 set `TRINO_MCP_JWT` if query-app has MCP auth enabled. The web UI is on port 8000.
 
+## Tests
+
+Unit tests with Strands + MCP mocked (no AWS creds, no live Trino):
+
+```bash
+pip install -r requirements.txt -r requirements-dev.txt
+pytest
+```
+
+- `tests/test_helpers.py` — the pure helpers (`extract_sql`, `auth_headers`);
+  needs no third-party deps.
+- `tests/test_api.py` — `/healthz` and `/api/chat` via FastAPI `TestClient` with
+  a fake agent + MCP (skips automatically if the app deps aren't installed).
+
 ## Notes
 
 - **Stateless** single-turn Q&A: a fresh agent + MCP connection per request

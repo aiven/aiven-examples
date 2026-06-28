@@ -67,6 +67,17 @@ trino> SHOW SCHEMAS FROM iceberg;
 trino> SELECT count(*) FROM iceberg.<namespace>.order;
 ```
 
+## Smoke test
+
+`smoke-test.sh` runs the keystone check (Trino → Open Catalog → S3) against a
+running container:
+
+```bash
+./smoke-test.sh                       # catalogs + schemas in iceberg
+./smoke-test.sh <namespace>           # + tables in that namespace
+./smoke-test.sh <namespace> <table>   # + SELECT count(*) (default table: order)
+```
+
 ## Deploy to Aiven Apps (eu-west-1)
 
 Deploy this compose recipe to Aiven Apps and supply the variables above as

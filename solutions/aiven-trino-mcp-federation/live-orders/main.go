@@ -73,6 +73,29 @@ var (
 	statuses = []string{"PENDING", "PAID", "SHIPPED", "DELIVERED", "CANCELLED"}
 )
 
+// intervalFor returns the delay between sends needed to hit a target rate.
+func intervalFor(ordersPerMinute int) time.Duration {
+	return time.Minute / time.Duration(ordersPerMinute)
+}
+
+// newOrderMessage builds the Kafka message (JSON key + value) for an order.
+func newOrderMessage(topic string, order Order) (*sarama.ProducerMessage, error) {
+	key := OrderKey{KeyId: order.OrderID * 10, KeyCode: fmt.Sprintf("O%d", order.OrderID)}
+	keyBytes, err := json.Marshal(key)
+	if err != nil {
+		return nil, fmt.Errorf("marshal key: %w", err)
+	}
+	valueBytes, err := json.Marshal(order)
+	if err != nil {
+		return nil, fmt.Errorf("marshal value: %w", err)
+	}
+	return &sarama.ProducerMessage{
+		Topic: topic,
+		Key:   sarama.ByteEncoder(keyBytes),
+		Value: sarama.ByteEncoder(valueBytes),
+	}, nil
+}
+
 // generateOrder builds a single mock order stamped with the current time.
 func generateOrder(rng *rand.Rand, orderID int) Order {
 	quantity := rng.Intn(5) + 1
@@ -105,7 +128,7 @@ func main() {
 		}
 		ordersPerMinute = n
 	}
-	interval := time.Minute / time.Duration(ordersPerMinute)
+	interval := intervalFor(ordersPerMinute)
 	log.Printf("Config: topic=%q rate=%d orders/min (1 every %s)", topic, ordersPerMinute, interval)
 
 	config := sarama.NewConfig()
@@ -152,22 +175,10 @@ func main() {
 		case <-ticker.C:
 			order := generateOrder(rng, orderID)
 
-			key := OrderKey{KeyId: order.OrderID * 10, KeyCode: fmt.Sprintf("O%d", order.OrderID)}
-			keyBytes, err := json.Marshal(key)
+			msg, err := newOrderMessage(topic, order)
 			if err != nil {
-				log.Printf("Failed to marshal key for order %d: %v", order.OrderID, err)
+				log.Printf("Failed to build message for order %d: %v", order.OrderID, err)
 				continue
-			}
-			valueBytes, err := json.Marshal(order)
-			if err != nil {
-				log.Printf("Failed to marshal order %d: %v", order.OrderID, err)
-				continue
-			}
-
-			msg := &sarama.ProducerMessage{
-				Topic: topic,
-				Key:   sarama.ByteEncoder(keyBytes),
-				Value: sarama.ByteEncoder(valueBytes),
 			}
 
 			partition, offset, err := producer.SendMessage(msg)
