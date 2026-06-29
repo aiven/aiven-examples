@@ -43,8 +43,11 @@ query-agent/
 | `AWS_SECRET_ACCESS_KEY` | yes | — | (secret). |
 | `AWS_REGION` | no | `eu-west-1` | Bedrock region. |
 | `BEDROCK_MODEL_ID` | no | `eu.anthropic.claude-sonnet-4-6` | EU inference profile. |
-| `TRINO_MCP_URL` | no | `http://localhost:9097/mcp` | query-app's MCP endpoint. |
-| `TRINO_MCP_JWT` | when MCP auth on | — | Bearer token (HMAC JWT) for the MCP endpoint. |
+| `TRINO_MCP_URL` | no | `http://localhost:9097/mcp` | query-app's MCP endpoint. Deployed: public host (with `-9097`) **+ `/mcp`**, no `:port`. |
+| `MCP_JWT_SECRET` | when MCP auth on | — | Shared HMAC secret (same as query-app). Mints a fresh JWT per request — never expires. (secret) |
+| `MCP_JWT_AUDIENCE` | no | `trino-mcp` | `aud` claim; must match query-app's `OIDC_AUDIENCE`. |
+| `MCP_JWT_ISSUER` | no | `aiven-query-agent` | `iss` claim; must match query-app's `OIDC_ISSUER`. |
+| `TRINO_MCP_JWT` | alt to secret | — | Ready-made bearer token. Wins over `MCP_JWT_SECRET`, but **expires**. |
 
 ## Run locally
 
@@ -69,9 +72,10 @@ Open <http://localhost:8000> and ask, e.g.:
 
 ## Deploy to Aiven Apps (eu-west-1)
 
-Deploy `compose.yaml` and supply the variables above as
-env/secrets. Point `TRINO_MCP_URL` at query-app's externally-exposed MCP URL and
-set `TRINO_MCP_JWT` if query-app has MCP auth enabled. The web UI is on port 8000.
+Deploy `compose.yaml` and supply the variables above as env/secrets. Point
+`TRINO_MCP_URL` at query-app's externally-exposed MCP URL (public host + `/mcp`,
+no `:port`) and, when query-app has MCP auth enabled, set `MCP_JWT_SECRET` to the
+same secret so query-agent mints its own tokens. The web UI is on port 8000.
 
 ## Tests
 

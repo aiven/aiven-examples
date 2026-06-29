@@ -19,6 +19,11 @@ services:
       BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-eu.anthropic.claude-sonnet-4-6}
       # --- Trino MCP endpoint (from query-app) ---
       TRINO_MCP_URL: ${TRINO_MCP_URL:-http://localhost:9097/mcp}
+      # MCP auth: supply the shared HMAC secret to mint per-request JWTs
+      # (preferred — never expires), or paste a ready-made TRINO_MCP_JWT.
+      MCP_JWT_SECRET: ${MCP_JWT_SECRET:-}
+      MCP_JWT_AUDIENCE: ${MCP_JWT_AUDIENCE:-trino-mcp}
+      MCP_JWT_ISSUER: ${MCP_JWT_ISSUER:-aiven-query-agent}
       TRINO_MCP_JWT: ${TRINO_MCP_JWT:-}
       PORT: "8000"
     ports:

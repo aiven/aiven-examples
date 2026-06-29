@@ -174,10 +174,18 @@ point `query-agent` at it. Deploy in this sequence:
 
 - Set the Bedrock env: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
   `BEDROCK_MODEL_ID`.
-- Set **`TRINO_MCP_URL`** to query-app's deployed endpoint from step 1, e.g.
-  `https://<uuid>-9097.eur-1.aiven.app/mcp` (the root compose's
-  `http://query-app:9097/mcp` default is local-only and won't resolve here).
-- Set **`TRINO_MCP_JWT`** to a token signed with the same `MCP_JWT_SECRET`.
+- Set **`TRINO_MCP_URL`** to query-app's deployed endpoint from step 1: the
+  public host (which already encodes the port as `-9097`) **plus `/mcp`**, with
+  **no `:port` suffix** — e.g. `https://<uuid>-9097.eur-1.aiven.app/mcp`. The
+  root compose's `http://query-app:9097/mcp` default is local-only and won't
+  resolve here. Two easy mistakes: forgetting the trailing `/mcp` (the MCP
+  `initialize` handshake fails → `MCPClientInitializationError`), and appending
+  `:9097` (Aiven serves over HTTPS/443; the port lives in the hostname).
+- Set **`MCP_JWT_SECRET`** to the **same** secret you set on query-app.
+  query-agent mints a fresh short-lived HMAC JWT per request, so the token never
+  expires. (`MCP_JWT_AUDIENCE`/`MCP_JWT_ISSUER` default to `trino-mcp` /
+  `aiven-query-agent` and must match query-app's `OIDC_AUDIENCE`/`OIDC_ISSUER`.)
+  Alternatively paste a ready-made `TRINO_MCP_JWT` — but that one **will expire**.
 - Exposes the web UI on port `8000`.
 
 #### 3. `live-orders` (producer) — independent, deploy any time
@@ -206,7 +214,8 @@ deploy time:
 - **Open Catalog** (`query-app`): `ICEBERG_CATALOG_URI`, `ICEBERG_OAUTH_CREDENTIAL`,
   `ICEBERG_OAUTH_SCOPE`, `ICEBERG_WAREHOUSE`; optional MCP `MCP_JWT_SECRET`.
 - **Bedrock** (`query-agent`): `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
-  `AWS_REGION`, `BEDROCK_MODEL_ID`; plus `TRINO_MCP_URL`, `TRINO_MCP_JWT`.
+  `AWS_REGION`, `BEDROCK_MODEL_ID`; plus `TRINO_MCP_URL` and, for MCP auth,
+  `MCP_JWT_SECRET` (mints per-request tokens) or a ready-made `TRINO_MCP_JWT`.
 
 <a id="cleanup"></a>
 ## 🧹 Cleanup

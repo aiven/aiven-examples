@@ -1,7 +1,59 @@
 """Pure helpers for query-agent, with no third-party dependencies, so they can
 be unit-tested in isolation (no Strands / MCP / AWS imports required)."""
 
+import base64
+import hashlib
+import hmac
+import json
+import time
 from typing import Optional
+
+
+def _b64url(raw: bytes) -> str:
+    """base64url with no padding, as JWT requires."""
+    return base64.urlsafe_b64encode(raw).rstrip(b"=").decode("ascii")
+
+
+def mint_jwt(
+    secret: str,
+    audience: str,
+    issuer: str,
+    sub: str = "query-agent",
+    ttl: int = 300,
+) -> str:
+    """Mint a short-lived HS256 JWT in the format mcp-trino's HMAC provider
+    expects. The validator requires aud/iss to match its OIDC_AUDIENCE/
+    OIDC_ISSUER, so callers must pass the same values configured on query-app.
+
+    Minting per request (rather than baking a static token) means the token
+    can never expire out from under a long-running deployment.
+    """
+    now = int(time.time())
+    header = {"alg": "HS256", "typ": "JWT"}
+    payload = {"sub": sub, "aud": audience, "iss": issuer, "iat": now, "exp": now + ttl}
+    signing_input = (
+        _b64url(json.dumps(header, separators=(",", ":")).encode())
+        + "."
+        + _b64url(json.dumps(payload, separators=(",", ":")).encode())
+    )
+    sig = hmac.new(secret.encode(), signing_input.encode(), hashlib.sha256).digest()
+    return f"{signing_input}.{_b64url(sig)}"
+
+
+def resolve_token(
+    static_jwt: Optional[str],
+    secret: Optional[str],
+    audience: str,
+    issuer: str,
+) -> Optional[str]:
+    """Decide which bearer token (if any) to present to the MCP endpoint:
+    an explicit static JWT wins; otherwise mint a fresh one from the shared
+    secret; otherwise None (MCP auth disabled)."""
+    if static_jwt:
+        return static_jwt
+    if secret:
+        return mint_jwt(secret, audience, issuer)
+    return None
 
 
 def auth_headers(jwt: Optional[str]) -> Optional[dict]:

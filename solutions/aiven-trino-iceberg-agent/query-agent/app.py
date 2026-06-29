@@ -22,7 +22,7 @@ from strands.models import BedrockModel
 from strands.tools.mcp import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 
-from helpers import auth_headers, extract_sql
+from helpers import auth_headers, extract_sql, resolve_token
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("query-agent")
@@ -31,7 +31,14 @@ log = logging.getLogger("query-agent")
 AWS_REGION = os.getenv("AWS_REGION", "eu-west-1")
 BEDROCK_MODEL_ID = os.getenv("BEDROCK_MODEL_ID", "eu.anthropic.claude-sonnet-4-6")
 TRINO_MCP_URL = os.getenv("TRINO_MCP_URL", "http://localhost:9097/mcp")
-TRINO_MCP_JWT = os.getenv("TRINO_MCP_JWT")  # optional bearer token for the MCP endpoint
+# Auth on the MCP endpoint. Either present a ready-made bearer token
+# (TRINO_MCP_JWT), or — preferred for a long-running deployment — supply the
+# shared HMAC secret and mint a fresh short-lived token per request, so it can
+# never expire. aud/iss must match query-app's OIDC_AUDIENCE/OIDC_ISSUER.
+TRINO_MCP_JWT = os.getenv("TRINO_MCP_JWT")  # optional ready-made bearer token
+MCP_JWT_SECRET = os.getenv("MCP_JWT_SECRET")  # shared HMAC secret; mint per request
+MCP_JWT_AUDIENCE = os.getenv("MCP_JWT_AUDIENCE", "trino-mcp")
+MCP_JWT_ISSUER = os.getenv("MCP_JWT_ISSUER", "aiven-query-agent")
 
 SYSTEM_PROMPT = """\
 You are a data analyst assistant for an ecommerce business. You answer questions
@@ -73,8 +80,12 @@ class ChatRequest(BaseModel):
 
 
 def _make_mcp_client() -> MCPClient:
-    """Build an MCP client for the Trino MCP server, with optional JWT auth."""
-    headers = auth_headers(TRINO_MCP_JWT)
+    """Build an MCP client for the Trino MCP server, with optional JWT auth.
+
+    Resolves a fresh token on each call: a static TRINO_MCP_JWT if provided,
+    otherwise one minted from MCP_JWT_SECRET, otherwise no auth."""
+    token = resolve_token(TRINO_MCP_JWT, MCP_JWT_SECRET, MCP_JWT_AUDIENCE, MCP_JWT_ISSUER)
+    headers = auth_headers(token)
     return MCPClient(lambda: streamablehttp_client(TRINO_MCP_URL, headers=headers))
 
 
