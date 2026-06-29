@@ -1,6 +1,6 @@
 // Command live-orders is a long-running Kafka producer that continuously streams
 // mock ecommerce orders into a Kafka topic at a configurable rate, until it is
-// shut down. It is the "live" data source for the aiven-trino-mcp-federation
+// shut down. It is the "live" data source for the aiven-trino-iceberg-agent
 // demo: orders land in Kafka, flow through the Kafka Connect Iceberg sink into
 // Iceberg-on-S3, and are then queryable through Trino.
 //

@@ -26,7 +26,7 @@ echo "Account: ${ACCOUNT}  Region: ${REGION}  Model: ${MODEL_ID}"
 
 # 1) Dedicated user (ignore "already exists").
 aws iam create-user --user-name "$USER" \
-  --tags Key=project,Value=aiven-trino-mcp-federation Key=purpose,Value=bedrock-invoke \
+  --tags Key=project,Value=aiven-trino-iceberg-agent Key=purpose,Value=bedrock-invoke \
   2>/dev/null || echo "user ${USER} already exists, continuing"
 
 # 2) Scoped inline policy: Bedrock invoke on Anthropic models only.
