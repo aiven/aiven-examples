@@ -22,7 +22,7 @@ query-agent/
 ├── static/index.html               # chat UI (self-contained)
 ├── requirements.txt
 ├── Containerfile
-├── query-agent-docker-compose.yml
+├── compose.yaml
 ├── setup-bedrock.sh                # provisions the Bedrock IAM user (one-time)
 └── .env.example
 ```
@@ -59,7 +59,7 @@ python app.py             # serves on http://localhost:8000
 Or via Compose:
 
 ```bash
-docker compose -f query-agent-docker-compose.yml up --build   # reads .env
+docker compose up --build   # reads .env
 ```
 
 Open <http://localhost:8000> and ask, e.g.:
@@ -69,7 +69,7 @@ Open <http://localhost:8000> and ask, e.g.:
 
 ## Deploy to Aiven Apps (eu-west-1)
 
-Deploy `query-agent-docker-compose.yml` and supply the variables above as
+Deploy `compose.yaml` and supply the variables above as
 env/secrets. Point `TRINO_MCP_URL` at query-app's externally-exposed MCP URL and
 set `TRINO_MCP_JWT` if query-app has MCP auth enabled. The web UI is on port 8000.
 

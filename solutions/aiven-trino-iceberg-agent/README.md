@@ -85,8 +85,8 @@ producer, you'll run **`live-orders`** to stream continuously into the same
 <a id="the-three-apps"></a>
 ## 📦 The three apps
 
-Each app is self-contained with its own README, `Containerfile`, and a prefixed
-`*-docker-compose.yml` so it's easy to pick during Aiven Apps deployment. **No
+Each app is self-contained with its own README, `Containerfile`, and a
+`compose.yaml` that Aiven Apps auto-detects during deployment. **No
 secrets are committed or baked into images** — all config is supplied via
 environment variables (Aiven Apps secrets / a local git-ignored `.env`).
 
@@ -111,19 +111,19 @@ After the base pipeline exists and Snowflake Open Catalog is wired:
 2. **Stream live orders:**
    ```bash
    cd live-orders && cp .env.example .env   # fill Kafka creds
-   docker compose -f live-orders-docker-compose.yml up --build
+   docker compose up --build
    ```
 
 3. **Start Trino + MCP:**
    ```bash
    cd query-app && cp .env.example .env     # fill Open Catalog creds
-   docker compose -f query-app-docker-compose.yml up
+   docker compose up
    ```
 
 4. **Start the chat agent:**
    ```bash
    cd query-agent && cp .env.example .env   # fill Bedrock keys; MCP URL=http://localhost:9097/mcp
-   docker compose -f query-agent-docker-compose.yml up --build
+   docker compose up --build
    ```
 
 Open <http://localhost:8000> and ask: *“Top 5 products by total revenue”*,
@@ -146,7 +146,7 @@ Open <http://localhost:8000> and ask: *“Top 5 products by total revenue”*,
 > The `iceberg-agent` remote points at the standalone repo. Only **committed**
 > changes are pushed.
 
-Deploy each app from its `*-docker-compose.yml`, supplying the env vars/secrets in
+Deploy each app from its `compose.yaml`, supplying the env vars/secrets in
 the Aiven Apps setup. Notes:
 
 - **Pin image tags** before deploying (`trinodb/trino:<version>`,

@@ -44,7 +44,7 @@ SIGTERM, which is how Aiven Apps stops a worker.
 Via Compose (reads `.env`):
 
 ```bash
-docker compose -f live-orders-docker-compose.yml up --build
+docker compose up --build
 ```
 
 Or build the image directly:
@@ -56,7 +56,7 @@ docker build -f Containerfile -t live-orders .
 
 The image is a static binary on a distroless base, with no inbound port (it's a
 pure producer). Deploy it to Aiven Apps as a **long-running worker** (via the
-`live-orders-docker-compose.yml` recipe) and supply the environment variables
+`compose.yaml` recipe) and supply the environment variables
 above in the Aiven Apps configuration.
 
 ## Tests

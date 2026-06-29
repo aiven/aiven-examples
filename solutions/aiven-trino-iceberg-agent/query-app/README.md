@@ -13,7 +13,7 @@ query-agent ──MCP/HTTP──► mcp-trino ──SQL──► Trino ──►
 
 ```
 query-app/
-├── query-app-docker-compose.yml    # trino + mcp-trino
+├── compose.yaml    # trino + mcp-trino
 ├── .env.example                # config (secrets via env, never committed)
 └── trino/etc/
     ├── config.properties       # single-node Trino
@@ -57,7 +57,7 @@ query-app/
 
 ```bash
 cp .env.example .env      # fill in Open Catalog values
-docker compose -f query-app-docker-compose.yml up    # (reads .env)
+docker compose up    # (reads .env)
 ```
 
 - Trino UI/CLI: `http://localhost:8080` (catalog `iceberg`).

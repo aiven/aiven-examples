@@ -22,7 +22,7 @@ run() {
 
 if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
   echo "ERROR: Trino container '$CONTAINER' is not running. Start query-app first:" >&2
-  echo "  docker compose -f query-app-docker-compose.yml up" >&2
+  echo "  docker compose up" >&2
   exit 1
 fi
 
