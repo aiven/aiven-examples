@@ -132,6 +132,20 @@ Open <http://localhost:8000> and ask: *“Top 5 products by total revenue”*,
 <a id="deploy-to-aiven-apps"></a>
 ## 🚀 Deploy to Aiven Apps (eu-west-1)
 
+> **Deployment source.** Aiven Apps deploys this project from a standalone repo
+> ([`rezaaiven/aiven-trino-iceberg-agent`](https://github.com/rezaaiven/aiven-trino-iceberg-agent),
+> branch `main`) where this folder's contents sit at the repo root. That repo is a
+> `git subtree` mirror of `solutions/aiven-trino-iceberg-agent/` in the
+> `aiven/aiven-examples` monorepo — make changes here, commit them, then re-sync:
+>
+> ```bash
+> # run from the aiven-examples repo root, after committing your changes
+> git subtree push --prefix=solutions/aiven-trino-iceberg-agent iceberg-agent main
+> ```
+>
+> The `iceberg-agent` remote points at the standalone repo. Only **committed**
+> changes are pushed.
+
 Deploy each app from its `*-docker-compose.yml`, supplying the env vars/secrets in
 the Aiven Apps setup. Notes:
 
