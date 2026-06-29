@@ -192,9 +192,9 @@ point `query-agent` at it. Deploy in this sequence:
 > your data. Without `MCP_OAUTH_ENABLED` + `MCP_JWT_SECRET` it is an open,
 > query-executing endpoint. Always enable it for a deployed setup.
 
-> **Pin image tags** before deploying — `query-app`'s base images
-> (`trinodb/trino`, `ghcr.io/tuannvm/mcp-trino`) default to `:latest` for local
-> dev; replace with released tags in the Dockerfile for reproducible builds.
+> **Image tags are pinned** for reproducible builds — `query-app`'s Dockerfile
+> uses `trinodb/trino:482` and `ghcr.io/tuannvm/mcp-trino:4.3.1`. Bump those tags
+> deliberately when you want newer versions.
 
 <a id="configuration-reference"></a>
 ## ⚙️ Configuration reference

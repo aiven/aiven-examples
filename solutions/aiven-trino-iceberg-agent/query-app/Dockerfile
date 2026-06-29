@@ -14,13 +14,13 @@
 # --- Stage 1: lift the statically-linked mcp-trino binary -------------------
 # It's a static Go binary, so it drops cleanly into the glibc-based Trino image,
 # and `docker build` selects the arch matching the build host automatically.
-# Pin to a released tag for reproducibility (replace :latest).
-ARG MCP_TRINO_IMAGE=ghcr.io/tuannvm/mcp-trino:latest
+# Pinned to a released tag for reproducibility (bump deliberately).
+ARG MCP_TRINO_IMAGE=ghcr.io/tuannvm/mcp-trino:4.3.1
 FROM ${MCP_TRINO_IMAGE} AS mcp
 
 # --- Stage 2: Trino + baked config + the MCP binary -------------------------
-# Pin to a specific Trino release for reproducibility (e.g. trinodb/trino:476).
-FROM trinodb/trino:latest
+# Pinned to a specific Trino release for reproducibility (bump deliberately).
+FROM trinodb/trino:482
 
 # COPY/chmod need root; the base image runs as the unprivileged "trino" user.
 USER root
