@@ -153,20 +153,48 @@ detects all three `build:` services and resolves each build context to its
 subfolder, so you get three deployable app suggestions from the one file. They
 deploy as **three separate Aiven App services** (Aiven runs one buildable service
 per app) — the root compose is the shared source, not a single combined
-container. (You can equally onboard one app from its own `compose.yaml`; both
-resolve to the same per-app build context.)
+container. (You can equally onboard one app from its own `compose.yaml`.)
 
-Supply each service's env vars/secrets at deploy time. Notes:
+**Order matters.** Aiven Apps has no app-to-app service discovery — each service
+gets only a public URL (`https://<uuid>-<port>.eur-1.aiven.app`), and there's no
+internal DNS or automatic URL injection. So `query-app` must exist before you can
+point `query-agent` at it. Deploy in this sequence:
 
-- **Pin image tags** in the Dockerfiles before deploying — `query-app`'s base
-  images (`trinodb/trino`, `ghcr.io/tuannvm/mcp-trino`) default to `:latest` for
-  local dev; replace with released tags for reproducible builds.
-- **Expose `query-app`'s MCP port** (`9097`); enable `MCP_OAUTH_ENABLED` +
-  `MCP_JWT_SECRET` and set the matching `TRINO_MCP_JWT` on `query-agent`.
-- **`query-agent`** serves the web UI on port `8000`; set `TRINO_MCP_URL` to the
-  **deployed** `query-app` endpoint (`https://<query-app-host>/mcp`) — the root
-  compose's `http://query-app:9097/mcp` default is local-only.
-- **`live-orders`** is a worker that also serves `/healthz`–`/readyz` on `8080`.
+#### 1. `query-app` (Trino + Trino MCP) — deploy first
+
+- Set the Open Catalog env: `ICEBERG_CATALOG_URI`, `ICEBERG_OAUTH_CREDENTIAL`,
+  `ICEBERG_OAUTH_SCOPE`, `ICEBERG_WAREHOUSE`.
+- **Expose port `9097`** (the MCP endpoint).
+- **Enable auth** (mandatory — see below): `MCP_OAUTH_ENABLED=true` + a strong
+  `MCP_JWT_SECRET` (`openssl rand -hex 32`).
+- After it deploys, **copy its public URL** — you'll get something like
+  `https://<uuid>-9097.eur-1.aiven.app`. The MCP endpoint is that **+ `/mcp`**.
+
+#### 2. `query-agent` (web chat) — deploy second, wired to query-app
+
+- Set the Bedrock env: `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
+  `BEDROCK_MODEL_ID`.
+- Set **`TRINO_MCP_URL`** to query-app's deployed endpoint from step 1, e.g.
+  `https://<uuid>-9097.eur-1.aiven.app/mcp` (the root compose's
+  `http://query-app:9097/mcp` default is local-only and won't resolve here).
+- Set **`TRINO_MCP_JWT`** to a token signed with the same `MCP_JWT_SECRET`.
+- Exposes the web UI on port `8000`.
+
+#### 3. `live-orders` (producer) — independent, deploy any time
+
+- Set the Kafka env: `KAFKA_SERVICE_URI`, `KAFKA_USERNAME`, `KAFKA_PASSWORD`
+  (optional: `KAFKA_TOPIC`, `ORDERS_PER_MINUTE`).
+- Worker that also serves `/healthz`–`/readyz` on `8080`. Has no dependency on
+  the other two, so its order doesn't matter.
+
+> **Security — JWT is mandatory, not optional.** `query-app`'s MCP endpoint is a
+> **public internet URL** (no VPC-internal option yet), and it runs SQL against
+> your data. Without `MCP_OAUTH_ENABLED` + `MCP_JWT_SECRET` it is an open,
+> query-executing endpoint. Always enable it for a deployed setup.
+
+> **Pin image tags** before deploying — `query-app`'s base images
+> (`trinodb/trino`, `ghcr.io/tuannvm/mcp-trino`) default to `:latest` for local
+> dev; replace with released tags in the Dockerfile for reproducible builds.
 
 <a id="configuration-reference"></a>
 ## ⚙️ Configuration reference
