@@ -1,8 +1,8 @@
-# Containerfile for the live-orders producer, built for deployment to Aiven Apps.
+# Dockerfile for the live-orders producer, built for deployment to Aiven Apps.
 #
 # All configuration (KAFKA_SERVICE_URI, KAFKA_USERNAME, KAFKA_PASSWORD, and the
-# optional KAFKA_TOPIC / ORDERS_PER_MINUTE) is injected at runtime via Aiven Apps
-# environment variables / secrets — nothing is baked into the image.
+# optional KAFKA_TOPIC / ORDERS_PER_MINUTE / PORT) is injected at runtime via
+# Aiven Apps environment variables / secrets — nothing is baked into the image.
 
 # ---- build stage ----
 FROM golang:1.24 AS build
@@ -23,5 +23,8 @@ FROM gcr.io/distroless/static-debian12:nonroot
 WORKDIR /app
 COPY --from=build /out/live-orders /app/live-orders
 
-# Pure producer — no inbound port to expose.
+# The producer also serves a small health endpoint so Aiven Apps has a port to
+# probe (PORT, default 8080): /healthz (liveness) and /readyz (ready once the
+# Kafka producer connects).
+EXPOSE 8080
 ENTRYPOINT ["/app/live-orders"]

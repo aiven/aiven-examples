@@ -1,13 +1,14 @@
 # live-orders: continuous Kafka order producer (long-running worker).
 #
-# Pure producer — no inbound port. All config via environment variables
-# (Aiven Apps env/secrets; local .env). Nothing sensitive is baked into the image.
+# Primarily a producer, but it also serves a small health endpoint (PORT, default
+# 8080) so Aiven Apps has a port to health-check. All config via environment
+# variables (Aiven Apps env/secrets; local .env). Nothing sensitive is baked in.
 
 services:
   live-orders:
     build:
       context: .
-      dockerfile: Containerfile
+      dockerfile: Dockerfile
     image: live-orders
     container_name: live-orders
     environment:
@@ -16,4 +17,8 @@ services:
       KAFKA_PASSWORD: ${KAFKA_PASSWORD}
       KAFKA_TOPIC: ${KAFKA_TOPIC:-order}
       ORDERS_PER_MINUTE: ${ORDERS_PER_MINUTE:-100}
+      PORT: ${PORT:-8080}
+    # Health endpoint (/healthz, /readyz) — gives the platform a port to probe.
+    ports:
+      - "8080:8080"
     restart: unless-stopped

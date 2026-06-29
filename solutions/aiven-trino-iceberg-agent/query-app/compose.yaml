@@ -1,48 +1,25 @@
-# query-app: Trino + co-located Trino MCP server.
+# query-app: Trino + co-located Trino MCP server, as ONE deployable service.
 #
-# Trino queries Iceberg-on-S3 through Snowflake Open Catalog; mcp-trino exposes
-# Trino to the query-agent over MCP (StreamableHTTP at /mcp). All secrets are
-# injected via environment variables (Aiven Apps env/secrets; local .env) — see
-# .env.example. Nothing sensitive is baked into the config files or image.
+# Both processes run in a single image (see Dockerfile) because Aiven Apps deploys
+# one buildable service per app — no pre-built image pull, no multi-service
+# compose, no bind-mount volumes. The Trino config is baked into the image; only
+# the MCP endpoint (/mcp on :9097) is exposed. All secrets are injected via
+# environment variables (Aiven Apps env/secrets; local .env) — see .env.example.
+# Nothing sensitive is baked into the config files or image.
 
 services:
-  trino:
-    # Pin to a specific Trino release for reproducibility (e.g. trinodb/trino:476).
-    image: trinodb/trino:latest
-    container_name: trino
-    volumes:
-      - ./trino/etc:/etc/trino:ro
+  query-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: query-app
+    container_name: query-app
     environment:
-      # Expanded by Trino's ${ENV:...} syntax in catalog/iceberg.properties.
+      # --- Trino -> Snowflake Open Catalog (expanded by Trino's ${ENV:...}) ---
       ICEBERG_CATALOG_URI: ${ICEBERG_CATALOG_URI}
       ICEBERG_OAUTH_CREDENTIAL: ${ICEBERG_OAUTH_CREDENTIAL}
       ICEBERG_OAUTH_SCOPE: ${ICEBERG_OAUTH_SCOPE}
       ICEBERG_WAREHOUSE: ${ICEBERG_WAREHOUSE}
-    # Trino is internal: only mcp-trino talks to it over the compose network.
-    # Expose 8080 locally for CLI/debugging; can be dropped in production.
-    ports:
-      - "8080:8080"
-    user: "trino"
-
-  mcp-trino:
-    # Pin to a released tag for reproducibility (check the repo's releases).
-    image: ghcr.io/tuannvm/mcp-trino:latest
-    container_name: mcp-trino
-    depends_on:
-      # mcp-trino tests its Trino connection once at startup and exits on failure,
-      # so wait for Trino to be healthy (its image ships a healthcheck), not merely started.
-      trino:
-        condition: service_healthy
-    environment:
-      # --- MCP transport: HTTP (StreamableHTTP), endpoint /mcp ---
-      MCP_TRANSPORT: http
-      MCP_PORT: "9097"
-      # --- Trino connection (internal compose hostname) ---
-      TRINO_HOST: trino
-      TRINO_PORT: "8080"
-      TRINO_SCHEME: http
-      TRINO_USER: trino
-      TRINO_CATALOG: iceberg
       # --- Auth on the exposed MCP endpoint (HMAC-signed JWT) ---
       # Local dev: leave MCP_OAUTH_ENABLED=false. For the exposed Aiven Apps
       # deployment set it true and provide a strong MCP_JWT_SECRET; query-agent
@@ -56,6 +33,10 @@ services:
       # JWTs whose aud/iss claims match these exact values.
       OIDC_AUDIENCE: ${MCP_JWT_AUDIENCE:-trino-mcp}
       OIDC_ISSUER: ${MCP_JWT_ISSUER:-aiven-query-agent}
-    # This is the externally-reachable surface for query-agent.
+      # Trino wiring (TRINO_HOST/PORT/SCHEME/USER/CATALOG, MCP_TRANSPORT/PORT) has
+      # image defaults — see Dockerfile. Override here only if you change them.
+    # The only externally-reachable surface (consumed by query-agent).
+    # Trino's 8080 stays container-internal; to debug it locally, add "8080:8080".
     ports:
       - "9097:9097"
+    restart: unless-stopped

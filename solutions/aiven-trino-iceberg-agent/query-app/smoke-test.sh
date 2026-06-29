@@ -13,7 +13,7 @@
 #   TRINO_CONTAINER  docker container name (default: trino)
 set -euo pipefail
 
-CONTAINER="${TRINO_CONTAINER:-trino}"
+CONTAINER="${TRINO_CONTAINER:-query-app}"
 
 run() {
   echo "  trino> $1"
@@ -21,8 +21,8 @@ run() {
 }
 
 if ! docker ps --format '{{.Names}}' | grep -qx "$CONTAINER"; then
-  echo "ERROR: Trino container '$CONTAINER' is not running. Start query-app first:" >&2
-  echo "  docker compose up" >&2
+  echo "ERROR: query-app container '$CONTAINER' is not running. Start it first:" >&2
+  echo "  docker compose up --build" >&2
   exit 1
 fi
 

@@ -1,0 +1,7 @@
+# Keep secrets, local data, tests, and docs out of the build image/context.
+.env
+.gitignore
+trino/data/
+smoke-test.sh
+mcp-smoke-test.sh
+README.md

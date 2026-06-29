@@ -21,7 +21,7 @@ query-agent/
 ├── app.py                          # FastAPI + Strands agent
 ├── static/index.html               # chat UI (self-contained)
 ├── requirements.txt
-├── Containerfile
+├── Dockerfile
 ├── compose.yaml
 ├── setup-bedrock.sh                # provisions the Bedrock IAM user (one-time)
 └── .env.example

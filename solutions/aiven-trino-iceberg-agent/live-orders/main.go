@@ -16,6 +16,8 @@
 //	KAFKA_PASSWORD     - Kafka SASL password
 //	KAFKA_TOPIC        - target topic (optional, default "order")
 //	ORDERS_PER_MINUTE  - target emission rate (optional, default 100)
+//	PORT               - health-server port (optional, default 8080); serves
+//	                     /healthz (liveness) and /readyz (ready once connected)
 package main
 
 import (
@@ -25,9 +27,11 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -78,6 +82,38 @@ func intervalFor(ordersPerMinute int) time.Duration {
 	return time.Minute / time.Duration(ordersPerMinute)
 }
 
+// startHealthServer runs a minimal HTTP server so the platform (Aiven Apps) has a
+// port to health-check — this is otherwise a headless producer with no inbound
+// surface. /healthz is liveness (always 200 once the process is up); /readyz
+// returns 200 only after the Kafka producer has connected.
+func startHealthServer(addr string, ready *atomic.Bool) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok"))
+	})
+	mux.HandleFunc("/readyz", func(w http.ResponseWriter, _ *http.Request) {
+		if ready.Load() {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("ready"))
+			return
+		}
+		http.Error(w, "connecting to kafka", http.StatusServiceUnavailable)
+	})
+	// A bare GET / also succeeds, so the simplest HTTP health check passes.
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("live-orders"))
+	})
+	srv := &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	go func() {
+		log.Printf("Health server listening on %s (/healthz, /readyz)", addr)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Printf("Health server error: %v", err)
+		}
+	}()
+}
+
 // newOrderMessage builds the Kafka message (JSON key + value) for an order.
 func newOrderMessage(topic string, order Order) (*sarama.ProducerMessage, error) {
 	key := OrderKey{KeyId: order.OrderID * 10, KeyCode: fmt.Sprintf("O%d", order.OrderID)}
@@ -114,6 +150,12 @@ func generateOrder(rng *rand.Rand, orderID int) Order {
 
 func main() {
 	log.Println("Starting live-orders producer...")
+
+	// Bring up the health port first, so the platform sees a listening socket
+	// even while we connect to Kafka. PORT defaults to 8080 (Aiven Apps default).
+	healthAddr := ":" + getenvDefault("PORT", "8080")
+	var ready atomic.Bool
+	startHealthServer(healthAddr, &ready)
 
 	brokerAddress := mustGetenv("KAFKA_SERVICE_URI")
 	username := mustGetenv("KAFKA_USERNAME")
@@ -154,6 +196,7 @@ func main() {
 		log.Fatalf("Failed to create Kafka producer: %v", err)
 	}
 	defer producer.Close()
+	ready.Store(true) // producer connected — /readyz now returns 200
 
 	// Cancel the loop on SIGINT/SIGTERM so Aiven Apps can stop us cleanly.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)

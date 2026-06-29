@@ -26,6 +26,7 @@ and `source` it.
 | `KAFKA_PASSWORD` | yes | — | Kafka SASL password (secret). |
 | `KAFKA_TOPIC` | no | `order` | Target topic. Must match the Iceberg sink's source topic. |
 | `ORDERS_PER_MINUTE` | no | `100` | Emission rate; one order every `60s / rate`. |
+| `PORT` | no | `8080` | Health-server port: `/healthz` (liveness), `/readyz` (ready once connected). |
 
 ## Run locally
 
@@ -50,14 +51,16 @@ docker compose up --build
 Or build the image directly:
 
 ```bash
-docker build -f Containerfile -t live-orders .
-# or: podman build -f Containerfile -t live-orders .
+docker build -t live-orders .
+# or: podman build -t live-orders .
 ```
 
-The image is a static binary on a distroless base, with no inbound port (it's a
-pure producer). Deploy it to Aiven Apps as a **long-running worker** (via the
-`compose.yaml` recipe) and supply the environment variables
-above in the Aiven Apps configuration.
+The image is a static binary on a distroless base. It serves a small health
+endpoint on `PORT` (default `8080`) — `/healthz` (liveness) and `/readyz` (ready
+once the Kafka producer connects) — so Aiven Apps has a port to probe; otherwise
+it's a pure producer. Deploy it to Aiven Apps as a **long-running worker** (via
+the `compose.yaml` recipe) and supply the environment variables above in the
+Aiven Apps configuration.
 
 ## Tests
 

@@ -1,4 +1,4 @@
-# Containerfile for the query-agent web app, built for deployment to Aiven Apps.
+# Dockerfile for the query-agent web app, built for deployment to Aiven Apps.
 #
 # Config (AWS_REGION, BEDROCK_MODEL_ID, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY,
 # TRINO_MCP_URL, TRINO_MCP_JWT) is injected at runtime via Aiven Apps env vars /
