@@ -22,7 +22,7 @@ from strands.models import BedrockModel
 from strands.tools.mcp import MCPClient
 from mcp.client.streamable_http import streamablehttp_client
 
-from helpers import auth_headers, extract_sql, resolve_token
+from helpers import auth_headers, describe_auth, extract_sql, resolve_token
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger("query-agent")
@@ -39,6 +39,14 @@ TRINO_MCP_JWT = os.getenv("TRINO_MCP_JWT")  # optional ready-made bearer token
 MCP_JWT_SECRET = os.getenv("MCP_JWT_SECRET")  # shared HMAC secret; mint per request
 MCP_JWT_AUDIENCE = os.getenv("MCP_JWT_AUDIENCE", "trino-mcp")
 MCP_JWT_ISSUER = os.getenv("MCP_JWT_ISSUER", "aiven-query-agent")
+
+# Surface the MCP target and auth mode once at startup so a 401 is debuggable
+# from the logs alone (compare the secret fingerprint against query-app's).
+log.info(
+    "MCP endpoint: %s | %s",
+    TRINO_MCP_URL,
+    describe_auth(TRINO_MCP_JWT, MCP_JWT_SECRET, MCP_JWT_AUDIENCE, MCP_JWT_ISSUER),
+)
 
 SYSTEM_PROMPT = """\
 You are a data analyst assistant for an ecommerce business. You answer questions

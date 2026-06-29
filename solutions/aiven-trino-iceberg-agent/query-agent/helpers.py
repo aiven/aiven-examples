@@ -63,6 +63,31 @@ def auth_headers(jwt: Optional[str]) -> Optional[dict]:
     return None
 
 
+def _secret_fingerprint(secret: str) -> str:
+    """A log-safe fingerprint of the HMAC secret: its length plus a short SHA-256
+    prefix. Lets you confirm query-agent and query-app share the *identical*
+    secret — a stray quote or trailing newline changes the fingerprint — without
+    ever logging the secret itself."""
+    digest = hashlib.sha256(secret.encode()).hexdigest()[:8]
+    return f"len={len(secret)} sha256={digest}"
+
+
+def describe_auth(
+    static_jwt: Optional[str],
+    secret: Optional[str],
+    audience: str,
+    issuer: str,
+) -> str:
+    """A one-line, secret-safe summary of how query-agent will authenticate to
+    the MCP endpoint, for logging at startup. Mirrors resolve_token's precedence
+    so the log reflects what actually happens on the wire."""
+    if static_jwt:
+        return "auth=static (ready-made TRINO_MCP_JWT — note: this token can expire)"
+    if secret:
+        return f"auth=minted aud={audience} iss={issuer} secret[{_secret_fingerprint(secret)}]"
+    return "auth=none (no TRINO_MCP_JWT or MCP_JWT_SECRET — MCP auth assumed disabled)"
+
+
 def extract_sql(messages: list) -> list:
     """Pull the tool/SQL calls the agent made out of a Strands conversation, so
     the UI can show what actually ran against Trino.

@@ -9,7 +9,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from helpers import auth_headers, extract_sql, mint_jwt, resolve_token
+from helpers import auth_headers, describe_auth, extract_sql, mint_jwt, resolve_token
 
 
 def test_auth_headers_with_token():
@@ -54,6 +54,22 @@ def test_resolve_token_mints_from_secret():
 def test_resolve_token_none_when_no_auth():
     assert resolve_token(None, None, "aud", "iss") is None
     assert resolve_token("", "", "aud", "iss") is None
+
+
+def test_describe_auth_modes_and_never_leaks_secret():
+    secret = "3ff83a0ade6b1474"
+    minted = describe_auth(None, secret, "trino-mcp", "aiven-query-agent")
+    assert minted.startswith("auth=minted")
+    assert "aud=trino-mcp" in minted and "iss=aiven-query-agent" in minted
+    assert secret not in minted and f"len={len(secret)}" in minted  # fingerprint, not the secret
+
+    assert describe_auth("a.b.c", secret, "x", "y").startswith("auth=static")
+    assert describe_auth(None, None, "x", "y").startswith("auth=none")
+
+
+def test_describe_auth_fingerprint_detects_stray_whitespace():
+    # A trailing newline (a common paste mistake) must change the fingerprint.
+    assert describe_auth(None, "sekret", "a", "b") != describe_auth(None, "sekret\n", "a", "b")
 
 
 def test_extract_sql_query_key():
