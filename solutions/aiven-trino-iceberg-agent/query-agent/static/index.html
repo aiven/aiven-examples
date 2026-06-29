@@ -195,6 +195,13 @@
             activity.line(evt.text);
           } else if (evt.type === "tool") {
             activity.line(friendly(evt.name));
+            // The model pauses to call a tool between reasoning steps, so break
+            // the streamed text onto a new line here — otherwise the segment
+            // before the tool and the one after it run together on one line.
+            if (answer && !answer.endsWith("\n")) {
+              answer += "\n";
+              botBody.textContent = answer;
+            }
           } else if (evt.type === "token") {
             answer += evt.text;
             botBody.textContent = answer;
