@@ -1,0 +1,2 @@
+# Local secrets for the root full-stack compose — never commit real values.
+.env

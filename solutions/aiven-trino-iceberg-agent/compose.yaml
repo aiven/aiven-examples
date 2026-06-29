@@ -1,0 +1,87 @@
+# Root compose: runs the WHOLE demo stack locally with one command.
+#
+#   cp .env.example .env   # fill in Kafka + Open Catalog + Bedrock values
+#   docker compose up --build
+#
+# This is for LOCAL orchestration only. On Aiven Apps each service is still
+# deployed independently from its own subdirectory (its build context below is
+# also its deploy `buildPath`); Aiven does not run this file. The per-app
+# compose.yaml files remain the unit you onboard/deploy one service at a time.
+#
+# All three services share the default compose network, so query-agent reaches
+# query-app by service name (http://query-app:9097/mcp) rather than localhost.
+# Secrets come from .env (git-ignored) — nothing sensitive is baked into images.
+
+services:
+  # ---- live-orders: continuous Kafka order producer (+ health endpoint) ----
+  live-orders:
+    build:
+      context: ./live-orders
+      dockerfile: Dockerfile
+    image: live-orders
+    container_name: live-orders
+    environment:
+      KAFKA_SERVICE_URI: ${KAFKA_SERVICE_URI}
+      KAFKA_USERNAME: ${KAFKA_USERNAME}
+      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
+      KAFKA_TOPIC: ${KAFKA_TOPIC:-order}
+      ORDERS_PER_MINUTE: ${ORDERS_PER_MINUTE:-100}
+      PORT: "8080"
+    ports:
+      - "8080:8080"   # health: /healthz, /readyz
+    restart: unless-stopped
+
+  # ---- query-app: Trino + co-located Trino MCP server (read-only) ----
+  query-app:
+    build:
+      context: ./query-app
+      dockerfile: Dockerfile
+    image: query-app
+    container_name: query-app
+    environment:
+      # Trino -> Snowflake Open Catalog (expanded by Trino's ${ENV:...}).
+      ICEBERG_CATALOG_URI: ${ICEBERG_CATALOG_URI}
+      ICEBERG_OAUTH_CREDENTIAL: ${ICEBERG_OAUTH_CREDENTIAL}
+      ICEBERG_OAUTH_SCOPE: ${ICEBERG_OAUTH_SCOPE}
+      ICEBERG_WAREHOUSE: ${ICEBERG_WAREHOUSE}
+      # MCP endpoint auth (HMAC JWT). Local default: disabled.
+      OAUTH_ENABLED: ${MCP_OAUTH_ENABLED:-false}
+      OAUTH_MODE: native
+      OAUTH_PROVIDER: hmac
+      JWT_SECRET: ${MCP_JWT_SECRET:-}
+      OIDC_AUDIENCE: ${MCP_JWT_AUDIENCE:-trino-mcp}
+      OIDC_ISSUER: ${MCP_JWT_ISSUER:-aiven-query-agent}
+    ports:
+      - "9097:9097"   # MCP endpoint (/mcp); add "8080" only if debugging Trino
+    # Healthy once the MCP port accepts connections (mcp-trino starts only after
+    # Trino is ready), so query-agent can wait on it.
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/9097"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+
+  # ---- query-agent: web chat over the Trino MCP ----
+  query-agent:
+    build:
+      context: ./query-agent
+      dockerfile: Dockerfile
+    image: query-agent
+    container_name: query-agent
+    depends_on:
+      query-app:
+        condition: service_healthy
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      BEDROCK_MODEL_ID: ${BEDROCK_MODEL_ID:-eu.anthropic.claude-sonnet-4-6}
+      # Reach query-app by service name on the shared compose network.
+      TRINO_MCP_URL: ${TRINO_MCP_URL:-http://query-app:9097/mcp}
+      TRINO_MCP_JWT: ${TRINO_MCP_JWT:-}
+      PORT: "8000"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

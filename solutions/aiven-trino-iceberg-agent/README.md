@@ -85,7 +85,7 @@ producer, you'll run **`live-orders`** to stream continuously into the same
 <a id="the-three-apps"></a>
 ## 📦 The three apps
 
-Each app is self-contained with its own README, `Containerfile`, and a
+Each app is self-contained with its own README, `Dockerfile`, and a
 `compose.yaml` that Aiven Apps auto-detects during deployment. **No
 secrets are committed or baked into images** — all config is supplied via
 environment variables (Aiven Apps secrets / a local git-ignored `.env`).
@@ -99,35 +99,37 @@ environment variables (Aiven Apps secrets / a local git-ignored `.env`).
 <a id="run-it-locally"></a>
 ## 💻 Run it locally
 
-After the base pipeline exists and Snowflake Open Catalog is wired:
+After the base pipeline exists and Snowflake Open Catalog is wired, first do the
+one-time **Bedrock identity** setup, then bring up the stack.
 
-1. **Bedrock identity** (one-time) — provision the scoped IAM user, then create
-   its access key:
-   ```bash
-   cd query-agent && ./setup-bedrock.sh
-   aws iam create-access-key --user-name query-agent-bedrock   # capture the keys
-   ```
+**Bedrock identity** (one-time) — provision the scoped IAM user, then create its
+access key:
+```bash
+cd query-agent && ./setup-bedrock.sh
+aws iam create-access-key --user-name query-agent-bedrock   # capture the keys
+```
 
-2. **Stream live orders:**
-   ```bash
-   cd live-orders && cp .env.example .env   # fill Kafka creds
-   docker compose up --build
-   ```
+### Option A — whole stack, one command (recommended)
 
-3. **Start Trino + MCP:**
-   ```bash
-   cd query-app && cp .env.example .env     # fill Open Catalog creds
-   docker compose up
-   ```
+The root [`compose.yaml`](compose.yaml) runs all three services together (shared
+network; query-agent reaches query-app by service name):
+```bash
+cp .env.example .env      # consolidated: Kafka + Open Catalog + Bedrock
+docker compose up --build
+```
 
-4. **Start the chat agent:**
-   ```bash
-   cd query-agent && cp .env.example .env   # fill Bedrock keys; MCP URL=http://localhost:9097/mcp
-   docker compose up --build
-   ```
+### Option B — one app at a time
 
-Open <http://localhost:8000> and ask: *“Top 5 products by total revenue”*,
-*“How many orders in the last hour?”*, *“Average order amount by status.”*
+Each app also has its own `compose.yaml` and `.env.example`, handy for iterating
+on a single service (this is also the unit you deploy to Aiven Apps):
+```bash
+cd live-orders && cp .env.example .env && docker compose up --build   # producer
+cd query-app   && cp .env.example .env && docker compose up           # Trino + MCP
+cd query-agent && cp .env.example .env && docker compose up --build   # chat (set MCP URL=http://localhost:9097/mcp)
+```
+
+Either way, open <http://localhost:8000> and ask: *“Top 5 products by total
+revenue”*, *“How many orders in the last hour?”*, *“Average order amount by status.”*
 
 <a id="deploy-to-aiven-apps"></a>
 ## 🚀 Deploy to Aiven Apps (eu-west-1)
