@@ -8,6 +8,7 @@ The Strands Agent and the Trino MCP connection are replaced with fakes, so these
 run with no AWS credentials and no live Trino.
 """
 
+import json
 import os
 import sys
 
@@ -41,10 +42,19 @@ class _FakeAgent:
         },
     ]
 
-    def __init__(self, model=None, tools=None, system_prompt=None):
+    def __init__(self, model=None, tools=None, system_prompt=None, callback_handler=None):
         self.messages = _FakeAgent.last_messages
+        self._cb = callback_handler
 
     def __call__(self, message):
+        # Simulate Strands streaming: emit a tool-use event (twice, to exercise
+        # the toolUseId de-dupe) and a couple of text chunks before answering.
+        if self._cb:
+            tool = {"toolUseId": "t1", "name": "execute_query", "input": {}}
+            self._cb(current_tool_use=tool)
+            self._cb(current_tool_use=tool)
+            self._cb(data="There were 5 ")
+            self._cb(data="orders in the last hour.")
         return _FakeResult()
 
 
@@ -80,6 +90,44 @@ def test_chat_returns_answer_and_sql(client):
     assert "5 orders" in body["answer"]
     assert body["tool_calls"][0]["tool"] == "execute_query"
     assert "count(*)" in body["tool_calls"][0]["sql"]
+
+
+def _parse_sse(text):
+    """Parse an SSE response body into a list of decoded JSON events."""
+    events = []
+    for frame in text.split("\n\n"):
+        for line in frame.splitlines():
+            if line.startswith("data:"):
+                events.append(json.loads(line[len("data:"):].strip()))
+    return events
+
+
+def test_chat_stream_emits_tool_tokens_and_done(client):
+    res = client.post("/api/chat/stream", json={"message": "orders in the last hour?"})
+    assert res.status_code == 200
+    assert res.headers["content-type"].startswith("text/event-stream")
+    events = _parse_sse(res.text)
+    types = [e["type"] for e in events]
+
+    # The tool fires twice in the fake but must be announced once (toolUseId de-dupe).
+    assert types.count("tool") == 1
+    tool_evt = next(e for e in events if e["type"] == "tool")
+    assert tool_evt["name"] == "execute_query"
+
+    assert "token" in types  # answer streamed in chunks
+
+    done = next(e for e in events if e["type"] == "done")
+    assert "5 orders" in done["answer"]
+    assert done["tool_calls"][0]["tool"] == "execute_query"
+
+
+def test_chat_stream_error_path(client, monkeypatch):
+    monkeypatch.setattr(app_module, "_make_mcp_client", lambda: (_ for _ in ()).throw(RuntimeError("MCP unreachable")))
+    res = client.post("/api/chat/stream", json={"message": "hi"})
+    assert res.status_code == 200  # stream opens, then carries an error event
+    events = _parse_sse(res.text)
+    err = next(e for e in events if e["type"] == "error")
+    assert "MCP unreachable" in err["error"]
 
 
 def test_chat_error_path(client, monkeypatch):

@@ -9,12 +9,15 @@ Iceberg connection. All config comes from environment variables (Aiven Apps
 secrets / local .env) — see .env.example.
 """
 
+import json
 import logging
 import os
+import queue
+import threading
 from pathlib import Path
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from strands import Agent
@@ -126,6 +129,77 @@ def chat(req: ChatRequest):
             status_code=500,
             content={"error": f"{type(exc).__name__}: {exc}"},
         )
+
+
+def _sse(event_type: str, **payload) -> str:
+    """Format one Server-Sent Event line carrying a JSON object."""
+    return f"data: {json.dumps({'type': event_type, **payload})}\n\n"
+
+
+@app.post("/api/chat/stream")
+def chat_stream(req: ChatRequest):
+    """Same as /api/chat, but streams the agent's activity as Server-Sent Events
+    so the UI can show what's happening live instead of a frozen 'Thinking…'.
+
+    The Strands agent call is blocking, so it runs on a background thread and
+    pushes events onto a queue; this generator drains the queue into SSE frames.
+    Event types: `tool` (a tool the agent invoked, once per call), `token` (a
+    chunk of the answer text), `done` (final answer + the full SQL/tool list),
+    `error`.
+    """
+    events: "queue.Queue" = queue.Queue()
+
+    def on_event(**kwargs):
+        # Stream answer text as it's generated — the clearest "still working" signal.
+        data = kwargs.get("data")
+        if data:
+            events.put(_sse("token", text=data))
+        # Announce each tool the moment the agent commits to it. current_tool_use
+        # is emitted repeatedly as its input streams in, so de-dupe by toolUseId.
+        tool = kwargs.get("current_tool_use") or {}
+        tool_id = tool.get("toolUseId")
+        name = tool.get("name")
+        if name and tool_id and tool_id not in on_event.seen:
+            on_event.seen.add(tool_id)
+            events.put(_sse("tool", name=name))
+
+    on_event.seen = set()
+
+    def run():
+        try:
+            events.put(_sse("status", text="Connecting to Trino MCP…"))
+            mcp_client = _make_mcp_client()
+            with mcp_client:
+                tools = mcp_client.list_tools_sync()
+                events.put(_sse("status", text="Asking the model…"))
+                agent = Agent(
+                    model=get_model(),
+                    tools=tools,
+                    system_prompt=SYSTEM_PROMPT,
+                    callback_handler=on_event,
+                )
+                result = agent(req.message)
+                events.put(_sse("done", answer=str(result), tool_calls=extract_sql(agent.messages)))
+        except Exception as exc:
+            log.exception("stream chat failed")
+            events.put(_sse("error", error=f"{type(exc).__name__}: {exc}"))
+        finally:
+            events.put(None)  # sentinel: close the stream
+
+    def generate():
+        threading.Thread(target=run, daemon=True).start()
+        while True:
+            item = events.get()
+            if item is None:
+                break
+            yield item
+
+    # X-Accel-Buffering: no keeps proxies from buffering the stream (events arrive live).
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 if __name__ == "__main__":

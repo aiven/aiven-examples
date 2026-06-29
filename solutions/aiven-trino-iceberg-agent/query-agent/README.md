@@ -14,6 +14,16 @@ browser ──► query-agent (FastAPI + Strands) ──► Amazon Bedrock (Clau
 The agent only talks to the Trino MCP; Trino owns the Snowflake Open Catalog /
 Iceberg connection. The UI shows both the answer and the **SQL the agent ran**.
 
+### Live activity (so it's never a frozen "Thinking…")
+
+The answer streams in token-by-token, and a **"Show activity"** toggle in the
+header (state remembered across reloads) reveals a live trace of what the agent
+is doing — connecting to the MCP, then each tool it calls (e.g. *Listing
+schemas*, *Running SQL query*). This is served by `POST /api/chat/stream` as
+Server-Sent Events; the agent runs on a background thread and its Strands
+callback pushes events onto a queue that the endpoint drains into the stream.
+`POST /api/chat` (single JSON response) remains for non-streaming callers.
+
 ## Layout
 
 ```
