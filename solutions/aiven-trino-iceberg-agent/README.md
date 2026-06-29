@@ -148,16 +148,25 @@ revenue”*, *“How many orders in the last hour?”*, *“Average order amount
 > The `iceberg-agent` remote points at the standalone repo. Only **committed**
 > changes are pushed.
 
-Deploy each app from its `compose.yaml`, supplying the env vars/secrets in
-the Aiven Apps setup. Notes:
+Onboard the repo against the **root [`compose.yaml`](compose.yaml)**: Aiven Apps
+detects all three `build:` services and resolves each build context to its
+subfolder, so you get three deployable app suggestions from the one file. They
+deploy as **three separate Aiven App services** (Aiven runs one buildable service
+per app) — the root compose is the shared source, not a single combined
+container. (You can equally onboard one app from its own `compose.yaml`; both
+resolve to the same per-app build context.)
 
-- **Pin image tags** before deploying (`trinodb/trino:<version>`,
-  `ghcr.io/tuannvm/mcp-trino:<tag>`) — `:latest` is for local dev.
-- **Expose `query-app`'s MCP port** (`9097`) so `query-agent` can reach
-  `https://<query-app-host>/mcp`; enable `MCP_OAUTH_ENABLED` + `MCP_JWT_SECRET`
-  and set the matching `TRINO_MCP_JWT` on `query-agent`.
+Supply each service's env vars/secrets at deploy time. Notes:
+
+- **Pin image tags** in the Dockerfiles before deploying — `query-app`'s base
+  images (`trinodb/trino`, `ghcr.io/tuannvm/mcp-trino`) default to `:latest` for
+  local dev; replace with released tags for reproducible builds.
+- **Expose `query-app`'s MCP port** (`9097`); enable `MCP_OAUTH_ENABLED` +
+  `MCP_JWT_SECRET` and set the matching `TRINO_MCP_JWT` on `query-agent`.
 - **`query-agent`** serves the web UI on port `8000`; set `TRINO_MCP_URL` to the
-  exposed MCP endpoint.
+  **deployed** `query-app` endpoint (`https://<query-app-host>/mcp`) — the root
+  compose's `http://query-app:9097/mcp` default is local-only.
+- **`live-orders`** is a worker that also serves `/healthz`–`/readyz` on `8080`.
 
 <a id="configuration-reference"></a>
 ## ⚙️ Configuration reference

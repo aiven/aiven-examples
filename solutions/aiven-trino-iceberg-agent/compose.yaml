@@ -1,16 +1,22 @@
-# Root compose: runs the WHOLE demo stack locally with one command.
+# Root compose: runs the WHOLE demo stack locally AND is the single onboarding
+# source for Aiven Apps.
 #
+# Local (one command):
 #   cp .env.example .env   # fill in Kafka + Open Catalog + Bedrock values
 #   docker compose up --build
 #
-# This is for LOCAL orchestration only. On Aiven Apps each service is still
-# deployed independently from its own subdirectory (its build context below is
-# also its deploy `buildPath`); Aiven does not run this file. The per-app
-# compose.yaml files remain the unit you onboard/deploy one service at a time.
+# Aiven Apps: onboard the repo against this file. The scanner detects all three
+# build: services and resolves each one's build context to its subdirectory
+# (live-orders/, query-app/, query-agent/), so you get three deployable app
+# suggestions from this one file. NOTE: they still deploy as three SEPARATE Aiven
+# App services (Aiven runs one buildable service per app) — this file is the
+# shared source, not a single combined container. Per-service at deploy time:
+# supply that service's env/secrets, and point query-agent's TRINO_MCP_URL at the
+# DEPLOYED query-app MCP endpoint (the service-name URL below is local-only).
 #
-# All three services share the default compose network, so query-agent reaches
-# query-app by service name (http://query-app:9097/mcp) rather than localhost.
-# Secrets come from .env (git-ignored) — nothing sensitive is baked into images.
+# All three services share the default compose network locally, so query-agent
+# reaches query-app by service name (http://query-app:9097/mcp) rather than
+# localhost. Secrets come from .env (git-ignored) — nothing is baked into images.
 
 services:
   # ---- live-orders: continuous Kafka order producer (+ health endpoint) ----
