@@ -12,7 +12,7 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg.connect(DATABASE_URL)
 
 
 def ensure_table():
