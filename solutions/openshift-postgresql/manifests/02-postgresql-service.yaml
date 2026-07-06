@@ -7,10 +7,10 @@ spec:
     name: aiven-token
     key: token
 
-  # The Aiven free tier plan is "hobbyist". It is a single-node instance
+  # The Aiven free tier plan is "free-1-1gb". It is a single-node instance
   # with no backups or high-availability. It is suitable for development
   # and demonstration purposes only.
-  plan: hobbyist
+  plan: free-1-1gb
 
   # Set to the Aiven project you want the service created in.
   project: YOUR_AIVEN_PROJECT
