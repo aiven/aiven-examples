@@ -1,0 +1,45 @@
+{
+  "name": "live-orders-iceberg-sink",
+  "connector.class": "org.apache.iceberg.connect.IcebergSinkConnector",
+  "tasks.max": "1",
+
+  "topics": "live_orders.public.orders",
+  "iceberg.tables": "moneylion.live_orders",
+  "iceberg.tables.auto-create-enabled": "true",
+  "iceberg.tables.evolve-schema-enabled": "true",
+
+  "iceberg.tables.upsert-mode-enabled": "true",
+  "iceberg.tables.default-id-columns": "order_id",
+
+  "iceberg.control.topic": "control-iceberg-live-orders",
+  "iceberg.control.group-id": "cg-control-iceberg-live-orders",
+  "iceberg.control.commit.interval-ms": "5000",
+  "iceberg.control.commit.timeout-ms": "20000",
+
+  "iceberg.catalog.type": "rest",
+  "iceberg.catalog.uri": "<ICEBERG_CATALOG_URI>",
+  "iceberg.catalog.credential": "<client-id>:<client-secret>",
+  "iceberg.catalog.scope": "PRINCIPAL_ROLE:<your-principal-role>",
+  "iceberg.catalog.warehouse": "<catalog-name>",
+  "iceberg.catalog.io-impl": "org.apache.iceberg.aws.s3.S3FileIO",
+  "iceberg.catalog.client.region": "us-west-2",
+  "iceberg.catalog.s3.path-style-access": "true",
+  "iceberg.catalog.s3.access-key-id": "<aws-access-key-id>",
+  "iceberg.catalog.s3.secret-access-key": "<aws-secret-access-key>",
+
+  "iceberg.kafka.bootstrap.servers": "<your-kafka-host>.aivencloud.com:<mtls-port>",
+  "iceberg.kafka.security.protocol": "SSL",
+  "iceberg.kafka.ssl.keystore.location": "/run/aiven/keys/public.keystore.p12",
+  "iceberg.kafka.ssl.keystore.password": "password",
+  "iceberg.kafka.ssl.keystore.type": "PKCS12",
+  "iceberg.kafka.ssl.key.password": "password",
+  "iceberg.kafka.ssl.truststore.location": "/run/aiven/keys/public.truststore.jks",
+  "iceberg.kafka.ssl.truststore.password": "password",
+  "iceberg.kafka.auto.offset.reset": "earliest",
+
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "false",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+  "consumer.override.auto.offset.reset": "earliest"
+}

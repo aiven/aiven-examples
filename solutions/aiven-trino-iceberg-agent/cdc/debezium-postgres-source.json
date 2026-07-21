@@ -1,0 +1,36 @@
+{
+  "name": "live-orders-pg-cdc-source",
+  "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+
+  "database.hostname": "<your-pg-host>.aivencloud.com",
+  "database.port": "<your-pg-port>",
+  "database.user": "avnadmin",
+  "database.password": "<your-pg-password>",
+  "database.dbname": "defaultdb",
+  "database.sslmode": "require",
+
+  "plugin.name": "pgoutput",
+  "slot.name": "live_orders_cdc",
+  "publication.name": "live_orders_publication",
+  "publication.autocreate.mode": "disabled",
+  "table.include.list": "public.orders",
+
+  "topic.prefix": "live_orders",
+  "snapshot.mode": "initial",
+  "tombstones.on.delete": "false",
+  "decimal.handling.mode": "double",
+  "heartbeat.interval.ms": "30000",
+
+  "transforms": "unwrap",
+  "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+  "transforms.unwrap.drop.tombstones": "true",
+
+  "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "key.converter.schemas.enable": "false",
+  "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+  "value.converter.schemas.enable": "false",
+
+  "topic.creation.enable": "true",
+  "topic.creation.default.partitions": "3",
+  "topic.creation.default.replication.factor": "2"
+}

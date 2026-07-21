@@ -1,8 +1,9 @@
-# live-orders: continuous Kafka order producer (long-running worker).
+# live-orders: continuous Postgres order writer (long-running worker).
 #
-# Primarily a producer, but it also serves a small health endpoint (PORT, default
-# 8080) so Aiven Apps has a port to health-check. All config via environment
-# variables (Aiven Apps env/secrets; local .env). Nothing sensitive is baked in.
+# Primarily a database writer, but it also serves a small health endpoint (PORT,
+# default 8080) so Aiven Apps has a port to health-check. All config via
+# environment variables (Aiven Apps env/secrets; local .env). Nothing sensitive
+# is baked in.
 
 services:
   live-orders:
@@ -12,11 +13,9 @@ services:
     image: live-orders
     container_name: live-orders
     environment:
-      KAFKA_SERVICE_URI: ${KAFKA_SERVICE_URI}
-      KAFKA_USERNAME: ${KAFKA_USERNAME}
-      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-order}
+      POSTGRES_URI: ${POSTGRES_URI}
       ORDERS_PER_MINUTE: ${ORDERS_PER_MINUTE:-100}
+      UPDATES_PER_MINUTE: ${UPDATES_PER_MINUTE:-60}
       PORT: ${PORT:-8080}
     # Health endpoint (/healthz, /readyz) — gives the platform a port to probe.
     ports:

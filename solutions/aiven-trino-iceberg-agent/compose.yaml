@@ -2,7 +2,7 @@
 # source for Aiven Apps.
 #
 # Local (one command):
-#   cp .env.example .env   # fill in Kafka + Open Catalog + Bedrock values
+#   cp .env.example .env   # fill in Postgres + Open Catalog + Bedrock values
 #   docker compose up --build
 #
 # Aiven Apps: onboard the repo against this file. The scanner detects all three
@@ -19,7 +19,7 @@
 # localhost. Secrets come from .env (git-ignored) — nothing is baked into images.
 
 services:
-  # ---- live-orders: continuous Kafka order producer (+ health endpoint) ----
+  # ---- live-orders: continuous Postgres order writer (+ health endpoint) ----
   live-orders:
     build:
       context: ./live-orders
@@ -27,11 +27,9 @@ services:
     image: live-orders
     container_name: live-orders
     environment:
-      KAFKA_SERVICE_URI: ${KAFKA_SERVICE_URI}
-      KAFKA_USERNAME: ${KAFKA_USERNAME}
-      KAFKA_PASSWORD: ${KAFKA_PASSWORD}
-      KAFKA_TOPIC: ${KAFKA_TOPIC:-order}
+      POSTGRES_URI: ${POSTGRES_URI}
       ORDERS_PER_MINUTE: ${ORDERS_PER_MINUTE:-100}
+      UPDATES_PER_MINUTE: ${UPDATES_PER_MINUTE:-60}
       PORT: "8080"
     ports:
       - "8080:8080"   # health: /healthz, /readyz
