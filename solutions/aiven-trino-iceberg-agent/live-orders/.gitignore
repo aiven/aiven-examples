@@ -4,3 +4,6 @@
 # Build output
 /live-orders
 /bin/
+
+# Local toolchain pin (asdf) — machine-specific
+.tool-versions
