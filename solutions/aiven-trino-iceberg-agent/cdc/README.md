@@ -4,7 +4,7 @@ Wiring for the end-to-end CDC leg of the demo:
 
 ```
 live-orders ─► Aiven PostgreSQL ─► Debezium PG source ─► Aiven Kafka ─► Iceberg sink ─► Iceberg / S3
-              (public.orders)     (Aiven Kafka Connect)  (topic:        (upsert mode)   (moneylion.live_orders,
+              (public.orders)     (Aiven Kafka Connect)  (topic:        (upsert mode)   (ecommerce.live_orders,
                                                           live_orders.                   Snowflake Open Catalog)
                                                           public.orders)
 ```
@@ -101,7 +101,7 @@ avn service connector create <your-kafka>-connect @iceberg-sink-live-orders.json
 Differences vs. the original sink — these are the adjustments needed so CDC
 data lands correctly:
 
-- **`topics=live_orders.public.orders`**, **`iceberg.tables=moneylion.live_orders`**
+- **`topics=live_orders.public.orders`**, **`iceberg.tables=ecommerce.live_orders`**
   — new topic, new table. Auto-created on first commit; snake_case columns.
 - **Upsert mode**: `iceberg.tables.upsert-mode-enabled=true` +
   `iceberg.tables.default-id-columns=order_id`. Because live-orders UPDATEs
@@ -129,7 +129,7 @@ kcat -b <kafka-host>:<sasl-port> -X security.protocol=SASL_SSL \
      -X sasl.mechanisms=SCRAM-SHA-512 -X sasl.username=avnadmin \
      -X sasl.password=<pw> -t live_orders.public.orders -C -o -3 -e
 
-# 3. Table visible in Snowflake Open Catalog (moneylion.live_orders), then:
+# 3. Table visible in Snowflake Open Catalog (ecommerce.live_orders), then:
 #    ask the query-agent "how many orders are currently SHIPPED?" — it reads
 #    the table through Trino.
 ```

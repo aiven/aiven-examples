@@ -4,7 +4,7 @@
   "tasks.max": "1",
 
   "topics": "live_orders.public.orders",
-  "iceberg.tables": "moneylion.live_orders",
+  "iceberg.tables": "ecommerce.live_orders",
   "iceberg.tables.auto-create-enabled": "true",
   "iceberg.tables.evolve-schema-enabled": "true",
 

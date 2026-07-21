@@ -22,7 +22,7 @@ Aiven Apps.
   ([`cdc/`](cdc/)).
 - ❄️ **Kafka → Iceberg sink → S3** + **Snowflake Open Catalog** — an
   upsert-mode Iceberg sink keeps one current row per order in the
-  `moneylion.live_orders` table.
+  `ecommerce.live_orders` table.
 - 🔭 **`query-app`** — **Trino** + a co-located **Trino MCP** server
   ([`tuannvm/mcp-trino`](https://github.com/tuannvm/mcp-trino)), read-only.
 - 🤖 **`query-agent`** — a web chat (FastAPI + [Strands Agents](https://strandsagents.com/)
@@ -90,7 +90,7 @@ Catalog → Aiven Kafka). On top of that, this solution adds the **CDC leg**:
 an Aiven for PostgreSQL service that `live-orders` writes into, a **Debezium
 PostgreSQL source connector** that streams the changes to Kafka (topic
 `live_orders.public.orders`), and a **second Iceberg sink** in upsert mode
-that lands them in `moneylion.live_orders`. Full setup — Postgres init SQL and
+that lands them in `ecommerce.live_orders`. Full setup — Postgres init SQL and
 both connector configs — lives in [`cdc/`](cdc/).
 
 <a id="the-three-apps"></a>
