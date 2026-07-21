@@ -46,6 +46,18 @@ variable "iceberg_control_topic" {
   default     = "control-iceberg"
 }
 
+variable "cdc_orders_topic" {
+  description = "Debezium CDC output topic the Iceberg sink consumes (<topic.prefix>.<schema>.<table>)"
+  type        = string
+  default     = "live_orders.public.orders"
+}
+
+variable "iceberg_table_id_columns" {
+  description = "Comma-separated identity columns used for upsert-mode equality deletes on auto-created tables"
+  type        = string
+  default     = "order_id"
+}
+
 variable "iceberg_catalog_uri" {
   description = "Iceberg catalog URI"
   type        = string

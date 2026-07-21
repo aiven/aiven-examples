@@ -34,11 +34,14 @@ resource "aiven_kafka" "iceberg_kafka" {
   }
 }
 
-# Create Kafka Topics (1 for use case and 1 for control)
-resource "aiven_kafka_topic" "order_topic" {
+# Create Kafka Topics (1 for use case and 1 for control).
+# The data topic is the Debezium CDC output topic (<topic.prefix>.<schema>.<table>
+# from the Debezium Postgres source connector) — pre-created here so the sink can
+# subscribe immediately, regardless of the source connector's topic.creation settings.
+resource "aiven_kafka_topic" "cdc_orders_topic" {
   project      = var.aiven_project_name
   service_name = aiven_kafka.iceberg_kafka.service_name
-  topic_name   = "order"
+  topic_name   = var.cdc_orders_topic
   partitions   = 3
   replication  = 2
 }
@@ -73,7 +76,11 @@ resource "aiven_service_integration" "kafka_connect_integration" {
   destination_service_name = aiven_kafka_connect.iceberg_kafka_connect.service_name
 }
 
-# Iceberg Sink Connector
+# Iceberg Sink Connector (CDC-aware).
+# Consumes the Debezium CDC topic (envelope already unwrapped by the source
+# connector's ExtractNewRecordState transform) and UPSERTS into the Iceberg
+# table: the same order_id appears many times on the topic (status updates),
+# and upsert mode keeps one current row per order via equality-delete + append.
 resource "aiven_kafka_connector" "iceberg_sink" {
   project        = var.aiven_project_name
   service_name   = aiven_kafka_connect.iceberg_kafka_connect.service_name
@@ -82,18 +89,17 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "name": "${aiven_kafka.iceberg_kafka.service_name}-iceberg-sink"
     "iceberg.tables" = var.iceberg_catalog_tables_config
     "iceberg.tables.auto-create-enabled" = "true"
+    "iceberg.tables.evolve-schema-enabled" = "true"
+    "iceberg.tables.upsert-mode-enabled" = "true"
+    "iceberg.tables.default-id-columns" = var.iceberg_table_id_columns
     "iceberg.control.topic" = var.iceberg_control_topic
-    "iceberg.control.commit.interval-ms" = "2000"
+    "iceberg.control.commit.interval-ms" = "5000"
     "iceberg.control.commit.timeout-ms" = "20000"
     "connector.class" = "org.apache.iceberg.connect.IcebergSinkConnector"
     "tasks.max" = "1"
     "key.converter" = "org.apache.kafka.connect.json.JsonConverter"
     "value.converter" = "org.apache.kafka.connect.json.JsonConverter"
-    "topics" = "order"
-    "transforms" = "k2v"
-    "transforms.k2v.type" = "io.aiven.kafka.connect.transforms.KeyToValue"
-    "transforms.k2v.key.fields" = "keyId"
-    "transforms.k2v.value.fields" = "kId"
+    "topics" = aiven_kafka_topic.cdc_orders_topic.topic_name
     "iceberg.catalog.credential" = "${var.snowflake_client_id}:${var.snowflake_client_secret}"
     "iceberg.catalog.io-impl" = "org.apache.iceberg.aws.s3.S3FileIO"
     "iceberg.catalog.scope" = var.iceberg_catalog_scope

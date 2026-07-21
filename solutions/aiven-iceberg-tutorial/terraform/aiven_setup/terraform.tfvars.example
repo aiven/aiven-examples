@@ -8,4 +8,4 @@ iceberg_catalog_scope = "PRINCIPAL_ROLE:<your_principal_role>"
 snowflake_client_id = "your_snowflake_connect_client_id"
 snowflake_client_secret = "your_snowflake_connect_client_secret"
 iceberg_catalog_name = "your_catalog_name"
-iceberg_catalog_tables_config = "<your_namespace>.<your_table_name>"
+iceberg_catalog_tables_config = "<your_namespace>.<your_table_name>"   # e.g. ecommerce.live_orders — upsert target for the CDC stream

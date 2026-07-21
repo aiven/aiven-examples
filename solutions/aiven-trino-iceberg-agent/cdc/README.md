@@ -9,15 +9,16 @@ live-orders ─► Aiven PostgreSQL ─► Debezium PG source ─► Aiven Kafka
                                                           public.orders)
 ```
 
-Both connectors run on the **same Aiven Kafka Connect service** you already
-have from `aiven-iceberg-tutorial`. This folder holds the two connector
-configs (with placeholders) and the Postgres init SQL.
+Both connectors run on the **same Aiven Kafka Connect service** created by
+`aiven-iceberg-tutorial`'s Terraform. That Terraform **also creates the
+Iceberg sink** (CDC-aware, upsert mode) and the CDC topic — so the only
+connector you create by hand is the Debezium source.
 
 | File | What it is |
 |------|------------|
 | [`sql/init.sql`](sql/init.sql) | `orders` table DDL + the logical-replication publication |
-| [`debezium-postgres-source.json`](debezium-postgres-source.json) | Debezium CDC source: Postgres → Kafka |
-| [`iceberg-sink-live-orders.json`](iceberg-sink-live-orders.json) | Iceberg sink for the CDC topic (upsert mode) |
+| [`debezium-postgres-source.json`](debezium-postgres-source.json) | Debezium CDC source: Postgres → Kafka (manual create) |
+| [`iceberg-sink-live-orders.json`](iceberg-sink-live-orders.json) | Reference copy of the Iceberg sink config — normally provisioned by the tutorial's Terraform; use this only for a Console/API setup without Terraform |
 
 ## Setup, in order
 
@@ -91,22 +92,24 @@ What the non-obvious settings do:
   sink expects (same as the original pipeline). `timestamptz` columns arrive
   as ISO-8601 strings, same as the old producer's `orderDate`.
 
-### 3. Iceberg sink connector (new one, for the CDC topic)
+### 3. Iceberg sink connector — created by the tutorial's Terraform
 
-The original `order`-topic sink stays as-is (or retire it — nothing writes to
-`order` anymore). Create a **second** sink from
-[`iceberg-sink-live-orders.json`](iceberg-sink-live-orders.json) after filling
-in the same catalog/S3/Kafka values you used in the tutorial's Terraform:
+The sink is provisioned by `aiven-iceberg-tutorial/terraform/aiven_setup`
+(along with Kafka, Kafka Connect, the CDC topic, and the control topic). Set
+in its `terraform.tfvars`:
 
-```bash
-avn service connector create <your-kafka>-connect @iceberg-sink-live-orders.json
+```hcl
+iceberg_catalog_tables_config = "ecommerce.live_orders"   # upsert target table
+# optional overrides (defaults shown):
+# cdc_orders_topic         = "live_orders.public.orders"
+# iceberg_table_id_columns = "order_id"
 ```
 
-Differences vs. the original sink — these are the adjustments needed so CDC
-data lands correctly:
+What makes this sink CDC-aware (vs. the tutorial's original append-only one):
 
 - **`topics=live_orders.public.orders`**, **`iceberg.tables=ecommerce.live_orders`**
-  — new topic, new table. Auto-created on first commit; snake_case columns.
+  — consumes the Debezium topic; table auto-created on first commit with
+  snake_case columns.
 - **Upsert mode**: `iceberg.tables.upsert-mode-enabled=true` +
   `iceberg.tables.default-id-columns=order_id`. Because live-orders UPDATEs
   order statuses, the same `order_id` appears multiple times on the topic;
@@ -115,12 +118,13 @@ data lands correctly:
 - **No `KeyToValue` transform** — the old producer's synthetic `keyId` key is
   gone; Debezium's key is the real primary key and `order_id` is already in
   the value.
-- **Own control topic + group id** (`control-iceberg-live-orders` /
-  `cg-control-iceberg-live-orders`) so the two sinks on the shared Connect
-  service never cross-commit. Pre-create the control topic (3 partitions,
-  RF 2) or enable topic auto-creation on the Kafka service.
 - **Commit interval 5000 ms** — don't go low: sub-second intervals bloat the
   control topic and replay from earliest on restart, blocking real commits.
+
+No-Terraform alternative: create it manually from
+[`iceberg-sink-live-orders.json`](iceberg-sink-live-orders.json) after filling
+the placeholders (`avn service connector create <your-kafka>-connect
+@iceberg-sink-live-orders.json`).
 
 ### 4. Verify end to end
 
