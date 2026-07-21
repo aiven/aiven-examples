@@ -23,10 +23,14 @@ configs (with placeholders) and the Postgres init SQL.
 
 ### 1. Aiven for PostgreSQL
 
-Create the service (same project; any plan ≥ `startup-4` works for the demo):
+Create the service (same project; any plan ≥ `startup-4` works for the demo).
+**Region: `aws-us-west-2`** — co-located with Kafka/Kafka Connect and the
+S3 + Open Catalog data plane, so the CDC leg (Debezium → Kafka → Iceberg)
+stays in-region. Only the Aiven Apps compute (live-orders itself) runs
+cross-region from eu-west-1, which a low-rate writer tolerates fine:
 
 ```bash
-avn service create live-orders-pg --service-type pg --plan startup-4 --cloud aws-eu-west-1
+avn service create live-orders-pg --service-type pg --plan startup-4 --cloud aws-us-west-2
 ```
 
 Aiven PG ships with `wal_level=logical` already — no config change needed for
