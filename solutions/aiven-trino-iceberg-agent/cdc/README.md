@@ -30,7 +30,7 @@ stays in-region. Only the Aiven Apps compute (live-orders itself) runs
 cross-region from eu-west-1, which a low-rate writer tolerates fine:
 
 ```bash
-avn service create live-orders-pg --service-type pg --plan startup-4 --cloud aws-us-west-2
+avn service create live-orders-pg --service-type pg --plan startup-4 --cloud aws-us-west-2 -c pg_version=18
 ```
 
 Aiven PG ships with `wal_level=logical` already — no config change needed for
