@@ -7,8 +7,6 @@
   "iceberg.tables": "ecommerce.live_orders",
   "iceberg.tables.auto-create-enabled": "true",
   "iceberg.tables.evolve-schema-enabled": "true",
-
-  "iceberg.tables.upsert-mode-enabled": "true",
   "iceberg.tables.default-id-columns": "order_id",
 
   "iceberg.control.topic": "control-iceberg-live-orders",

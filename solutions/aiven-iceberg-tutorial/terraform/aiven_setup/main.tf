@@ -76,11 +76,15 @@ resource "aiven_service_integration" "kafka_connect_integration" {
   destination_service_name = aiven_kafka_connect.iceberg_kafka_connect.service_name
 }
 
-# Iceberg Sink Connector (CDC-aware).
+# Iceberg Sink Connector (CDC change log).
 # Consumes the Debezium CDC topic (envelope already unwrapped by the source
-# connector's ExtractNewRecordState transform) and UPSERTS into the Iceberg
-# table: the same order_id appears many times on the topic (status updates),
-# and upsert mode keeps one current row per order via equality-delete + append.
+# connector's ExtractNewRecordState transform) and APPENDS every change event
+# to the Iceberg table: one row per insert/update, so an order_id appears once
+# per status transition and the table is a full order-history log. Current
+# state = latest row per order_id (row_number() OVER ... ORDER BY updated_at
+# DESC). NOTE: the Apache Iceberg Kafka Connect sink has no upsert/delta-write
+# mode (that was a Tabular-connector feature not carried into the donation) —
+# append is the only write path.
 resource "aiven_kafka_connector" "iceberg_sink" {
   project        = var.aiven_project_name
   service_name   = aiven_kafka_connect.iceberg_kafka_connect.service_name
@@ -90,7 +94,6 @@ resource "aiven_kafka_connector" "iceberg_sink" {
     "iceberg.tables" = var.iceberg_catalog_tables_config
     "iceberg.tables.auto-create-enabled" = "true"
     "iceberg.tables.evolve-schema-enabled" = "true"
-    "iceberg.tables.upsert-mode-enabled" = "true"
     "iceberg.tables.default-id-columns" = var.iceberg_table_id_columns
     "iceberg.control.topic" = var.iceberg_control_topic
     "iceberg.control.commit.interval-ms" = "5000"

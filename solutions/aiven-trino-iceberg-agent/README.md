@@ -21,8 +21,9 @@ Aiven Apps.
   connector on Aiven Kafka Connect streams inserts *and* updates
   ([`cdc/`](cdc/)).
 - ❄️ **Kafka → Iceberg sink → S3** + **Snowflake Open Catalog** — an
-  upsert-mode Iceberg sink keeps one current row per order in the
-  `ecommerce.live_orders` table.
+  append-only Iceberg sink lands every change event in the
+  `ecommerce.live_orders` table — a full order-history CDC log (current state
+  = latest row per `order_id`).
 - 🔭 **`query-app`** — **Trino** + a co-located **Trino MCP** server
   ([`tuannvm/mcp-trino`](https://github.com/tuannvm/mcp-trino)), read-only.
 - 🤖 **`query-agent`** — a web chat (FastAPI + [Strands Agents](https://strandsagents.com/)
@@ -33,7 +34,7 @@ Aiven Apps.
 ```
   ┌─────────────┐  INSERT/   ┌────────────┐  Debezium CDC   ┌──────────┐  Iceberg sink   ┌──────────────┐
   │ live-orders │  UPDATE    │ PostgreSQL │ ──────────────► │  Kafka   │ ──────────────► │ Iceberg / S3 │
-  │ (Go worker) │ ─────────► │  (Aiven)   │  Kafka Connect  │ (Aiven)  │  (upsert mode)  │  (us-west-2) │
+  │ (Go worker) │ ─────────► │  (Aiven)   │  Kafka Connect  │ (Aiven)  │  (CDC log)      │  (us-west-2) │
   └─────────────┘  ~100/min  └────────────┘                 └──────────┘                 └──────┬───────┘
                                                        registered in                            │ metadata
                                                  Snowflake Open Catalog ◄────────────────────────┘ (REST catalog)
@@ -89,8 +90,9 @@ Stand up Kafka, Kafka Connect, S3, and Snowflake Open Catalog by following
 Catalog → Aiven Kafka). On top of that, this solution adds the **CDC leg**:
 an Aiven for PostgreSQL service that `live-orders` writes into, a **Debezium
 PostgreSQL source connector** that streams the changes to Kafka (topic
-`live_orders.public.orders`), and a **second Iceberg sink** in upsert mode
-that lands them in `ecommerce.live_orders`. Full setup — Postgres init SQL and
+`live_orders.public.orders`), and an **Iceberg sink** that appends every
+change event to `ecommerce.live_orders` (a CDC change log — the Apache Iceberg
+Kafka Connect sink has no upsert mode). Full setup — Postgres init SQL and
 both connector configs — lives in [`cdc/`](cdc/).
 
 <a id="the-three-apps"></a>

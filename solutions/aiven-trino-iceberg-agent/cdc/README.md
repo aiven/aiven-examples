@@ -4,14 +4,34 @@ Wiring for the end-to-end CDC leg of the demo:
 
 ```
 live-orders ─► Aiven PostgreSQL ─► Debezium PG source ─► Aiven Kafka ─► Iceberg sink ─► Iceberg / S3
-              (public.orders)     (Aiven Kafka Connect)  (topic:        (upsert mode)   (ecommerce.live_orders,
-                                                          live_orders.                   Snowflake Open Catalog)
+              (public.orders)     (Aiven Kafka Connect)  (topic:        (append-only    (ecommerce.live_orders,
+                                                          live_orders.   CDC log)        Snowflake Open Catalog)
                                                           public.orders)
 ```
 
+The Iceberg table is an **append-only CDC change log**: every INSERT and every
+status UPDATE lands as its own row, so one `order_id` appears once per
+transition and the table holds the full order history. Current state is a
+query pattern, not a table property:
+
+```sql
+SELECT * FROM (
+  SELECT *, row_number() OVER (PARTITION BY order_id ORDER BY updated_at DESC) AS rn
+  FROM ecommerce.live_orders
+) WHERE rn = 1
+```
+
+> Why not upsert? The **Apache** Iceberg Kafka Connect sink (what Aiven
+> deploys, `org.apache.iceberg.connect.IcebergSinkConnector`) has **no
+> upsert/delta-write mode** — `iceberg.tables.upsert-mode-enabled` was a
+> Tabular-connector feature that was not carried into the Apache donation, and
+> Kafka Connect silently ignores unknown properties, so it *looks* configured
+> while appending. Verified empirically (zero equality-delete files) and
+> against the connector docs/source.
+
 Both connectors run on the **same Aiven Kafka Connect service** created by
 `aiven-iceberg-tutorial`'s Terraform. That Terraform **also creates the
-Iceberg sink** (CDC-aware, upsert mode) and the CDC topic — so the only
+Iceberg sink** (append-only CDC log) and the CDC topic — so the only
 connector you create by hand is the Debezium source.
 
 | File | What it is |
@@ -99,22 +119,24 @@ The sink is provisioned by `aiven-iceberg-tutorial/terraform/aiven_setup`
 in its `terraform.tfvars`:
 
 ```hcl
-iceberg_catalog_tables_config = "ecommerce.live_orders"   # upsert target table
+iceberg_catalog_tables_config = "ecommerce.live_orders"   # CDC change-log table
 # optional overrides (defaults shown):
 # cdc_orders_topic         = "live_orders.public.orders"
 # iceberg_table_id_columns = "order_id"
 ```
 
-What makes this sink CDC-aware (vs. the tutorial's original append-only one):
+What makes this sink CDC-oriented (vs. the tutorial's original one):
 
 - **`topics=live_orders.public.orders`**, **`iceberg.tables=ecommerce.live_orders`**
   — consumes the Debezium topic; table auto-created on first commit with
   snake_case columns.
-- **Upsert mode**: `iceberg.tables.upsert-mode-enabled=true` +
-  `iceberg.tables.default-id-columns=order_id`. Because live-orders UPDATEs
-  order statuses, the same `order_id` appears multiple times on the topic;
-  upsert mode makes the Iceberg table hold one current row per order
-  (equality-delete + append) instead of duplicate append-only rows.
+- **Append-only change log** — every insert/update event becomes a row (see
+  the note at the top: the Apache connector has no upsert mode). Downstream
+  consumers use the latest-row-per-order pattern for current state; the
+  query-agent's system prompt teaches it exactly that.
+- **`iceberg.tables.default-id-columns=order_id`** — records the primary key
+  as row-identity metadata on the auto-created table (documentation of
+  intent; it does not change the append behavior).
 - **No `KeyToValue` transform** — the old producer's synthetic `keyId` key is
   gone; Debezium's key is the real primary key and `order_id` is already in
   the value.

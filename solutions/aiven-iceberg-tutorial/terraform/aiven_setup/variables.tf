@@ -53,7 +53,7 @@ variable "cdc_orders_topic" {
 }
 
 variable "iceberg_table_id_columns" {
-  description = "Comma-separated identity columns used for upsert-mode equality deletes on auto-created tables"
+  description = "Comma-separated columns recorded as the row identity (primary key) on auto-created tables — metadata only; the sink always appends"
   type        = string
   default     = "order_id"
 }
