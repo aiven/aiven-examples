@@ -1,2 +1,5 @@
 # Local secrets for the root full-stack compose — never commit real values.
 .env
+
+# Filled-in connector configs with real credentials (from the cdc/ templates).
+cdc/local/
