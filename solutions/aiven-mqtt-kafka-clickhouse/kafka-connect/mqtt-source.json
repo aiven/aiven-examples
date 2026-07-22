@@ -1,0 +1,17 @@
+{
+    "name": "mqtt-source-optime-telemetry",
+    "connector.class": "io.lenses.streamreactor.connect.mqtt.source.MqttSourceConnector",
+    "tasks.max": "1",
+
+    "connect.mqtt.hosts": "tcp://<BROKER_APP_HOSTNAME>:1883",
+    "connect.mqtt.username": "iot",
+    "connect.mqtt.password": "<MQTT_PASSWORD>",
+    "connect.mqtt.client.id": "aiven-kafka-connect-optime",
+    "connect.mqtt.service.quality": "1",
+    "connect.mqtt.clean": "false",
+
+    "connect.mqtt.kcql": "INSERT INTO iot_optime_telemetry SELECT * FROM `optime/+/+/telemetry` WITHCONVERTER=`io.lenses.streamreactor.connect.converters.source.BytesConverter`",
+
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter"
+}

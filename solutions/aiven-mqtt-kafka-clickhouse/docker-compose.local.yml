@@ -1,0 +1,28 @@
+# Local end-to-end test: broker + publisher on one machine.
+#   MQTT_PASSWORD=changeme docker compose -f docker-compose.local.yml up --build
+# Then watch the stream:
+#   docker compose -f docker-compose.local.yml exec mosquitto \
+#     mosquitto_sub -u iot -P changeme -t 'optime/#' -v
+services:
+  mosquitto:
+    build: ./mqtt-broker
+    ports:
+      - "1883:1883"
+    environment:
+      MQTT_USERNAME: ${MQTT_USERNAME:-iot}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?set the MQTT password}
+
+  publisher:
+    build: ./publisher
+    depends_on:
+      - mosquitto
+    ports:
+      - "8080:8080"
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      MQTT_USERNAME: ${MQTT_USERNAME:-iot}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:?set the MQTT password}
+      MACHINE_COUNT: ${MACHINE_COUNT:-14}
+      PUBLISH_INTERVAL_SECONDS: 5
+      SITE: plant-herzogenaurach

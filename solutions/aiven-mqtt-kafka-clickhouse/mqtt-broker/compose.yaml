@@ -1,0 +1,26 @@
+# mqtt-broker: Eclipse Mosquitto with password auth (long-running service).
+#
+# Credentials are generated from env vars at container startup — nothing
+# sensitive is baked into the image and no bind mounts are needed. Expose
+# TCP port 1883 so the publisher app and the Kafka Connect MQTT source
+# connector can reach it; the listener doubles as the port the platform
+# can probe.
+
+services:
+  mqtt-broker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mqtt-broker
+    container_name: mqtt-broker
+    environment:
+      MQTT_USERNAME: ${MQTT_USERNAME:-iot}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+    ports:
+      - "1883:1883"
+    volumes:
+      - mosquitto-data:/mosquitto/data
+    restart: unless-stopped
+
+volumes:
+  mosquitto-data:

@@ -1,0 +1,30 @@
+# optime-publisher: continuous MQTT telemetry writer (long-running worker).
+#
+# Simulates MACHINE_COUNT Schaeffler OPTIME-style IoT sensors publishing to
+# the MQTT broker every PUBLISH_INTERVAL_SECONDS. Primarily an MQTT writer,
+# but it also serves a small health endpoint (PORT, default 8080) so Aiven
+# Apps has a port to health-check. All config via environment variables
+# (Aiven Apps env/secrets; local .env). Nothing sensitive is baked in.
+
+services:
+  optime-publisher:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: optime-publisher
+    container_name: optime-publisher
+    environment:
+      MQTT_HOST: ${MQTT_HOST}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:-iot}
+      MQTT_PASSWORD: ${MQTT_PASSWORD}
+      MQTT_TLS: ${MQTT_TLS:-false}
+      MACHINE_COUNT: ${MACHINE_COUNT:-14}
+      PUBLISH_INTERVAL_SECONDS: ${PUBLISH_INTERVAL_SECONDS:-5}
+      SITE: ${SITE:-plant-herzogenaurach}
+      TOPIC_PREFIX: ${TOPIC_PREFIX:-optime}
+      PORT: ${PORT:-8080}
+    # Health endpoint (/healthz, /readyz) — gives the platform a port to probe.
+    ports:
+      - "8080:8080"
+    restart: unless-stopped

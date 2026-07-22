@@ -1,0 +1,279 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_CLICKHOUSE",
+      "label": "Aiven for ClickHouse",
+      "description": "ClickHouse datasource pointing at the iot database",
+      "type": "datasource",
+      "pluginId": "grafana-clickhouse-datasource",
+      "pluginName": "ClickHouse"
+    }
+  ],
+  "title": "OPTIME Condition Monitoring",
+  "uid": "optime-condition-monitoring",
+  "tags": ["iot", "mqtt", "clickhouse", "condition-monitoring"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {"from": "now-3h", "to": "now"},
+  "templating": {
+    "list": [
+      {
+        "name": "site",
+        "label": "Site",
+        "type": "query",
+        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+        "query": "SELECT DISTINCT site FROM iot.optime_telemetry",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2
+      },
+      {
+        "name": "machine",
+        "label": "Machine",
+        "type": "query",
+        "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+        "query": "SELECT DISTINCT machine_id FROM iot.optime_telemetry WHERE site IN (${site:sqlstring})",
+        "includeAll": true,
+        "multi": true,
+        "refresh": 2
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Machines in Alarm (ISO zone D)",
+      "gridPos": {"h": 5, "w": 4, "x": 0, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT count() FROM (SELECT machine_id, argMax(condition, timestamp) AS c FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) GROUP BY machine_id) WHERE c = 'alarm'",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Machines in Warning (ISO zone C)",
+      "gridPos": {"h": 5, "w": 4, "x": 4, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT count() FROM (SELECT machine_id, argMax(condition, timestamp) AS c FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) GROUP BY machine_id) WHERE c = 'warning'",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 1}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Machines Reporting",
+      "gridPos": {"h": 5, "w": 4, "x": 8, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT uniqExact(machine_id) FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) AND timestamp >= now() - INTERVAL 5 MINUTE",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}}, "overrides": []}
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Messages / min",
+      "gridPos": {"h": 5, "w": 4, "x": 12, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT count() FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) AND timestamp >= now() - INTERVAL 1 MINUTE",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "blue", "value": null}]}}, "overrides": []}
+    },
+    {
+      "id": 5,
+      "type": "piechart",
+      "title": "Fleet by ISO 10816 Zone (latest)",
+      "gridPos": {"h": 5, "w": 8, "x": 16, "y": 0},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT z AS iso_zone, count() AS machines FROM (SELECT machine_id, argMax(iso_zone, timestamp) AS z FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) GROUP BY machine_id) GROUP BY z ORDER BY z",
+          "format": 1
+        }
+      ],
+      "options": {"legend": {"displayMode": "table", "placement": "right", "values": ["value"]}}
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Vibration Velocity RMS (mm/s) — ISO 10816",
+      "description": "Zone C (warning) at 2.8 mm/s, Zone D (alarm) at 7.1 mm/s",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 5},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toStartOfInterval(toDateTime(timestamp), INTERVAL 1 MINUTE) AS t, machine_id, avg(vibration_velocity_rms_mms) AS velocity FROM iot.optime_telemetry WHERE $__timeFilter(timestamp) AND site IN (${site:sqlstring}) AND machine_id IN (${machine:sqlstring}) GROUP BY t, machine_id ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never"},
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 2.8},
+              {"color": "red", "value": 7.1}
+            ]
+          },
+          "custom.thresholdsStyle": {"mode": "line"}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Surface Temperature (°C)",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 5},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toStartOfInterval(toDateTime(timestamp), INTERVAL 1 MINUTE) AS t, machine_id, avg(temperature_c) AS temperature FROM iot.optime_telemetry WHERE $__timeFilter(timestamp) AND site IN (${site:sqlstring}) AND machine_id IN (${machine:sqlstring}) GROUP BY t, machine_id ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "celsius",
+          "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never"}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "Vibration Acceleration RMS (m/s²) — bearing defect indicator",
+      "gridPos": {"h": 9, "w": 12, "x": 0, "y": 14},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toStartOfInterval(toDateTime(timestamp), INTERVAL 1 MINUTE) AS t, machine_id, avg(vibration_acceleration_rms_ms2) AS acceleration FROM iot.optime_telemetry WHERE $__timeFilter(timestamp) AND site IN (${site:sqlstring}) AND machine_id IN (${machine:sqlstring}) GROUP BY t, machine_id ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never"}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "table",
+      "title": "Fleet Status (latest reading per machine)",
+      "gridPos": {"h": 9, "w": 12, "x": 12, "y": 14},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT machine_id, argMax(machine_type, timestamp) AS type, argMax(iso_zone, timestamp) AS zone, argMax(condition, timestamp) AS condition, round(argMax(vibration_velocity_rms_mms, timestamp), 2) AS `velocity mm/s`, round(argMax(temperature_c, timestamp), 1) AS `temp °C`, argMax(rpm, timestamp) AS rpm, round(argMax(battery_pct, timestamp), 0) AS `battery %`, argMax(rssi_dbm, timestamp) AS `rssi dBm`, max(timestamp) AS last_seen FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) GROUP BY machine_id ORDER BY condition = 'alarm' DESC, condition = 'warning' DESC, machine_id",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "condition"},
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {"type": "value", "options": {"alarm": {"color": "red", "index": 0}, "warning": {"color": "yellow", "index": 1}, "acceptable": {"color": "blue", "index": 2}, "good": {"color": "green", "index": 3}}}
+                ]
+              },
+              {"id": "custom.cellOptions", "value": {"type": "color-background"}}
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 10,
+      "type": "bargauge",
+      "title": "Sensor Battery (%)",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 23},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT machine_id, argMax(battery_pct, timestamp) AS battery FROM iot.optime_telemetry WHERE site IN (${site:sqlstring}) GROUP BY machine_id ORDER BY battery ASC",
+          "format": 1
+        }
+      ],
+      "options": {"orientation": "horizontal", "displayMode": "gradient", "reduceOptions": {"calcs": ["lastNotNull"]}},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "yellow", "value": 15}, {"color": "green", "value": 40}]}
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "RPM",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 23},
+      "datasource": {"type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}"},
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toStartOfInterval(toDateTime(timestamp), INTERVAL 1 MINUTE) AS t, machine_id, avg(rpm) AS rpm FROM iot.optime_telemetry WHERE $__timeFilter(timestamp) AND site IN (${site:sqlstring}) AND machine_id IN (${machine:sqlstring}) GROUP BY t, machine_id ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "rotrpm",
+          "custom": {"drawStyle": "line", "lineWidth": 1, "fillOpacity": 5, "showPoints": "never"}
+        },
+        "overrides": []
+      }
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

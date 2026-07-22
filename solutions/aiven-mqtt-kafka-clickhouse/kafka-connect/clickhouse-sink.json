@@ -1,0 +1,23 @@
+{
+    "name": "clickhouse-sink-optime-telemetry",
+    "connector.class": "com.clickhouse.kafka.connect.ClickHouseSinkConnector",
+    "tasks.max": "1",
+
+    "topics": "iot_optime_telemetry",
+    "topic2TableMap": "iot_optime_telemetry=optime_telemetry",
+
+    "hostname": "<CLICKHOUSE_HOST>",
+    "port": "<CLICKHOUSE_HTTPS_PORT>",
+    "ssl": "true",
+    "username": "avnadmin",
+    "password": "<CLICKHOUSE_PASSWORD>",
+    "database": "iot",
+
+    "clickhouseSettings": "date_time_input_format=best_effort",
+    "exactlyOnce": "false",
+    "errors.retry.timeout": "60",
+
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false"
+}
