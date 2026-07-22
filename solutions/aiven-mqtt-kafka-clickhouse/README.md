@@ -120,7 +120,21 @@ avn service connector status $KAFKA_CONNECT_SERVICE mqtt-source-optime-telemetry
 The connector is the Stream Reactor MQTT source. The KCQL subscribes to the
 wildcard `optime/+/+/telemetry` and, together with `ByteArrayConverter`,
 passes the JSON payload through byte-for-byte — so the Kafka topic contains
-plain JSON that ClickHouse can read as `JSONEachRow`.
+plain JSON that ClickHouse can read as `JSONEachRow`. The record key is the
+source MQTT topic, serialized as JSON so console message browsing works.
+
+Two settings are deliberate:
+
+- `connect.mqtt.clean=true` — a persistent session (`clean=false`) sounds
+  safer, but if the connector's Kafka producer ever stalls (e.g. the target
+  topic is deleted), Mosquitto's per-session queue fills (default cap 1000)
+  and the broker permanently drops messages for that client id — the log
+  line is `Outgoing messages are being dropped for client …`. Restarts
+  resume the same poisoned session; the only recovery is a new client id.
+  A clean session at QoS 1 just skips messages while disconnected, which
+  is the right trade-off for high-rate telemetry.
+- If you ever hit the dropped-messages state anyway, recreate the connector
+  with a different `connect.mqtt.client.id`.
 
 ## 4. Sink the topic into Aiven for ClickHouse
 
