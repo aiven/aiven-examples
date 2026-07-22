@@ -61,10 +61,12 @@ env vars set in the Aiven Apps configuration (see
 | `MQTT_USERNAME` | no | `iot` | Broker login user. |
 | `MQTT_PASSWORD` | yes | — | Broker login password (set as a secret). |
 
-Expose **TCP port 1883** publicly (the Kafka Connect MQTT source and the
-publisher app both connect to it; the listener also gives the platform a
-port to probe). Note the app's public hostname — you'll need it below as
-`<BROKER_APP_HOSTNAME>`.
+Expose **port 9001** (the WebSockets listener). The Aiven Apps ingress is
+HTTP(S)-only — it terminates TLS on 443 and forwards HTTP to the container,
+so raw MQTT/TCP on 1883 does not pass through it; MQTT over WebSockets
+does. External clients (the publisher and the Kafka Connect MQTT source)
+connect with `wss://<app-hostname>:443`. Note the app's public hostname —
+you'll need it below as `<BROKER_APP_HOSTNAME>`.
 
 ## 2. Deploy the publisher (Aiven Apps)
 
@@ -81,9 +83,10 @@ these env vars (see [publisher/.env.example](publisher/.env.example)):
 |----------|----------|---------|-------|
 | `MQTT_HOST` | yes | — | `<BROKER_APP_HOSTNAME>` from step 1. |
 | `MQTT_PASSWORD` | yes | — | Same as the broker (set as a secret). |
-| `MQTT_PORT` | no | `1883` | |
+| `MQTT_PORT` | no | `1883` | `443` when the broker is on Aiven Apps. |
 | `MQTT_USERNAME` | no | `iot` | |
-| `MQTT_TLS` | no | `false` | Set `true` if the broker is behind TLS. |
+| `MQTT_TLS` | no | `false` | `true` when the broker is on Aiven Apps. |
+| `MQTT_TRANSPORT` | no | `tcp` | `websockets` when the broker is on Aiven Apps (HTTP-only ingress). |
 | `MACHINE_COUNT` | no | `14` | Number of simulated IoT devices, cycled across 4 machine types. |
 | `PUBLISH_INTERVAL_SECONDS` | no | `5` | Publish cadence per device. |
 | `SITE` | no | `plant-herzogenaurach` | Run more instances with other sites for a multi-plant fleet. |
@@ -102,7 +105,10 @@ docker run --rm --network host eclipse-mosquitto:2 \
 
 Create the Kafka topic, then deploy
 [kafka-connect/mqtt-source.json](kafka-connect/mqtt-source.json) after
-replacing `<BROKER_APP_HOSTNAME>` and `<MQTT_PASSWORD>`:
+replacing `<BROKER_APP_HOSTNAME>` and `<MQTT_PASSWORD>`. The connector
+reaches the broker through the Aiven Apps HTTPS ingress, hence the
+`wss://…:443` URL (Paho/Stream Reactor support MQTT over WebSockets;
+raw `tcp://` only works to brokers with a directly reachable TCP port):
 
 ```bash
 avn service topic-create $KAFKA_SERVICE iot_optime_telemetry --partitions 3 --replication 2

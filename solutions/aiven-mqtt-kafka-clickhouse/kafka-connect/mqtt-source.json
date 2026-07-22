@@ -3,7 +3,7 @@
     "connector.class": "io.lenses.streamreactor.connect.mqtt.source.MqttSourceConnector",
     "tasks.max": "1",
 
-    "connect.mqtt.hosts": "tcp://<BROKER_APP_HOSTNAME>:1883",
+    "connect.mqtt.hosts": "wss://<BROKER_APP_HOSTNAME>:443",
     "connect.mqtt.username": "iot",
     "connect.mqtt.password": "<MQTT_PASSWORD>",
     "connect.mqtt.client.id": "aiven-kafka-connect-optime",

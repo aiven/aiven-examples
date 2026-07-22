@@ -1,10 +1,12 @@
 # mqtt-broker: Eclipse Mosquitto with password auth (long-running service).
 #
 # Credentials are generated from env vars at container startup — nothing
-# sensitive is baked into the image and no bind mounts are needed. Expose
-# TCP port 1883 so the publisher app and the Kafka Connect MQTT source
-# connector can reach it; the listener doubles as the port the platform
-# can probe.
+# sensitive is baked into the image and no bind mounts are needed.
+#
+# Two listeners: 1883 (raw MQTT, local dev) and 9001 (MQTT over
+# WebSockets). On Aiven Apps expose port 9001 — the Apps ingress is
+# HTTP(S)-only, so external clients (publisher, Kafka Connect MQTT
+# source) must connect via WebSockets: wss://<app-hostname>:443.
 
 services:
   mqtt-broker:
@@ -18,6 +20,7 @@ services:
       MQTT_PASSWORD: ${MQTT_PASSWORD}
     ports:
       - "1883:1883"
+      - "9001:9001"
     volumes:
       - mosquitto-data:/mosquitto/data
     restart: unless-stopped

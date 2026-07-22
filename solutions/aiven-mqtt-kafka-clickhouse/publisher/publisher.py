@@ -46,6 +46,9 @@ MQTT_PORT = int(os.environ.get("MQTT_PORT", "1883"))
 MQTT_USERNAME = os.environ.get("MQTT_USERNAME", "")
 MQTT_PASSWORD = os.environ.get("MQTT_PASSWORD", "")
 MQTT_TLS = os.environ.get("MQTT_TLS", "false").lower() == "true"
+# "tcp" for raw MQTT, "websockets" when the broker sits behind an
+# HTTP(S)-only ingress such as Aiven Apps (use with MQTT_TLS=true, port 443).
+MQTT_TRANSPORT = os.environ.get("MQTT_TRANSPORT", "tcp")
 PUBLISH_INTERVAL_SECONDS = float(os.environ.get("PUBLISH_INTERVAL_SECONDS", "5"))
 MACHINE_COUNT = int(os.environ.get("MACHINE_COUNT", "14"))
 SITE = os.environ.get("SITE", "plant-herzogenaurach")
@@ -188,6 +191,7 @@ def main() -> None:
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
         client_id=f"optime-publisher-{SITE}",
+        transport=MQTT_TRANSPORT,
     )
     if MQTT_USERNAME:
         client.username_pw_set(MQTT_USERNAME, MQTT_PASSWORD)
