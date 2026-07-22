@@ -45,23 +45,37 @@ the Apache Iceberg *sink* is not among its known sink classes, so the
 `kafka:live_orders.public.orders → iceberg:ecommerce.live_orders` edge is not
 emitted automatically. Two options:
 
-- **Emitter script (repeatable — what this repo uses):**
-  [`emit-lineage.py`](emit-lineage.py). Create a personal access token in the
-  DataHub UI (Settings → Access Tokens), then:
+- **Derivation script (what this repo uses):**
+  [`derive-lineage.py`](derive-lineage.py). Nothing is hardcoded: it asks the
+  Kafka Connect REST API for **every** connector, and for each Apache Iceberg
+  sink derives topic→table edges from the connector's own `topics` /
+  `iceberg.tables` config — the same source of truth DataHub's kafka-connect
+  ingestion uses for the connector classes it recognizes. Works unchanged for
+  one connector or a hundred; re-runnable (preserves existing upstreams);
+  `--dry-run` prints the derived edges without emitting. Create a personal
+  access token in the DataHub UI (Settings → Access Tokens), then:
   ```bash
   # Python <= 3.13 (acryl-datahub's pinned pydantic-core has no 3.14 wheels
   # and its source build fails on PyO3's version cap)
-  cd datahub && python3.13 -m venv venv && ./venv/bin/pip install acryl-datahub
+  cd datahub && python3.13 -m venv venv && ./venv/bin/pip install acryl-datahub requests
+  export CONNECT_URL="https://public-<connect-host>:443"
+  export CONNECT_PASSWORD="<connect avnadmin password>"
   # GMS endpoint: Aiven exposes the datahub-<name>-gms child service publicly
   # (its own <uuid>-8080.eur-1.aiven.app URL) — use that directly. Fallback if
   # you only have the frontend URL: https://<frontend-host>/api/gms (proxied).
   export DATAHUB_GMS_URL="https://<datahub-gms-host>"
   export DATAHUB_TOKEN="<token>"
-  ./venv/bin/python emit-lineage.py
+  ./venv/bin/python derive-lineage.py --dry-run   # inspect, then run without the flag
   ```
+  Sinks using dynamic table routing (`iceberg.tables.dynamic-enabled`) name
+  tables per-record, so no static derivation is possible — the script reports
+  and skips those. The durable fix for everyone is upstreaming an Iceberg-sink
+  handler to DataHub's kafka-connect source, which would make this edge fully
+  automatic during ingestion.
 - **Manual edge (UI alternative):** the Kafka topic → Lineage tab →
   *Edit lineage* → add downstream → pick `ecommerce.live_orders`. Also
-  survives re-ingestion.
+  survives re-ingestion, but is per-edge human work — fine for one table,
+  not for a fleet.
 
 ## Notes
 
