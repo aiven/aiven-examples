@@ -49,7 +49,9 @@ emitted automatically. Two options:
   [`emit-lineage.py`](emit-lineage.py). Create a personal access token in the
   DataHub UI (Settings → Access Tokens), then:
   ```bash
-  cd datahub && python3 -m venv venv && ./venv/bin/pip install acryl-datahub
+  # Python <= 3.13 (acryl-datahub's pinned pydantic-core has no 3.14 wheels
+  # and its source build fails on PyO3's version cap)
+  cd datahub && python3.13 -m venv venv && ./venv/bin/pip install acryl-datahub
   # GMS endpoint: Aiven exposes the datahub-<name>-gms child service publicly
   # (its own <uuid>-8080.eur-1.aiven.app URL) — use that directly. Fallback if
   # you only have the frontend URL: https://<frontend-host>/api/gms (proxied).
