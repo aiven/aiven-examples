@@ -1,0 +1,22 @@
+# DataHub ingestion: Aiven for Apache Kafka Connect (both connectors).
+# This is the source that stitches lineage: DataHub understands Debezium
+# natively, so it emits postgres:public.orders -> kafka:live_orders.public.orders
+# automatically.
+#
+# NOTE: the Apache Iceberg sink is NOT a connector class DataHub's
+# kafka-connect source recognizes, so the topic -> Iceberg edge does not come
+# from here — see README.md ("Closing the last lineage edge").
+#
+# Create the DataHub secret CONNECT_PASSWORD first (the Connect service's
+# avnadmin password, Console -> kafka-iceberg-demo-connect -> Connection info).
+source:
+  type: kafka-connect
+  config:
+    connect_uri: "https://public-kafka-iceberg-demo-connect-reza-lesmana-demo.l.aivencloud.com:443"
+    username: avnadmin
+    password: "${CONNECT_PASSWORD}"
+    # Map connector metadata onto the same platform instances the other
+    # recipes ingest into, so the graph joins up instead of duplicating nodes.
+    platform_instance_map:
+      postgres: pg-31f9bac5
+      kafka: kafka-iceberg-demo

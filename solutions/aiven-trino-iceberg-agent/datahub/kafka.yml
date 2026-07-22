@@ -1,0 +1,19 @@
+# DataHub ingestion: Aiven for Kafka (topics, incl. the CDC topic).
+# Uses the Let's Encrypt SASL listener so no CA file is needed.
+# Create the DataHub secret KAFKA_PASSWORD first (avnadmin's Kafka password).
+source:
+  type: kafka
+  config:
+    connection:
+      bootstrap: "kafka-iceberg-demo-reza-lesmana-demo.j.aivencloud.com:10599"
+      consumer_config:
+        security.protocol: SASL_SSL
+        sasl.mechanism: SCRAM-SHA-512
+        sasl.username: avnadmin
+        sasl.password: "${KAFKA_PASSWORD}"
+    topic_patterns:
+      allow:
+        - "live_orders.*"
+      deny:
+        - "^_.*"           # Connect internals
+        - "control-iceberg" # sink control topic — noise in the graph

@@ -1,0 +1,20 @@
+# DataHub ingestion: Aiven for PostgreSQL (the CDC source database).
+# Paste into DataHub UI -> Ingestion -> Create new source -> Custom (YAML).
+# Create the DataHub secret PG_PASSWORD first (UI -> Ingestion -> Secrets).
+source:
+  type: postgres
+  config:
+    host_port: "pg-31f9bac5-reza-lesmana-demo.a.aivencloud.com:10584"
+    database: defaultdb
+    username: avnadmin
+    password: "${PG_PASSWORD}"
+    options:
+      connect_args:
+        sslmode: require
+    schema_pattern:
+      allow:
+        - "public"
+    # Only the demo table; drop this block to ingest everything.
+    table_pattern:
+      allow:
+        - "defaultdb.public.orders"

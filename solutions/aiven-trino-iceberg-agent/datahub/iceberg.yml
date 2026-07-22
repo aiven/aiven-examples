@@ -1,0 +1,22 @@
+# DataHub ingestion: the Iceberg lakehouse via Snowflake Open Catalog
+# (Iceberg REST catalog / Polaris) — same protocol Trino and pyiceberg use.
+#
+# Prerequisite: a DEDICATED READ-ONLY Open Catalog connection for DataHub
+# (Snowflake UI -> Connections -> + Connection; grant a read-only catalog role
+# to its principal role). Do NOT reuse the pipeline's CATALOG_MANAGE_CONTENT
+# credential. Then create the DataHub secret OC_DATAHUB_CREDENTIAL with the
+# value "<client-id>:<client-secret>".
+source:
+  type: iceberg
+  config:
+    catalog:
+      opencatalog:
+        type: rest
+        uri: "https://aqb65601.us-west-2.snowflakecomputing.com/polaris/api/catalog"
+        credential: "${OC_DATAHUB_CREDENTIAL}"
+        scope: "PRINCIPAL_ROLE:<datahub-principal-role>"
+        warehouse: "temp-iceberg-demo-catalog"
+        header.X-Iceberg-Access-Delegation: vended-credentials
+    namespace_pattern:
+      allow:
+        - "ecommerce"
