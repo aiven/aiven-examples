@@ -5,7 +5,7 @@
 # variables / secrets — nothing is baked into the image.
 
 # ---- build stage ----
-FROM golang:1.24 AS build
+FROM golang:1.26 AS build
 WORKDIR /src
 
 # Cache module downloads first.
