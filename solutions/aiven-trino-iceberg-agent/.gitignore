@@ -3,3 +3,6 @@
 
 # Filled-in connector configs with real credentials (from the cdc/ templates).
 cdc/local/
+
+# Local venv for the DataHub lineage emitter.
+datahub/venv/
