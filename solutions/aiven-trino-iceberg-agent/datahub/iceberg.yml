@@ -14,7 +14,7 @@ source:
         type: rest
         uri: "https://aqb65601.us-west-2.snowflakecomputing.com/polaris/api/catalog"
         credential: "${OC_DATAHUB_CREDENTIAL}"
-        scope: "PRINCIPAL_ROLE:<datahub-principal-role>"
+        scope: "PRINCIPAL_ROLE:iceberg-datahub-demo-principal"
         warehouse: "temp-iceberg-demo-catalog"
         header.X-Iceberg-Access-Delegation: vended-credentials
     namespace_pattern:

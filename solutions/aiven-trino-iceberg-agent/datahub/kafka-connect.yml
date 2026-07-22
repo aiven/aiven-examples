@@ -15,8 +15,7 @@ source:
     connect_uri: "https://public-kafka-iceberg-demo-connect-reza-lesmana-demo.l.aivencloud.com:443"
     username: avnadmin
     password: "${CONNECT_PASSWORD}"
-    # Map connector metadata onto the same platform instances the other
-    # recipes ingest into, so the graph joins up instead of duplicating nodes.
-    platform_instance_map:
-      postgres: pg-31f9bac5
-      kafka: kafka-iceberg-demo
+    # No platform_instance_map: the postgres/kafka recipes ingest WITHOUT a
+    # platform instance, so the connector's lineage edges must also use plain
+    # URNs — an instance map here would point edges at nonexistent
+    # instance-prefixed nodes and the graph would show disconnected duplicates.

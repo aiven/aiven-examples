@@ -45,12 +45,18 @@ the Apache Iceberg *sink* is not among its known sink classes, so the
 `kafka:live_orders.public.orders → iceberg:ecommerce.live_orders` edge is not
 emitted automatically. Two options:
 
-- **Manual edge (quick, fine for the demo):** DataHub UI → the Kafka topic →
-  Lineage tab → *Edit lineage* → add downstream → pick
-  `ecommerce.live_orders`. One-time, survives re-ingestion.
-- **Emitter script (repeatable):** a few lines with `acryl-datahub`'s
-  `DataHubGraph.emit` of a lineage MCP — worth it only if you rebuild the
-  graph often.
+- **Emitter script (repeatable — what this repo uses):**
+  [`emit-lineage.py`](emit-lineage.py). Create a personal access token in the
+  DataHub UI (Settings → Access Tokens), then:
+  ```bash
+  cd datahub && python3 -m venv venv && ./venv/bin/pip install acryl-datahub
+  export DATAHUB_GMS_URL="https://<datahub-frontend-host>/api/gms"
+  export DATAHUB_TOKEN="<token>"
+  ./venv/bin/python emit-lineage.py
+  ```
+- **Manual edge (UI alternative):** the Kafka topic → Lineage tab →
+  *Edit lineage* → add downstream → pick `ecommerce.live_orders`. Also
+  survives re-ingestion.
 
 ## Notes
 
@@ -59,8 +65,10 @@ emitted automatically. Two options:
 - The Connect recipe needs the Connect service's **public** endpoint
   (`public-…-connect-….aivencloud.com:443`) — the internal one is not
   reachable from DataHub's ingestion executor.
-- `platform_instance_map` in `kafka-connect.yml` must match the instance
-  naming of the postgres/kafka recipes, or the graph shows disconnected
-  duplicate nodes.
+- None of the recipes set a `platform_instance` — and `kafka-connect.yml`
+  deliberately has no `platform_instance_map`. Instance naming must agree
+  across ALL recipes (all unset, or all matching), or the connector's lineage
+  edges point at instance-prefixed nodes that don't exist and the graph shows
+  disconnected duplicates.
 - Schedule: each source can run on a cron in the UI; hourly is plenty — the
   schema barely changes, only freshness metadata does.
