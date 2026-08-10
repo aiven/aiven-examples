@@ -63,7 +63,7 @@ management:
         include: health,metrics,prometheus
 
 ---
-# Aiven for ClickHouse (Azure SEA). Set via env:
+# Aiven for ClickHouse. Set via env:
 #   AIVEN_CH_HOST=<service>-<project>.aivencloud.com
 #   AIVEN_CH_PORT=<https port, usually the 8443-equivalent shown in the console>
 #   AIVEN_CH_PASSWORD=<avnadmin password>

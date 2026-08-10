@@ -1,6 +1,6 @@
 # Aiven infra — ClickHouse + Valkey
 
-Provisions two services in the same region (default **azure-southeastasia**):
+Provisions two services in the same region (default **azure-indonesia-central**; any Aiven region works — e.g. `aws-ap-southeast-3` or `google-asia-southeast2` for the other in-country Jakarta options):
 
 | Service | Plan | Version | Role |
 |---|---|---|---|

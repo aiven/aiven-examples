@@ -12,7 +12,7 @@ variable "project" {
 variable "cloud_name" {
   description = "Aiven cloud/region (shared by both services)"
   type        = string
-  default     = "azure-southeastasia"
+  default     = "azure-indonesia-central"
 }
 
 variable "clickhouse_plan" {

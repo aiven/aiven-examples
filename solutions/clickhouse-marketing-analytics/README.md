@@ -11,6 +11,14 @@ sustain 100,000 inserts/s. The answer, on a single-node Startup-16 plan, was
 **436,458 rows/s sustained with zero errors** — not from a bigger machine, but
 from the right insert pattern. This repo reproduces that journey.
 
+The customer's brief was to mirror Tinybird's
+[real-time marketing dashboards on ClickHouse](https://www.tinybird.co/blog/clickhouse-marketing-dashboards)
+article end to end on Aiven: the `campaign_events` schema, synthetic data
+shaped so its queries stay meaningful, and its full query suite running live —
+which is exactly what [shared/schema/](shared/schema/),
+[shared/datagen/](shared/datagen/), and
+[02-dashboard-mv/queries/](02-dashboard-mv/queries/) implement.
+
 ## Layout
 
 | Path | Contents |

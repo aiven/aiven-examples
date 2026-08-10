@@ -1,7 +1,8 @@
 # queries — the tinybird-suite demo queries
 
-One SQL file per demo chart, matching the blog's 8 use cases
-(one file per dashboard chart). Timings: best of two runs, local Docker
+One SQL file per demo chart, matching the 8 use cases in Tinybird's
+[real-time marketing dashboards on ClickHouse](https://www.tinybird.co/blog/clickhouse-marketing-dashboards)
+article. Timings: best of two runs, local Docker
 CH 26.3, 340.7M rows (May 2026 – Aug 7 2026), metrics from `system.query_log`.
 
 | File | Chart | Best s | Scanned |
