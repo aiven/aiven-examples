@@ -47,19 +47,25 @@ resource "aiven_clickhouse_user" "demo" {
   username     = "demo_ingest"
 }
 
+# Deliberately minimal: on ClickHouse 26.3, avnadmin cannot pass on
+# privilege = "ALL" (it expands to 26.3-new privileges avnadmin lacks WITH
+# GRANT OPTION) nor SELECT on system.*. The ingest service only ever inserts
+# and reads campaign_analytics; DDL (schema files) and diagnostics queries
+# (system.parts / system.query_log) run as avnadmin.
 resource "aiven_clickhouse_grant" "demo" {
   project      = var.project
   service_name = aiven_clickhouse.campaign_analytics.service_name
   user         = aiven_clickhouse_user.demo.username
 
-  privilege_grant {
-    privilege = "ALL"
-    database  = aiven_clickhouse_database.campaign_analytics.name
-    table     = "*"
-  }
+  # No `table` attribute: that grants on the whole database. (Setting
+  # table = "*" would grant on a literal table named `*` - provider quirk.)
   privilege_grant {
     privilege = "SELECT"
-    database  = "system"
+    database  = aiven_clickhouse_database.campaign_analytics.name
+  }
+  privilege_grant {
+    privilege = "INSERT"
+    database  = aiven_clickhouse_database.campaign_analytics.name
   }
 }
 

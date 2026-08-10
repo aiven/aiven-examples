@@ -21,6 +21,12 @@ output "demo_password" {
   sensitive = true
 }
 
+output "avnadmin_password" {
+  description = "For applying the DDL files (demo_ingest is SELECT+INSERT only)"
+  value       = aiven_clickhouse.campaign_analytics.service_password
+  sensitive   = true
+}
+
 # Valkey (ingestion buffer + shared config store)
 output "valkey_host" {
   value = aiven_valkey.ingest_buffer.service_host

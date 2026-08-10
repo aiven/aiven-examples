@@ -4,7 +4,7 @@ Provisions two services in the same region (default **azure-indonesia-central**;
 
 | Service | Plan | Version | Role |
 |---|---|---|---|
-| Aiven for ClickHouse® | `business-16` | 26.3 | analytics store (`campaign_analytics` db + `demo_ingest` user) |
+| Aiven for ClickHouse® | `business-16` | 26.3 | analytics store (`campaign_analytics` db + `demo_ingest` user (SELECT+INSERT; DDL runs as avnadmin)) |
 | Aiven for Valkey™ | `business-8` | 9.1 | ingestion buffer (Valkey Streams) + shared runtime config store |
 
 Both are variables (`clickhouse_plan`, `valkey_plan`, `clickhouse_version`,
@@ -31,7 +31,7 @@ HOST=$(terraform output -raw service_host)
 PORT=$(terraform output -json native_port | jq -r '.[0]')
 for f in ../shared/schema/01_campaign_events.sql ../shared/schema/02_daily_campaign_rollup.sql; do
   clickhouse client --host "$HOST" --port "$PORT" --secure \
-    --user avnadmin --password "$AIVEN_CH_PASSWORD" \
+    --user avnadmin --password "$(terraform output -raw avnadmin_password)" \
     --database campaign_analytics --multiquery < "$f"
 done
 ```
@@ -41,6 +41,6 @@ Connection values for the ingest service (`.env.aiven` at the repo root):
 ```bash
 terraform output -raw service_host     # AIVEN_CH_HOST
 terraform output -json https_port      # AIVEN_CH_PORT
-terraform output -raw demo_password    # AIVEN_CH_PASSWORD (or use avnadmin)
+terraform output -raw demo_password    # AIVEN_CH_PASSWORD (demo_ingest: SELECT+INSERT only)
 terraform output -raw valkey_uri       # AIVEN_VALKEY_URI (valkeys:// = TLS)
 ```

@@ -29,7 +29,7 @@ ingest:
   # zero dependencies, dies with the app), "valkey" = Valkey Streams - the
   # durable post-ladder production architecture (XADD -> consumer-group
   # flusher -> native-client bulk insert, runtime-tunable via PUT /config).
-  buffer: ${INGEST_BUFFER:${buffer:memory}}
+  buffer: ${buffer:${INGEST_BUFFER:memory}}
 
 # Valkey Streams buffer (only read when ingest.buffer=valkey).
 valkey:
