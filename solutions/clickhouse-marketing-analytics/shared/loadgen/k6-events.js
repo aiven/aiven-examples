@@ -15,12 +15,39 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 
-const BASE_URL = __ENV.BASE_URL || 'http://localhost:8080';
+const URLS = (__ENV.BASE_URL || 'http://localhost:8080').split(','); // comma-separated = spread VUs across instances
 
 const eventsAccepted = new Counter('events_accepted');
 const eventsRejected = new Counter('events_rejected');
 
 const scenarios = {
+  // Saturation probe: a controlled firehose, RATE requests/s x BATCH events
+  // each (defaults: 100 x 200 = 20k events/s). Unlike the device scenarios,
+  // this models upstream services shipping pre-batched events - use it to
+  // find where the XADD -> flusher pipeline tops out. Tune with
+  //   k6 run -e SCENARIO=firehose -e RATE=500 -e BATCH=200 ...   (=100k/s)
+  firehose: {
+    firehose: {
+      executor: 'constant-arrival-rate',
+      rate: Number(__ENV.RATE || 100),
+      timeUnit: '1s',
+      duration: __ENV.DURATION || '60s',
+      preAllocatedVUs: Number(__ENV.VUS || 200),
+      maxVUs: Number(__ENV.MAXVUS || 2000),
+    },
+  },
+  // 30s harness check: verifies the bench tooling end to end, not a benchmark.
+  smoke: {
+    smoke: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '10s', target: 50 },
+        { duration: '15s', target: 50 },
+        { duration: '5s', target: 0 },
+      ],
+    },
+  },
   steady: {
     // ~2000 devices, one 1-5 event batch every 2-6s => ~1-2.5k events/s.
     steady: {
@@ -83,24 +110,28 @@ function randomEvent(userId, sessionId) {
   };
 }
 
+const FIREHOSE = (__ENV.SCENARIO || 'steady') === 'firehose';
+const FIREHOSE_BATCH = Number(__ENV.BATCH || 200);
+
 export default function () {
   const userId = __VU; // one VU = one device = one user
   const sessionId = `s${__VU}-${__ITER}`;
   const batch = [];
-  const batchSize = 1 + Math.floor(Math.random() * 5); // SDK buffered 1-5 events
+  // Devices buffer 1-5 events; the firehose ships pre-batched uploads.
+  const batchSize = FIREHOSE ? FIREHOSE_BATCH : 1 + Math.floor(Math.random() * 5);
   for (let i = 0; i < batchSize; i++) {
     batch.push(randomEvent(userId, sessionId));
   }
 
-  const res = http.post(`${BASE_URL}/events`, JSON.stringify(batch), {
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const headers = { 'Content-Type': 'application/json' };
+  if (__ENV.API_KEY) headers['X-API-Key'] = __ENV.API_KEY;
+  const res = http.post(`${URLS[__VU % URLS.length]}/events`, JSON.stringify(batch), { headers });
 
   check(res, { 'accepted or backpressured': (r) => r.status === 202 || r.status === 429 });
 
   if (res.status === 202) {
     eventsAccepted.add(batch.length);
-    sleep(2 + Math.random() * 4); // device idles between event batches
+    if (!FIREHOSE) sleep(2 + Math.random() * 4); // device idles between event batches
   } else if (res.status === 429) {
     eventsRejected.add(batch.length);
     sleep(Number(res.headers['Retry-After'] || 1)); // honor backpressure

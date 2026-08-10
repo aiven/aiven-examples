@@ -61,6 +61,37 @@ public class ValkeyEventSink implements EventSink {
         }
     }
 
+    /**
+     * Pipelined batch: dispatch every XADD asynchronously and wait once for
+     * the last future (single-connection commands complete in order). One
+     * POST of N events costs ~one round trip, not N - without this, a 200-
+     * event upload serializes 200 round trips and the receiver saturates
+     * long before the flusher does.
+     */
+    @Override
+    public int acceptAll(java.util.List<EventDto> events) {
+        if (events.isEmpty() || overCapacity()) {
+            return 0;
+        }
+        var async = commands.getStatefulConnection().async();
+        try {
+            io.lettuce.core.RedisFuture<String> last = null;
+            for (EventDto event : events) {
+                last = async.xadd(stream, Map.of(FIELD_JSON, mapper.writeValueAsString(event)));
+            }
+            last.get(30, java.util.concurrent.TimeUnit.SECONDS);
+            sinceCheck.addAndGet(events.size());
+            return events.size();
+        } catch (JsonProcessingException impossible) {
+            throw new IllegalStateException("Failed to serialize event", impossible);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Interrupted while enqueueing batch", e);
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to enqueue batch to Valkey", e);
+        }
+    }
+
     @Override
     public long depth() {
         return commands.xlen(stream);

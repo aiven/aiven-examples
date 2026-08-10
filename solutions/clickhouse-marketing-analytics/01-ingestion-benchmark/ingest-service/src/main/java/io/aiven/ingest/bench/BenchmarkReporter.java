@@ -28,7 +28,10 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class BenchmarkReporter {
 
     private static final Logger log = LoggerFactory.getLogger(BenchmarkReporter.class);
-    private static final Path CSV = Path.of("benchmark-results.csv");
+    // Overridable so tests don't pollute the repo's raw results file
+    // (see ingest.results-csv in AbstractClickHouseIntegrationTest).
+    private static final Path CSV = Path.of(System.getProperty(
+            "ingest.results-csv", "benchmark-results.csv"));
     private static final String CSV_HEADER =
             "timestamp,run,rows,wall_seconds,rows_per_sec,flushes,flush_p50_ms,flush_p99_ms,errors\n";
 

@@ -91,6 +91,16 @@ class ValkeyBufferedIngestIntegrationTest extends AbstractClickHouseIntegrationT
         Duration latency = Duration.between(posted, Instant.now());
         assertThat(count).as("both events queryable via the Valkey path").isEqualTo(2);
         assertThat(latency).as("event->queryable latency").isLessThan(Duration.ofSeconds(5));
+
+        // The mini-benchmark's observation point: flushed counters move,
+        // nothing is stuck pending after a clean flush.
+        Map stats = rest.getForEntity(url("/stats"), Map.class).getBody();
+        assertThat(stats.get("mode")).isEqualTo("valkey");
+        Map flusher = (Map) stats.get("flusher");
+        assertThat(((Number) flusher.get("rows_flushed")).longValue()).isGreaterThanOrEqualTo(2);
+        assertThat(((Number) flusher.get("errors")).longValue()).isZero();
+        Map stream = (Map) stats.get("stream");
+        assertThat(((Number) stream.get("pending")).longValue()).isZero();
     }
 
     @Test

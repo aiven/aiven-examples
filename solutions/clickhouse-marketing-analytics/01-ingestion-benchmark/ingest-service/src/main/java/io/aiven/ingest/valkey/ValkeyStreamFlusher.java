@@ -74,8 +74,12 @@ public class ValkeyStreamFlusher implements SmartLifecycle {
             .serverSetting("date_time_input_format", "best_effort");
 
     private volatile boolean running;
+    // Last-writer-wins across workers is safe: an out-of-order write can only
+    // LOWER the trim floor (under-trim keeps a few extra entries); anything
+    // still pending is protected by the XPENDING check in trimAcknowledged.
     private volatile String lastAckedId;
-    private Thread worker;
+    private volatile BenchmarkReporter reporter;
+    private final java.util.List<Thread> workers = new java.util.ArrayList<>();
 
     public ValkeyStreamFlusher(RedisClient client,
                                IngestConfigStore configStore,
@@ -94,13 +98,23 @@ public class ValkeyStreamFlusher implements SmartLifecycle {
     @Override
     public void start() {
         running = true;
-        worker = Thread.ofPlatform().name("valkey-flusher").daemon().start(this::run);
+        // One shared reporter: /stats aggregates all workers of this instance.
+        reporter = reporterFactory.forRun("valkey-flusher");
+        reporter.start();
+        // valkey.flushers > 1 = the tier 6 pattern inside one instance: each
+        // worker is its own consumer in the group, so Valkey partitions the
+        // stream across them and the bulk inserts run in parallel.
+        for (int i = 1; i <= props.flushers(); i++) {
+            String consumer = props.flushers() == 1 ? props.consumer() : props.consumer() + "-" + i;
+            workers.add(Thread.ofPlatform().name("valkey-flusher-" + i).daemon()
+                    .start(() -> run(consumer)));
+        }
     }
 
     @Override
     public void stop() {
         running = false;
-        if (worker != null) {
+        for (Thread worker : workers) {
             try {
                 worker.join(10_000);
             } catch (InterruptedException e) {
@@ -114,19 +128,26 @@ public class ValkeyStreamFlusher implements SmartLifecycle {
         return running;
     }
 
-    private void run() {
-        BenchmarkReporter reporter = reporterFactory.forRun("valkey-flusher");
-        reporter.start();
-        // XREADGROUP BLOCK parks its connection, so the flusher gets its own
+    /** Live flusher accounting for GET /stats; null until the worker starts. */
+    public BenchmarkReporter reporter() {
+        return reporter;
+    }
+
+    public String consumerName() {
+        return props.consumer();
+    }
+
+    private void run(String consumer) {
+        // XREADGROUP BLOCK parks its connection, so each worker gets its own
         // instead of sharing the producer/config one.
         try (StatefulRedisConnection<String, String> connection = client.connect()) {
             RedisCommands<String, String> commands = connection.sync();
             ensureGroup(commands);
             log.info("Valkey flusher started: stream={} group={} consumer={}",
-                    props.stream(), props.group(), props.consumer());
+                    props.stream(), props.group(), consumer);
             while (running) {
                 try {
-                    cycle(commands, reporter);
+                    cycle(commands, consumer, reporter);
                 } catch (Exception e) {
                     if (!running) return;
                     log.warn("Flusher cycle failed ({}); retrying in {} ms",
@@ -139,15 +160,15 @@ public class ValkeyStreamFlusher implements SmartLifecycle {
         }
     }
 
-    private void cycle(RedisCommands<String, String> commands, BenchmarkReporter reporter) {
+    private void cycle(RedisCommands<String, String> commands, String consumer, BenchmarkReporter reporter) {
         IngestTuning tuning = configStore.current();
         List<StreamMessage<String, String>> messages = commands.xreadgroup(
-                Consumer.from(props.group(), props.consumer()),
+                Consumer.from(props.group(), consumer),
                 XReadArgs.Builder.count(tuning.batchSize()).block(tuning.flushIntervalMs()),
                 XReadArgs.StreamOffset.lastConsumed(props.stream()));
         if (messages == null || messages.isEmpty()) {
             // Idle: a good moment to pick up entries a dead instance left pending.
-            messages = reclaimStale(commands, tuning.batchSize());
+            messages = reclaimStale(commands, consumer, tuning.batchSize());
             if (messages.isEmpty()) {
                 return;
             }
@@ -218,11 +239,11 @@ public class ValkeyStreamFlusher implements SmartLifecycle {
 
     /** XAUTOCLAIM: adopt entries a crashed/stuck consumer left pending too long. */
     private List<StreamMessage<String, String>> reclaimStale(
-            RedisCommands<String, String> commands, int count) {
+            RedisCommands<String, String> commands, String consumer, int count) {
         ClaimedMessages<String, String> claimed = commands.xautoclaim(
                 props.stream(),
                 XAutoClaimArgs.Builder.xautoclaim(
-                                Consumer.from(props.group(), props.consumer()),
+                                Consumer.from(props.group(), consumer),
                                 props.claimMinIdleMs(), "0-0")
                         .count(count));
         List<StreamMessage<String, String>> messages = claimed.getMessages();

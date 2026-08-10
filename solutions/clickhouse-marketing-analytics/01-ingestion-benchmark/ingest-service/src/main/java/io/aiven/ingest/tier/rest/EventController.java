@@ -30,16 +30,13 @@ public class EventController {
 
     @PostMapping("/events")
     public ResponseEntity<Map<String, Object>> ingest(@RequestBody List<EventDto> events) {
-        int accepted = 0;
-        for (EventDto dto : events) {
-            if (!sink.accept(dto)) {
-                return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
-                        .header("Retry-After", "1")
-                        .body(Map.of("accepted", accepted,
-                                "rejected", events.size() - accepted,
-                                "queue_depth", sink.depth()));
-            }
-            accepted++;
+        int accepted = sink.acceptAll(events);
+        if (accepted < events.size()) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .header("Retry-After", "1")
+                    .body(Map.of("accepted", accepted,
+                            "rejected", events.size() - accepted,
+                            "queue_depth", sink.depth()));
         }
         return ResponseEntity.accepted().body(Map.of("accepted", accepted));
     }

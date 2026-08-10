@@ -28,3 +28,6 @@ shared/datagen/.venv/
 shared/datagen/out/
 shared/datagen/out-smoke/
 shared/datagen/config-smoke.yaml
+
+# valkey-bench run artifacts
+01-ingestion-benchmark/valkey-bench/results/

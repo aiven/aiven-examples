@@ -19,7 +19,8 @@ public record ValkeyProperties(
         String group,
         String consumer,
         long claimMinIdleMs,
-        long maxStreamLength) {
+        long maxStreamLength,
+        int flushers) {
 
     public ValkeyProperties {
         if (stream == null || stream.isBlank()) stream = "ingest:events";
@@ -27,6 +28,7 @@ public record ValkeyProperties(
         if (consumer == null || consumer.isBlank()) consumer = defaultConsumerName();
         if (claimMinIdleMs <= 0) claimMinIdleMs = 30_000;
         if (maxStreamLength <= 0) maxStreamLength = 1_000_000;
+        if (flushers <= 0) flushers = 1;
     }
 
     /** Lettuce understands rediss:// for TLS; Aiven may hand out valkeys://. */

@@ -26,7 +26,7 @@ which is exactly what [shared/schema/](shared/schema/),
 | [shared/schema/](shared/schema/) | `campaign_events` DDL (the customer's exact schema), `daily_campaign_rollup` MV, live diagnostics queries, rollup/projection objects |
 | [shared/datagen/](shared/datagen/) | journey-based synthetic event generator (backfill → Parquet, live mode) |
 | [shared/loadgen/](shared/loadgen/) | k6 scenario simulating a mobile fleet emitting single events: steady state + push-campaign burst |
-| [01-ingestion-benchmark/](01-ingestion-benchmark/) | Spring Boot 3.5 / Java 25 benchmark harness; the ladder behind `--tier=1..6` (`--tier=0` = buffered REST pipeline) |
+| [01-ingestion-benchmark/](01-ingestion-benchmark/) | Spring Boot 3.5 / Java 25 benchmark harness; the ladder behind `--tier=1..6` (`--tier=0` = buffered REST pipeline); [valkey-bench/](01-ingestion-benchmark/valkey-bench/) = mini-benchmark harness for the Valkey path |
 | [02-dashboard-mv/](02-dashboard-mv/) | the 8 dashboard queries (naive + optimized variants) |
 | [infra/](infra/) | Terraform: Aiven for ClickHouse (26.3, `business-16`) + Aiven for Valkey (9.1, `business-8`) — on Aiven, SQL `CREATE DATABASE` works for `avnadmin` only (Replicated engine); other users go via console/API/provider ([limitations](https://aiven.io/docs/products/clickhouse/reference/limitations)) |
 | [docker-compose.yml](docker-compose.yml) | local fallback: ClickHouse 26.3 (schema auto-applied on first start) + Valkey 9.1 |
@@ -140,7 +140,9 @@ run, is **Aiven for Valkey™ with Valkey Streams as the buffer**. That is what
 Scaling out needs no coordination code: every instance joins the same consumer
 group under a unique consumer name (the pod name), Valkey delivers each entry
 to exactly one consumer, and N instances = N parallel flushers = N parallel
-bulk inserts — precisely the pattern tier 6 proved ClickHouse wants.
+bulk inserts — precisely the pattern tier 6 proved ClickHouse wants. The same
+knob exists inside one instance: `VALKEY_FLUSHERS=N` starts N flusher workers,
+each its own consumer in the group.
 If an instance dies mid-flush, its unacked entries sit in the group's pending
 list until a survivor reclaims them with `XAUTOCLAIM` (after
 `valkey.claim-min-idle-ms`, default 30 s). Delivery is at-least-once;
@@ -159,6 +161,14 @@ curl -s -X PUT localhost:8080/config -H 'Content-Type: application/json' \
   -H "X-API-Key: $INGEST_API_KEY" \
   -d '{"batch_size": 50000, "flush_interval_ms": 1000}'
 ```
+
+Observability and benchmarking: in valkey mode the service exposes
+`GET /stats` (flusher rows/batches/errors, the tuning in force, stream
+length and pending count), and
+[01-ingestion-benchmark/valkey-bench/](01-ingestion-benchmark/valkey-bench/)
+is a ready-made harness that drives k6 load through this path while sampling
+`/stats` and probing end-to-end latency (event accepted → queryable) — including
+the mid-run `PUT /config` retune demo.
 
 Caveat, stated plainly: Valkey persistence is snapshot-based, not a replicated
 commit log — a hard crash of the Valkey service can lose a short window of

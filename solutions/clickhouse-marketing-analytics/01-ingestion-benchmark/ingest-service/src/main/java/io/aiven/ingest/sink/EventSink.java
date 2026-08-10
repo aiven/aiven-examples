@@ -18,6 +18,20 @@ public interface EventSink {
     /** Enqueue one event. false = backpressure: the caller should return 429. */
     boolean accept(EventDto event);
 
+    /**
+     * Enqueue a producer batch; returns how many were accepted (stops at the
+     * first rejection). Sinks with per-event round trips should override this
+     * to pipeline - one POST of N events must not cost N round trips.
+     */
+    default int acceptAll(java.util.List<EventDto> events) {
+        int accepted = 0;
+        for (EventDto e : events) {
+            if (!accept(e)) break;
+            accepted++;
+        }
+        return accepted;
+    }
+
     /** Current buffer depth (queue size / stream length) for 429 responses. */
     long depth();
 }

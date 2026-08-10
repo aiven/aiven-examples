@@ -41,6 +41,10 @@ valkey:
   consumer: ${VALKEY_CONSUMER:}
   # A dead instance's pending entries are reclaimed by a survivor after this.
   claim-min-idle-ms: 30000
+  # Flusher worker threads per instance (each its own consumer in the group).
+  # 1 = the tier 5 single-stream insert path; >1 = the tier 6 parallel-writers
+  # pattern inside one instance. Horizontal instances scale the same way.
+  flushers: ${VALKEY_FLUSHERS:1}
   # Backpressure bound: POST /events returns 429 once XLEN passes this
   # (ClickHouse outage / flushers behind), instead of filling Valkey's memory.
   max-stream-length: 1000000
