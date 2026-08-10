@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: ingest-service
+  # JDBC pools are built explicitly in ClickHouseJdbcConfig from the
+  # clickhouse.* block below (main pool + async_insert pool for tiers 2-3), so
+  # local Docker <-> Aiven is a profile/env switch only - no code changes.
+  threads:
+    virtual:
+      enabled: true   # Java 25: no synchronized pinning (JEP 491); used by tier 3 + the REST receiver
+
+# CLI aliases: --tier=1..6 (ladder) or --tier=0 (buffered REST pipeline), --rows=N,
+# --concurrency=N (tier 3, default 80), --batch-size=N (tiers 4-6 and 0),
+# --format=RowBinary|JSONEachRow (tiers 5-6), --writers=N (tier 6),
+# --buffer-capacity=N / --flush-interval-ms=N (tier 0).
+ingest:
+  tier: ${tier:-1}
+  rows: ${rows:100000}
+  seed: ${seed:42}
+  concurrency: ${concurrency:1}
+  batch-size: ${batch-size:10000}
+  format: ${format:RowBinary}
+  writers: ${writers:4}
+  buffer-capacity: ${buffer-capacity:100000}
+  flush-interval-ms: ${flush-interval-ms:1000}
+  # When set, every endpoint except /actuator/health requires this value in an
+  # X-API-Key header (see ApiKeyFilter). Always set it on public deploys.
+  api-key: ${INGEST_API_KEY:}
+  # What backs POST /events: "memory" = the in-memory buffer (default;
+  # zero dependencies, dies with the app), "valkey" = Valkey Streams - the
+  # durable post-ladder production architecture (XADD -> consumer-group
+  # flusher -> native-client bulk insert, runtime-tunable via PUT /config).
+  buffer: ${INGEST_BUFFER:${buffer:memory}}
+
+# Valkey Streams buffer (only read when ingest.buffer=valkey).
+valkey:
+  uri: ${VALKEY_URI:redis://localhost:6379}
+  stream: ingest:events
+  group: clickhouse-flushers
+  # Must be unique per app instance; defaults to the hostname (= pod name on
+  # containers), which is exactly the uniqueness the consumer group needs.
+  consumer: ${VALKEY_CONSUMER:}
+  # A dead instance's pending entries are reclaimed by a survivor after this.
+  claim-min-idle-ms: 30000
+  # Backpressure bound: POST /events returns 429 once XLEN passes this
+  # (ClickHouse outage / flushers behind), instead of filling Valkey's memory.
+  max-stream-length: 1000000
+
+clickhouse:
+  host: localhost
+  port: 8123
+  ssl: false
+  database: campaign_analytics
+  username: default
+  password: "local"   # matches CLICKHOUSE_PASSWORD in docker-compose.yml
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+
+---
+# Aiven for ClickHouse (Azure SEA). Set via env:
+#   AIVEN_CH_HOST=<service>-<project>.aivencloud.com
+#   AIVEN_CH_PORT=<https port, usually the 8443-equivalent shown in the console>
+#   AIVEN_CH_PASSWORD=<avnadmin password>
+spring:
+  config:
+    activate:
+      on-profile: aiven
+
+clickhouse:
+  host: ${AIVEN_CH_HOST}
+  port: ${AIVEN_CH_PORT:8443}
+  ssl: true
+  database: ${AIVEN_CH_DATABASE:campaign_analytics}
+  username: ${AIVEN_CH_USER:avnadmin}
+  password: ${AIVEN_CH_PASSWORD}
+
+# Aiven for Valkey (same region as ClickHouse - terraform output -raw valkey_uri).
+# Only used when INGEST_BUFFER=valkey; rediss:// / valkeys:// = TLS.
+valkey:
+  uri: ${AIVEN_VALKEY_URI:${VALKEY_URI:redis://localhost:6379}}

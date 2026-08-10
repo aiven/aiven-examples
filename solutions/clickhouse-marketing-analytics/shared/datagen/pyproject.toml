@@ -1,0 +1,22 @@
+[project]
+name = "campaign-datagen"
+version = "0.1.0"
+description = "Synthetic campaign_events generator: monthly Parquet backfill published to GCS, NYC-taxi style"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "polars>=1.10",
+    "pyarrow>=17.0",
+    "PyYAML>=6.0",
+    "google-cloud-storage>=2.18",
+]
+
+[project.scripts]
+campaign-datagen = "campaign_datagen.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["campaign_datagen*"]

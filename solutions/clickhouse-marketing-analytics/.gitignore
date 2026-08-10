@@ -1,0 +1,30 @@
+# local tooling / editors
+.claude/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# build output
+target/
+*.class
+__pycache__/
+*.egg-info/
+
+# secrets — never commit real credentials (template: .env.aiven.example)
+.env
+*.env
+.env.aiven*
+!.env.aiven.example
+
+# terraform state
+.terraform/
+*.tfstate*
+.terraform.lock.hcl
+terraform.tfvars
+
+# datagen artifacts (regenerable; out/ can be tens of GB)
+shared/datagen/.venv/
+shared/datagen/out/
+shared/datagen/out-smoke/
+shared/datagen/config-smoke.yaml

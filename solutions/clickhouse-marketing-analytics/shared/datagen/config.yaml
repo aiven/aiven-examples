@@ -1,0 +1,100 @@
+# Full-scale backfill config: ~100M rows over 92 days (3 published months).
+# Every number the simulation uses lives here; the seed makes runs reproducible.
+seed: 42
+
+horizon:
+  start_month: "2026-05"
+  months: 3              # published backfill: 2026-05 .. 2026-07
+  # The funnel plan extends this far past the published months so that
+  # `generate --through` (demo-morning month-to-date catch-up) stays
+  # deterministic: extending the plan later would change already-published months.
+  plan_extra_months: 2
+
+targets:
+  total_rows: 300_000_000   # ~100M/month, mirrors production-scale volume; over the published months; plan.py scales pro-rata
+  # Desired share of each event type; validate.py reports actual vs these,
+  # and plan.py sizes the funnel from lead/trial_start/purchase.
+  # Internally consistent: opens = 35% of sends, clicks = 4.5% of sends,
+  # and the user funnel drops ~100 -> 8 -> 4 -> 2.6 (the Q4 validation gate wants
+  # visible stage drop-offs, which the blog mix's 3% leads cannot give).
+  event_mix:
+    page_view: 0.64195
+    click: 0.21
+    email_send: 0.10
+    email_open: 0.035
+    email_click: 0.0045
+    lead: 0.004
+    trial_start: 0.002
+    purchase: 0.0013
+    unsubscribe: 0.00025
+    bounce: 0.001
+
+population:
+  users: 8_000_000
+  mobile_share: 0.75
+  # Acquisition spread over the horizon: mild growth trend + weekly seasonality.
+  growth_per_day: 0.004
+  countries: { ID: 0.86, SG: 0.05, MY: 0.04, PH: 0.03, TH: 0.02 }
+  # Cohort retention curve (probability a user is active in week N since acquisition).
+  retention_by_week: [1.0, 0.40, 0.31, 0.25, 0.21, 0.18, 0.155, 0.135, 0.12, 0.105,
+                      0.093, 0.083, 0.075, 0.068, 0.062, 0.057, 0.053, 0.05]
+
+catalog:
+  campaigns: 200
+  channels: { paid_search: 0.30, social: 0.22, email: 0.20, organic: 0.18, direct: 0.10 }
+  keywords: 50
+  landing_pages: 30
+  ad_groups_per_campaign: [3, 8]
+  email_sends_per_week: [2, 3]
+  # Segments whose unsub/bounce rates deliberately cross the alert thresholds
+  # (unsub > 0.5%, bounce > 2%) so the list-health dashboard has alerts to show.
+  bad_email_segments: 3
+
+activity:
+  # Scales overall volume; tuned so 92 days lands around 300M rows total.
+  daily_active_base: 0.35
+  sessions_per_active_day: [1, 3]
+  page_views_per_session: [1, 10]
+  weekday_multipliers: [1.0, 1.02, 1.04, 1.05, 1.03, 0.90, 0.82] # Mon..Sun
+  # Per-channel session→funnel conversion probabilities.
+  funnel:
+    click_per_page_view: 0.35
+    lead_per_click: { direct: 0.10, email: 0.09, paid_search: 0.06, organic: 0.05, social: 0.03 }
+    trial_per_lead: 0.50
+    purchase_per_trial: 0.65
+  # Multi-touch journeys: converters get extra pre-conversion touches across
+  # DIFFERENT channels so attribution models diverge >= 15%.
+  journey_touches: [2, 5]
+  journey_window_days: [1, 14]
+
+email:
+  open_rate: 0.35
+  click_per_send: 0.045
+  open_decay_hours: 48
+  audience_per_send: [13_500, 68_000]
+  # Normal campaigns must stay clearly under the alert thresholds
+  # (unsub 0.5%, bounce 2%) so only the bad segments trip them.
+  unsubscribe_rate: [0.001, 0.004]
+  bounce_rate: [0.003, 0.014]
+  bad_segment_unsubscribe_rate: [0.007, 0.012]
+  bad_segment_bounce_rate: [0.025, 0.04]
+
+purchases:
+  # Log-normal IDR: median ~150k with a heavy tail.
+  value_median_idr: 150_000
+  value_sigma: 0.9
+  currency: IDR
+
+properties:
+  app_versions: ["4.18.2", "4.19.0", "4.19.1", "4.20.0"]
+  ab_variants: ["control", "checkout_v2", "onboarding_v3"]
+
+output:
+  dir: out
+  rows_per_file: 5_000_000   # ~150-250 MB zstd parquet per part, NYC-taxi sized
+  compression: zstd
+  timezone_offset_hours: 7   # WIB diurnal shape, stored as UTC
+
+gcs:
+  bucket: ""                 # set when the bucket exists, or pass --bucket
+  prefix: campaign_events

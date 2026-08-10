@@ -1,0 +1,40 @@
+# Local ClickHouse for development (the "customer laptop" environment in the story).
+# First start creates campaign_analytics and applies shared/schema/ automatically via the
+# docker-entrypoint-initdb.d hook.
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.3
+    ports:
+      - "8123:8123"   # HTTP (JDBC + client-v2)
+      - "9000:9000"   # native
+    environment:
+      CLICKHOUSE_DB: campaign_analytics
+      # Without a password the image locks the default user to in-container
+      # connections (users.d/default-user.xml) - the host-side service could
+      # never connect. Setting one also lifts that network restriction.
+      CLICKHOUSE_PASSWORD: local
+    volumes:
+      # The image's initdb hook runs bare *.sql files against the default db
+      # (it ignores CLICKHOUSE_DB), so a shell hook applies shared/schema/ with
+      # --database campaign_analytics instead.
+      - ./shared/schema:/ddl:ro
+      - ./docker/clickhouse-init.sh:/docker-entrypoint-initdb.d/clickhouse-init.sh:ro
+      - clickhouse-data:/var/lib/clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+
+  # Local stand-in for Aiven for Valkey: the durable ingestion buffer
+  # (Valkey Streams) + shared runtime config store. Only needed when running
+  # the service with --buffer=valkey.
+  valkey:
+    image: valkey/valkey:9.1
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey-data:/data
+
+volumes:
+  clickhouse-data:
+  valkey-data:

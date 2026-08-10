@@ -173,3 +173,5 @@ maven-wrapper.jar
 *.cert
 
 **.gradle/
+# Claude Code local config
+.claude/

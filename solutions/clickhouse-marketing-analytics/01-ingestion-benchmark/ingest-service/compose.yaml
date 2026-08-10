@@ -1,0 +1,41 @@
+# ingest-service: campaign_events ingestion + remote benchmark control,
+# built for deployment to Aiven Apps next to the ClickHouse service (same
+# region/VPC = no laptop-uplink bottleneck in the benchmark numbers).
+#
+# All config via environment variables (Aiven Apps env/secrets; local
+# ../.env.aiven). Nothing sensitive is baked into the image.
+#
+# Once deployed, drive it over HTTP:
+#   POST /benchmarks {"tier":6,"rows":10000000,"writers":8}   -> run id
+#   GET  /benchmarks/{id}                                     -> progress/result
+#   POST /events                                              -> mobile-fleet ingestion path
+#   GET  /actuator/health                                     -> platform probe
+
+services:
+  ingest-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ingest-service
+    container_name: ingest-service
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-aiven}
+      # Aiven for ClickHouse connection (Console -> Connection information)
+      AIVEN_CH_HOST: ${AIVEN_CH_HOST}
+      AIVEN_CH_PORT: ${AIVEN_CH_PORT:-8443}
+      AIVEN_CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      AIVEN_CH_USER: ${AIVEN_CH_USER:-avnadmin}
+      AIVEN_CH_PASSWORD: ${AIVEN_CH_PASSWORD}
+      # Aiven for Valkey: the durable ingestion buffer behind POST /events
+      # (Valkey Streams + runtime config hash). This is the production
+      # architecture; leave INGEST_BUFFER=memory only for ladder benchmarks.
+      INGEST_BUFFER: ${INGEST_BUFFER:-valkey}
+      AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
+      # Required on public deploys: callers must send this in X-API-Key
+      # (only /actuator/health stays open for the platform probe).
+      INGEST_API_KEY: ${INGEST_API_KEY}
+      # Health/probe port; Spring Boot picks SERVER_PORT up natively.
+      SERVER_PORT: ${PORT:-8080}
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
