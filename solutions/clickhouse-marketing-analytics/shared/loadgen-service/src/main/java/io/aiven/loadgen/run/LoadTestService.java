@@ -65,9 +65,13 @@ public class LoadTestService {
     // handled by the bounded transport retry in post(). (Pinning HTTP/1.1
     // instead makes it far worse: thousands of real TCP+TLS connections trip
     // the ingress's handshake rate limits and the client thrashes.)
-    private final HttpClient http = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+    //
+    // LOADGEN_CLIENTS > 1 spreads requests round-robin over a pool of
+    // HttpClients = more h2 connections: raises the client-side in-flight
+    // ceiling (h2 stream caps are per connection) and shrinks the blast
+    // radius of one connection's GOAWAY rotation.
+    private final HttpClient[] httpPool;
+    private final AtomicLong httpPick = new AtomicLong();
 
     private final String defaultTargetUrl;
     private final String defaultTargetApiKey;
@@ -94,6 +98,7 @@ public class LoadTestService {
             Thread.ofPlatform().name("loadtest-", 0).factory());
 
     public LoadTestService(MeterRegistry registry,
+                           @Value("${loadgen.clients:1}") int clients,
                            @Value("${loadgen.target.url:http://localhost:8080}") String defaultTargetUrl,
                            @Value("${loadgen.target.api-key:}") String defaultTargetApiKey,
                            @Value("${clickhouse.host:}") String chHost,
@@ -110,6 +115,10 @@ public class LoadTestService {
         this.chDatabase = chDatabase;
         this.chUser = chUser;
         this.chPassword = chPassword;
+        this.httpPool = new HttpClient[Math.max(1, clients)];
+        for (int i = 0; i < httpPool.length; i++) {
+            httpPool[i] = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+        }
         this.mAccepted = Counter.builder("loadgen.events.accepted").register(registry);
         this.mRejected = Counter.builder("loadgen.events.rejected").register(registry);
         this.mErrors = Counter.builder("loadgen.request.errors").register(registry);
@@ -242,6 +251,7 @@ public class LoadTestService {
     private int post(LoadTestRun run, Params p, String body, int eventCount) {
         long t0 = System.nanoTime();
         try {
+            HttpClient http = httpPool[(int) (httpPick.getAndIncrement() % httpPool.length)];
             HttpResponse<Void> response;
             try {
                 response = http.send(eventsRequest(p, body), HttpResponse.BodyHandlers.discarding());

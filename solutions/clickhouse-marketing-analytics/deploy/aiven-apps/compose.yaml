@@ -60,6 +60,7 @@ services:
       TARGET_URL: ${TARGET_URL:-http://ingest-service:8080}
       TARGET_API_KEY: ${INGEST_API_KEY}
       LOADGEN_API_KEY: ${LOADGEN_API_KEY}
+      LOADGEN_CLIENTS: ${LOADGEN_CLIENTS:-1}
       # e2e probe (event accepted -> queryable in ClickHouse)
       CH_HOST: ${AIVEN_CH_HOST}
       CH_PORT: ${AIVEN_CH_PORT:-8443}

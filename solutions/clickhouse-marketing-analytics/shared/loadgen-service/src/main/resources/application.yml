@@ -9,6 +9,9 @@ loadgen:
   # Protects THIS service's API (a load generator is a DoS tool - always set
   # on public deploys). Sent by callers as X-API-Key.
   api-key: ${LOADGEN_API_KEY:}
+  # HttpClient pool size: >1 = more h2 connections to the target (higher
+  # client-side in-flight ceiling, smaller GOAWAY blast radius).
+  clients: ${LOADGEN_CLIENTS:1}
   target:
     # The ingest service to load-test; per-run override via target_url.
     url: ${TARGET_URL:http://localhost:8080}
