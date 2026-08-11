@@ -32,6 +32,26 @@ public interface EventSink {
         return accepted;
     }
 
+    /**
+     * Enqueue a producer batch given as RAW JSON element strings, returning
+     * how many were accepted. Sinks that store JSON verbatim (valkey) should
+     * override this to skip object binding entirely - on a small container
+     * the receiver's Jackson databind round-trip is the dominant CPU cost.
+     * The default parses each element and delegates to acceptAll().
+     */
+    default int acceptAllRaw(java.util.List<String> rawEvents,
+                             com.fasterxml.jackson.databind.ObjectMapper mapper) {
+        java.util.List<EventDto> events = new java.util.ArrayList<>(rawEvents.size());
+        try {
+            for (String raw : rawEvents) {
+                events.add(mapper.readValue(raw, EventDto.class));
+            }
+        } catch (com.fasterxml.jackson.core.JacksonException e) {
+            throw new IllegalArgumentException("malformed event JSON: " + e.getOriginalMessage());
+        }
+        return acceptAll(events);
+    }
+
     /** Current buffer depth (queue size / stream length) for 429 responses. */
     long depth();
 }

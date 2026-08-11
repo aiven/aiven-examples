@@ -36,6 +36,10 @@ services:
       AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
       INGEST_BUFFER: valkey
       VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-4}
+      # Valkey write semantics: ack sync|async, send direct|batched (see
+      # ingest-service application.yml). Defaults = durable handshake.
+      INGEST_VALKEY_ACK: ${INGEST_VALKEY_ACK:-sync}
+      INGEST_VALKEY_SEND: ${INGEST_VALKEY_SEND:-direct}
       INGEST_API_KEY: ${INGEST_API_KEY}
       OTLP_METRICS_ENABLED: "true"
       OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_COLLECTOR_URL:-http://otel-collector:4318}
