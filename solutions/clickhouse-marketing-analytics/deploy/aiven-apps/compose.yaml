@@ -38,7 +38,7 @@ services:
       VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-4}
       INGEST_API_KEY: ${INGEST_API_KEY}
       OTLP_METRICS_ENABLED: "true"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_COLLECTOR_URL:-http://otel-collector:4318}
       SERVER_PORT: "8080"
     ports:
       - "8080:8080"
@@ -50,8 +50,10 @@ services:
       context: ../../shared/loadgen-service
       dockerfile: Dockerfile
     environment:
-      # Container network: no ingress between loadgen and ingest.
-      TARGET_URL: http://ingest-service:8080
+      # Compose-network default. If service-name DNS does not resolve in
+      # your Apps runtime, override with the ingest app's public URL in the
+      # composer view (the run then measures the through-ingress path).
+      TARGET_URL: ${TARGET_URL:-http://ingest-service:8080}
       TARGET_API_KEY: ${INGEST_API_KEY}
       LOADGEN_API_KEY: ${LOADGEN_API_KEY}
       # e2e probe (event accepted -> queryable in ClickHouse)
@@ -62,7 +64,7 @@ services:
       CH_USER: ${AIVEN_CH_USER:-avnadmin}
       CH_PASSWORD: ${AIVEN_CH_PASSWORD}
       OTLP_METRICS_ENABLED: "true"
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_COLLECTOR_URL:-http://otel-collector:4318}
       SERVER_PORT: "8090"
     ports:
       - "8090:8090"
