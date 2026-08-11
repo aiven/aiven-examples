@@ -25,7 +25,8 @@ which is exactly what [shared/schema/](shared/schema/),
 |---|---|
 | [shared/schema/](shared/schema/) | `campaign_events` DDL (the customer's exact schema), `daily_campaign_rollup` MV, live diagnostics queries, rollup/projection objects |
 | [shared/datagen/](shared/datagen/) | journey-based synthetic event generator (backfill → Parquet, live mode) |
-| [shared/loadgen/](shared/loadgen/) | k6 scenario simulating a mobile fleet emitting single events: steady state + push-campaign burst |
+| [shared/loadgen/](shared/loadgen/) | k6 scenarios (CLI-driven, local): mobile-fleet steady state, push-campaign burst, saturation firehose |
+| [shared/loadgen-service/](shared/loadgen-service/) | the load generator as a service: deploy on Aiven Apps next to the ingest service, drive runs via `POST /loadtests` (devices/firehose modes, built-in e2e latency probe) |
 | [01-ingestion-benchmark/](01-ingestion-benchmark/) | Spring Boot 3.5 / Java 25 benchmark harness; the ladder behind `--tier=1..6` (`--tier=0` = buffered REST pipeline); [valkey-bench/](01-ingestion-benchmark/valkey-bench/) = mini-benchmark harness for the Valkey path |
 | [02-dashboard-mv/](02-dashboard-mv/) | the 8 dashboard queries (naive + optimized variants) |
 | [infra/](infra/) | Terraform: Aiven for ClickHouse (26.3, `business-16`) + Aiven for Valkey (9.1, `business-8`) — on Aiven, SQL `CREATE DATABASE` works for `avnadmin` only (Replicated engine); other users go via console/API/provider ([limitations](https://aiven.io/docs/products/clickhouse/reference/limitations)) |

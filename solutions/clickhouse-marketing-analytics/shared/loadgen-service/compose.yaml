@@ -1,0 +1,36 @@
+# loadgen-service: remote-controlled load generator, built for deployment to
+# Aiven Apps in the SAME region as the ingest service - so load tests measure
+# the target, not a laptop's uplink (the ladder's environment lesson applies
+# to load drivers too).
+#
+# Once deployed, drive it over HTTP:
+#   POST /loadtests {"mode":"firehose","rate":50000,"duration_s":60}  -> run id
+#   POST /loadtests {"mode":"devices","users":2000,"duration_s":180}
+#   GET  /loadtests/{id}                                              -> progress/result
+#   GET  /actuator/health                                             -> platform probe
+
+services:
+  loadgen-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: loadgen-service
+    container_name: loadgen-service
+    environment:
+      # The ingest service to load-test (its Aiven Apps URL) + its API key.
+      TARGET_URL: ${TARGET_URL}
+      TARGET_API_KEY: ${INGEST_API_KEY:-}
+      # Protects THIS service's /loadtests API. Always set on public deploys:
+      # an unauthenticated load generator is a DoS tool.
+      LOADGEN_API_KEY: ${LOADGEN_API_KEY}
+      # Optional e2e latency probe (event accepted -> queryable in ClickHouse).
+      CH_HOST: ${AIVEN_CH_HOST:-}
+      CH_PORT: ${AIVEN_CH_PORT:-8443}
+      CH_SSL: ${CH_SSL:-true}
+      CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      CH_USER: ${AIVEN_CH_USER:-demo_ingest}
+      CH_PASSWORD: ${AIVEN_CH_PASSWORD:-}
+      SERVER_PORT: ${PORT:-8090}
+    ports:
+      - "8090:8090"
+    restart: unless-stopped

@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: loadgen-service
+  threads:
+    virtual:
+      enabled: true   # devices mode = one virtual thread per simulated device
+
+loadgen:
+  # Protects THIS service's API (a load generator is a DoS tool - always set
+  # on public deploys). Sent by callers as X-API-Key.
+  api-key: ${LOADGEN_API_KEY:}
+  target:
+    # The ingest service to load-test; per-run override via target_url.
+    url: ${TARGET_URL:http://localhost:8080}
+    # The ingest service's INGEST_API_KEY, forwarded on every POST /events.
+    api-key: ${TARGET_API_KEY:}
+
+# Optional end-to-end latency probe (event accepted -> queryable): set CH_HOST
+# to enable. Needs only SELECT on campaign_analytics (demo_ingest works).
+clickhouse:
+  host: ${CH_HOST:}
+  port: ${CH_PORT:8123}
+  ssl: ${CH_SSL:false}
+  database: ${CH_DATABASE:campaign_analytics}
+  username: ${CH_USER:default}
+  password: ${CH_PASSWORD:}
+
+server:
+  port: ${SERVER_PORT:8090}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics
