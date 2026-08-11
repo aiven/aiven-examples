@@ -81,3 +81,41 @@ resource "aiven_valkey" "ingest_buffer" {
     valkey_version = var.valkey_version
   }
 }
+
+# Observability: the benchmark's metrics pipeline. Apps push OTLP to an
+# OpenTelemetry Collector, which remote-writes into Thanos; Grafana reads
+# Thanos through the datasource integration.
+resource "aiven_thanos" "metrics" {
+  project      = var.project
+  cloud_name   = var.cloud_name
+  plan         = var.thanos_plan
+  service_name = var.thanos_service_name
+
+  thanos_user_config {
+    compactor {
+      retention_days = 30
+    }
+  }
+}
+
+resource "aiven_grafana" "dashboards" {
+  project      = var.project
+  cloud_name   = var.grafana_cloud_name != "" ? var.grafana_cloud_name : var.cloud_name
+  plan         = var.grafana_plan
+  service_name = var.grafana_service_name
+
+  grafana_user_config {
+    public_access {
+      grafana = true
+    }
+  }
+}
+
+# Thanos appears in Grafana as a provisioned datasource ("dashboard"
+# integration: Grafana is the source, the metrics store the destination).
+resource "aiven_service_integration" "thanos_grafana" {
+  project                  = var.project
+  integration_type         = "dashboard"
+  source_service_name      = aiven_grafana.dashboards.service_name
+  destination_service_name = aiven_thanos.metrics.service_name
+}

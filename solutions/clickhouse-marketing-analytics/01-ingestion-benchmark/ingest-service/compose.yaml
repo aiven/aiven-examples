@@ -31,6 +31,11 @@ services:
       # architecture; leave INGEST_BUFFER=memory only for ladder benchmarks.
       INGEST_BUFFER: ${INGEST_BUFFER:-valkey}
       AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
+      # Metrics as OpenTelemetry: push OTLP to the collector (deployed from
+      # observability/otel-collector/), which remote-writes into Aiven for
+      # Metrics (Thanos) for the Grafana dashboard.
+      OTLP_METRICS_ENABLED: ${OTLP_METRICS_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}
       # Required on public deploys: callers must send this in X-API-Key
       # (only /actuator/health stays open for the platform probe).
       INGEST_API_KEY: ${INGEST_API_KEY}

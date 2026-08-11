@@ -1,0 +1,47 @@
+# OpenTelemetry Collector: the translation hop between the apps and Aiven.
+# The apps push OTLP (Micrometer's OTLP registry); Aiven for Metrics (Thanos)
+# ingests Prometheus remote write - the collector receives one and exports
+# the other.
+#
+# Env:
+#   THANOS_REMOTE_WRITE_URI  terraform output -raw thanos_remote_write_uri
+#                            (strip any user:pass@ - credentials go below)
+#   THANOS_USER              Thanos service username (avnadmin)
+#   THANOS_PASSWORD          Thanos service password
+
+extensions:
+  health_check:
+    endpoint: 0.0.0.0:13133
+  basicauth/thanos:
+    client_auth:
+      username: ${env:THANOS_USER}
+      password: ${env:THANOS_PASSWORD}
+
+receivers:
+  otlp:
+    protocols:
+      http:
+        endpoint: 0.0.0.0:4318
+      grpc:
+        endpoint: 0.0.0.0:4317
+
+processors:
+  batch: {}
+
+exporters:
+  prometheusremotewrite:
+    endpoint: ${env:THANOS_REMOTE_WRITE_URI}
+    auth:
+      authenticator: basicauth/thanos
+    resource_to_telemetry_conversion:
+      # service.name etc. become labels, so Grafana can tell
+      # ingest-service metrics from loadgen-service metrics.
+      enabled: true
+
+service:
+  extensions: [health_check, basicauth/thanos]
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheusremotewrite]

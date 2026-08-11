@@ -65,6 +65,19 @@ management:
     web:
       exposure:
         include: health,metrics,prometheus
+  # Push metrics as OTLP to an OpenTelemetry Collector, which remote-writes
+  # into Aiven for Metrics (Thanos). Off by default; enable with
+  # OTLP_METRICS_ENABLED=true and point OTEL_EXPORTER_OTLP_ENDPOINT at the
+  # collector (e.g. http://otel-collector:4318).
+  otlp:
+    metrics:
+      export:
+        enabled: ${OTLP_METRICS_ENABLED:false}
+        url: ${OTEL_EXPORTER_OTLP_ENDPOINT:http://localhost:4318}/v1/metrics
+        step: 15s
+  opentelemetry:
+    resource-attributes:
+      service.name: ingest-service
 
 ---
 # Aiven for ClickHouse. Set via env:

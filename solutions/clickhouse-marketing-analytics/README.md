@@ -29,7 +29,8 @@ which is exactly what [shared/schema/](shared/schema/),
 | [shared/loadgen-service/](shared/loadgen-service/) | the load generator as a service: deploy on Aiven Apps next to the ingest service, drive runs via `POST /loadtests` (devices/firehose modes, built-in e2e latency probe) |
 | [01-ingestion-benchmark/](01-ingestion-benchmark/) | Spring Boot 3.5 / Java 25 benchmark harness; the ladder behind `--tier=1..6` (`--tier=0` = buffered REST pipeline); [valkey-bench/](01-ingestion-benchmark/valkey-bench/) = mini-benchmark harness for the Valkey path |
 | [02-dashboard-mv/](02-dashboard-mv/) | the 8 dashboard queries (naive + optimized variants) |
-| [infra/](infra/) | Terraform: Aiven for ClickHouse (26.3, `business-16`) + Aiven for Valkey (9.1, `business-8`) — on Aiven, SQL `CREATE DATABASE` works for `avnadmin` only (Replicated engine); other users go via console/API/provider ([limitations](https://aiven.io/docs/products/clickhouse/reference/limitations)) |
+| [infra/](infra/) | Terraform: Aiven for ClickHouse (26.3, `business-16`) + Aiven for Valkey (9.1, `business-8`) + Aiven for Metrics (Thanos) + Aiven for Grafana — on Aiven, SQL `CREATE DATABASE` works for `avnadmin` only (Replicated engine); other users go via console/API/provider ([limitations](https://aiven.io/docs/products/clickhouse/reference/limitations)) |
+| [observability/](observability/) | live benchmark metrics: apps push OTLP → OTel Collector → remote write → Thanos → Grafana dashboard ([README](observability/README.md)) |
 | [docker-compose.yml](docker-compose.yml) | local fallback: ClickHouse 26.3 (schema auto-applied on first start) + Valkey 9.1 |
 
 ## The ingestion ladder

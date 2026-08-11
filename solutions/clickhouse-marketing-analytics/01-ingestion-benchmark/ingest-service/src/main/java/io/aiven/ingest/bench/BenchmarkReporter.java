@@ -37,6 +37,8 @@ public final class BenchmarkReporter {
 
     private final String runLabel;
     private final Timer flushTimer;
+    private final io.micrometer.core.instrument.Counter rowsCounter;
+    private final io.micrometer.core.instrument.Counter errorsCounter;
     private final AtomicLong rows = new AtomicLong();
     private final AtomicLong errors = new AtomicLong();
     private volatile Instant startedAt;
@@ -47,6 +49,19 @@ public final class BenchmarkReporter {
         this.flushTimer = Timer.builder("ingest.flush")
                 .tag("run", runLabel)
                 .publishPercentiles(0.5, 0.99)
+                // Bucketed histogram so Grafana can histogram_quantile() over
+                // the OTLP -> Thanos pipeline, not just read local percentiles.
+                .publishPercentileHistogram()
+                .register(registry);
+        // Real meters (not just the local AtomicLongs) so rows/errors flow
+        // out through the OTLP exporter to Thanos/Grafana.
+        this.rowsCounter = io.micrometer.core.instrument.Counter.builder("ingest.rows")
+                .tag("run", runLabel)
+                .description("rows successfully handed to ClickHouse")
+                .register(registry);
+        this.errorsCounter = io.micrometer.core.instrument.Counter.builder("ingest.errors")
+                .tag("run", runLabel)
+                .description("failed insert round-trips")
                 .register(registry);
     }
 
@@ -58,10 +73,12 @@ public final class BenchmarkReporter {
     public void recordFlush(long rowCount, long durationNanos) {
         flushTimer.record(durationNanos, TimeUnit.NANOSECONDS);
         rows.addAndGet(rowCount);
+        rowsCounter.increment(rowCount);
     }
 
     public void recordError(Throwable t) {
         errors.incrementAndGet();
+        errorsCounter.increment();
         log.warn("[{}] insert error: {}", runLabel, t.toString());
     }
 

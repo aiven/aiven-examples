@@ -6,6 +6,8 @@ Provisions two services in the same region (default **azure-indonesia-central**;
 |---|---|---|---|
 | Aiven for ClickHouse® | `business-16` | 26.3 | analytics store (`campaign_analytics` db + `demo_ingest` user (SELECT+INSERT; DDL runs as avnadmin)) |
 | Aiven for Valkey™ | `business-8` | 9.1 | ingestion buffer (Valkey Streams) + shared runtime config store |
+| Aiven for Metrics (Thanos) | `startup-4` | — | receives the benchmark metrics (Prometheus remote write via the OTel Collector) |
+| Aiven for Grafana® | `startup-1` | — | dashboards; Thanos auto-provisioned as a datasource (`datasource` integration) |
 
 Both are variables (`clickhouse_plan`, `valkey_plan`, `clickhouse_version`,
 `valkey_version`) if you want different sizing — the ingestion benchmark numbers
@@ -43,4 +45,13 @@ terraform output -raw service_host     # AIVEN_CH_HOST
 terraform output -json https_port      # AIVEN_CH_PORT
 terraform output -raw demo_password    # AIVEN_CH_PASSWORD (demo_ingest: SELECT+INSERT only)
 terraform output -raw valkey_uri       # AIVEN_VALKEY_URI (valkeys:// = TLS)
+```
+
+Observability values (see [../observability/](../observability/README.md)):
+
+```bash
+terraform output -raw thanos_remote_write_uri   # collector's THANOS_REMOTE_WRITE_URI
+terraform output -raw thanos_user               # THANOS_USER
+terraform output -raw thanos_password           # THANOS_PASSWORD
+terraform output -raw grafana_url               # log in with grafana_user/grafana_password
 ```

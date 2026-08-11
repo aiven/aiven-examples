@@ -1,5 +1,9 @@
 package io.aiven.loadgen.run;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.DistributionSummary;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -68,6 +72,14 @@ public class LoadTestService {
     private final String chUser;
     private final String chPassword;
 
+    // Exported via OTLP -> Thanos -> Grafana; the LoadTestRun counters stay
+    // the API's per-run source of truth, these meters are the live telemetry.
+    private final Counter mAccepted;
+    private final Counter mRejected;
+    private final Counter mErrors;
+    private final Timer mRequest;
+    private final DistributionSummary mE2eLatency;
+
     private final Map<String, LoadTestRun> runsById = new ConcurrentHashMap<>();
     private final List<LoadTestRun> runsInOrder = new CopyOnWriteArrayList<>();
     private final AtomicReference<LoadTestRun> active = new AtomicReference<>();
@@ -75,7 +87,8 @@ public class LoadTestService {
     private final ExecutorService coordinator = Executors.newThreadPerTaskExecutor(
             Thread.ofPlatform().name("loadtest-", 0).factory());
 
-    public LoadTestService(@Value("${loadgen.target.url:http://localhost:8080}") String defaultTargetUrl,
+    public LoadTestService(MeterRegistry registry,
+                           @Value("${loadgen.target.url:http://localhost:8080}") String defaultTargetUrl,
                            @Value("${loadgen.target.api-key:}") String defaultTargetApiKey,
                            @Value("${clickhouse.host:}") String chHost,
                            @Value("${clickhouse.port:8123}") int chPort,
@@ -91,6 +104,19 @@ public class LoadTestService {
         this.chDatabase = chDatabase;
         this.chUser = chUser;
         this.chPassword = chPassword;
+        this.mAccepted = Counter.builder("loadgen.events.accepted").register(registry);
+        this.mRejected = Counter.builder("loadgen.events.rejected").register(registry);
+        this.mErrors = Counter.builder("loadgen.request.errors").register(registry);
+        this.mRequest = Timer.builder("loadgen.request")
+                .publishPercentiles(0.5, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
+        this.mE2eLatency = DistributionSummary.builder("loadgen.e2e.latency")
+                .baseUnit("ms")
+                .description("event accepted -> queryable in ClickHouse")
+                .publishPercentiles(0.5, 0.99)
+                .publishPercentileHistogram()
+                .register(registry);
     }
 
     /** @throws IllegalArgumentException on bad parameters (400) */
@@ -213,15 +239,20 @@ public class LoadTestService {
             HttpResponse<Void> response = http.send(
                     eventsRequest(p, body), HttpResponse.BodyHandlers.discarding());
             long sent = run.requestsSent.incrementAndGet();
+            long elapsedNanos = System.nanoTime() - t0;
+            mRequest.record(java.time.Duration.ofNanos(elapsedNanos));
             if (sent % LATENCY_SAMPLE_EVERY == 0) {
-                run.latenciesMicros.add((System.nanoTime() - t0) / 1_000);
+                run.latenciesMicros.add(elapsedNanos / 1_000);
             }
             if (response.statusCode() == 202) {
                 run.eventsAccepted.addAndGet(eventCount);
+                mAccepted.increment(eventCount);
             } else if (response.statusCode() == 429) {
                 run.eventsRejected.addAndGet(eventCount);
+                mRejected.increment(eventCount);
             } else {
                 run.requestErrors.incrementAndGet();
+                mErrors.increment();
             }
             return response.statusCode();
         } catch (InterruptedException e) {
@@ -230,6 +261,7 @@ public class LoadTestService {
         } catch (Exception e) {
             run.requestsSent.incrementAndGet();
             run.requestErrors.incrementAndGet();
+            mErrors.increment();
             return 0;
         }
     }
@@ -258,6 +290,7 @@ public class LoadTestService {
                         Long latency = awaitVisible(conn, marker, t0);
                         if (latency != null) {
                             run.probeLatenciesMs.add(latency);
+                            mE2eLatency.record(latency);
                         }
                     }
                 } catch (InterruptedException stop) {

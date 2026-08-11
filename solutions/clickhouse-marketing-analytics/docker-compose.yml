@@ -35,6 +35,23 @@ services:
     volumes:
       - valkey-data:/data
 
+  # OTel Collector -> Aiven for Metrics (Thanos). Optional: only starts with
+  # `docker compose --profile observability up -d`, and needs THANOS_* env
+  # (from infra/ terraform outputs). Local apps then run with
+  # OTLP_METRICS_ENABLED=true to push through it.
+  otel-collector:
+    profiles: [observability]
+    build:
+      context: ./observability/otel-collector
+    environment:
+      THANOS_REMOTE_WRITE_URI: ${THANOS_REMOTE_WRITE_URI}
+      THANOS_USER: ${THANOS_USER}
+      THANOS_PASSWORD: ${THANOS_PASSWORD}
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+      - "13133:13133"
+
 volumes:
   clickhouse-data:
   valkey-data:

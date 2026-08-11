@@ -31,6 +31,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Push metrics as OpenTelemetry (OTLP) to the collector ->
+             Aiven for Metrics (Thanos). Enable with OTLP_METRICS_ENABLED. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-otlp</artifactId>
+        </dependency>
         <!-- Optional end-to-end latency probe: polls ClickHouse for marker events. -->
         <dependency>
             <groupId>com.clickhouse</groupId>

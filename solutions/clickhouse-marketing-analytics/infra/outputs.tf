@@ -41,3 +41,32 @@ output "valkey_uri" {
   value       = aiven_valkey.ingest_buffer.service_uri
   sensitive   = true
 }
+
+# Observability (Thanos + Grafana)
+output "thanos_remote_write_uri" {
+  description = "Prometheus remote-write endpoint for the OTel Collector's prometheusremotewrite exporter"
+  value       = one(aiven_thanos.metrics.thanos[*].receiver_remote_write_uri)
+  sensitive   = true
+}
+
+output "grafana_url" {
+  value = "https://${aiven_grafana.dashboards.service_host}:${aiven_grafana.dashboards.service_port}"
+}
+
+output "grafana_user" {
+  value = aiven_grafana.dashboards.service_username
+}
+
+output "grafana_password" {
+  value     = aiven_grafana.dashboards.service_password
+  sensitive = true
+}
+
+output "thanos_user" {
+  value = aiven_thanos.metrics.service_username
+}
+
+output "thanos_password" {
+  value     = aiven_thanos.metrics.service_password
+  sensitive = true
+}

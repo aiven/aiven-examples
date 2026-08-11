@@ -1,0 +1,216 @@
+{
+  "__comment": "Ingestion benchmark dashboard. Import into Aiven for Grafana and pick the Thanos datasource (provisioned by the terraform 'datasource' integration). Metric names assume the repo's OTel pipeline: Micrometer OTLP -> collector -> prometheusremotewrite; if your collector version names series slightly differently, check Grafana's metric browser for the ingest_/loadgen_/valkey_ prefixes.",
+  "title": "ClickHouse Ingestion Benchmark (Valkey path)",
+  "uid": "ingest-bench",
+  "timezone": "browser",
+  "refresh": "10s",
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "templating": {
+    "list": [
+      {
+        "name": "DS_THANOS",
+        "label": "Metrics datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Events accepted vs rejected (loadgen, events/s)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(loadgen_events_accepted_total[1m])",
+          "legendFormat": "accepted/s"
+        },
+        {
+          "expr": "rate(loadgen_events_rejected_total[1m])",
+          "legendFormat": "rejected (429)/s"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Flusher throughput into ClickHouse (rows/s)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(ingest_rows_total{run=\"valkey-flusher\"}[1m]))",
+          "legendFormat": "rows/s (all flushers)"
+        },
+        {
+          "expr": "sum(rate(ingest_flush_milliseconds_count{run=\"valkey-flusher\"}[1m]))",
+          "legendFormat": "batches/s"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Valkey stream: backlog & pending",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "max(valkey_stream_length)",
+          "legendFormat": "stream length (backlog)"
+        },
+        {
+          "expr": "max(valkey_stream_pending)",
+          "legendFormat": "pending (unacked)"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Flush latency (bulk insert round trip)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(ingest_flush_milliseconds_bucket{run=\"valkey-flusher\"}[1m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(ingest_flush_milliseconds_bucket{run=\"valkey-flusher\"}[1m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "POST /events request latency (loadgen side)",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(loadgen_request_milliseconds_bucket[1m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(loadgen_request_milliseconds_bucket[1m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "End-to-end latency: accepted -> queryable in ClickHouse",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(loadgen_e2e_latency_milliseconds_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(loadgen_e2e_latency_milliseconds_bucket[5m])) by (le))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Errors",
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "${DS_THANOS}"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(ingest_errors_total[1m]))",
+          "legendFormat": "insert errors/s (flusher)"
+        },
+        {
+          "expr": "sum(rate(loadgen_request_errors_total[1m]))",
+          "legendFormat": "request errors/s (loadgen)"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "version": 1
+}

@@ -30,6 +30,11 @@ services:
       CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
       CH_USER: ${AIVEN_CH_USER:-demo_ingest}
       CH_PASSWORD: ${AIVEN_CH_PASSWORD:-}
+      # Metrics as OpenTelemetry: push OTLP to the collector (deployed from
+      # observability/otel-collector/), which remote-writes into Aiven for
+      # Metrics (Thanos) for the Grafana dashboard.
+      OTLP_METRICS_ENABLED: ${OTLP_METRICS_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}
       SERVER_PORT: ${PORT:-8090}
     ports:
       - "8090:8090"

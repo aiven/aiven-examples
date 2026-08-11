@@ -1,0 +1,22 @@
+# otel-collector: deploy next to the ingest + loadgen services (Aiven Apps).
+# Receives OTLP from both apps on :4318 and remote-writes into Aiven for
+# Metrics (Thanos). Values from infra/:
+#   terraform output -raw thanos_remote_write_uri
+#   terraform output -raw thanos_user / thanos_password
+
+services:
+  otel-collector:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: otel-collector-bench
+    container_name: otel-collector-bench
+    environment:
+      THANOS_REMOTE_WRITE_URI: ${THANOS_REMOTE_WRITE_URI}
+      THANOS_USER: ${THANOS_USER}
+      THANOS_PASSWORD: ${THANOS_PASSWORD}
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP (what the Spring apps use)
+      - "13133:13133" # health probe
+    restart: unless-stopped

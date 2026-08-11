@@ -50,3 +50,36 @@ variable "valkey_service_name" {
   type        = string
   default     = "valkey-ingest-buffer"
 }
+
+variable "thanos_plan" {
+  description = "Aiven for Metrics (Thanos) plan"
+  type        = string
+  default     = "startup-4"
+}
+
+variable "thanos_service_name" {
+  description = "Thanos service name"
+  type        = string
+  default     = "metrics-ingest-bench"
+}
+
+variable "grafana_plan" {
+  description = "Aiven for Grafana plan (startup-1 is not offered in azure-indonesia-central; startup-8 is)"
+  type        = string
+  default     = "startup-8"
+}
+
+# Grafana is only a UI - if your region lacks a suitable plan, parking it in
+# a nearby region changes nothing about the benchmark, only dashboard-refresh
+# latency. Empty = same region as everything else.
+variable "grafana_cloud_name" {
+  description = "Region for Grafana. Empty = same as cloud_name."
+  type        = string
+  default     = ""
+}
+
+variable "grafana_service_name" {
+  description = "Grafana service name"
+  type        = string
+  default     = "grafana-ingest-bench"
+}

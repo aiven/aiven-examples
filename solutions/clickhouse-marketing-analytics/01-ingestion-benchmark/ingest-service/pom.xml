@@ -35,6 +35,13 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
+        <!-- Push metrics as OpenTelemetry (OTLP) to the collector, which
+             remote-writes into Aiven for Metrics (Thanos). Enabled per env:
+             OTLP_METRICS_ENABLED=true + OTEL_EXPORTER_OTLP_ENDPOINT. -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-otlp</artifactId>
+        </dependency>
 
         <!-- JDBC driver (tiers 0-3) -->
         <dependency>
