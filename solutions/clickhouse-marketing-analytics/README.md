@@ -31,6 +31,7 @@ which is exactly what [shared/schema/](shared/schema/),
 | [02-dashboard-mv/](02-dashboard-mv/) | the 8 dashboard queries (naive + optimized variants) |
 | [infra/](infra/) | Terraform: Aiven for ClickHouse (26.3, `business-16`) + Aiven for Valkey (9.1, `business-8`) + Aiven for Metrics (Thanos) + Aiven for Grafana — on Aiven, SQL `CREATE DATABASE` works for `avnadmin` only (Replicated engine); other users go via console/API/provider ([limitations](https://aiven.io/docs/products/clickhouse/reference/limitations)) |
 | [observability/](observability/) | live benchmark metrics: apps push OTLP → OTel Collector → remote write → Thanos → Grafana dashboard ([README](observability/README.md)) |
+| [deploy/aiven-apps/](deploy/aiven-apps/) | the benchmark stack (ingest + loadgen + collector) as ONE Aiven Apps manifest — shared container network, no ingress in the load path |
 | [docker-compose.yml](docker-compose.yml) | local fallback: ClickHouse 26.3 (schema auto-applied on first start) + Valkey 9.1 |
 
 ## The ingestion ladder

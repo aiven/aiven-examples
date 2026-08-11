@@ -1,0 +1,82 @@
+# The Phase B benchmark stack as ONE Aiven Apps deployment.
+#
+# Deploying the three containers in a single manifest puts them on a shared
+# container network: loadgen reaches ingest at http://ingest-service:8080 and
+# both apps reach the collector at http://otel-collector:4318 - no public
+# ingress in the load path (deployed as separate apps, app-to-app traffic
+# must use the public *.aiven.app URLs and pays the ingress's TLS/proxy
+# overhead and per-client connection limits).
+#
+# Point Aiven Apps at THIS file, not the repo-root docker-compose.yml (that
+# one is the local dev stack and contains clickhouse/valkey images that Apps
+# would try to map to managed services).
+#
+# Fill in via the composer view (secrets marked):
+#   AIVEN_CH_HOST / AIVEN_CH_PORT (https port!) / AIVEN_CH_PASSWORD (secret)
+#   AIVEN_VALKEY_URI (secret)   INGEST_API_KEY (secret)
+#   LOADGEN_API_KEY (secret)
+#   THANOS_REMOTE_WRITE_URI / THANOS_USER / THANOS_PASSWORD (secret)
+#
+# Control plane once deployed (public URLs of the two app ports):
+#   ingest-service :8080  -> /benchmarks, /config, /stats, /events
+#   loadgen-service :8090 -> /loadtests
+
+services:
+  ingest-service:
+    build:
+      context: ../../01-ingestion-benchmark/ingest-service
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: aiven
+      AIVEN_CH_HOST: ${AIVEN_CH_HOST}
+      AIVEN_CH_PORT: ${AIVEN_CH_PORT:-8443}
+      AIVEN_CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      AIVEN_CH_USER: ${AIVEN_CH_USER:-avnadmin}
+      AIVEN_CH_PASSWORD: ${AIVEN_CH_PASSWORD}
+      AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
+      INGEST_BUFFER: valkey
+      VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-4}
+      INGEST_API_KEY: ${INGEST_API_KEY}
+      OTLP_METRICS_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      SERVER_PORT: "8080"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - otel-collector
+
+  loadgen-service:
+    build:
+      context: ../../shared/loadgen-service
+      dockerfile: Dockerfile
+    environment:
+      # Container network: no ingress between loadgen and ingest.
+      TARGET_URL: http://ingest-service:8080
+      TARGET_API_KEY: ${INGEST_API_KEY}
+      LOADGEN_API_KEY: ${LOADGEN_API_KEY}
+      # e2e probe (event accepted -> queryable in ClickHouse)
+      CH_HOST: ${AIVEN_CH_HOST}
+      CH_PORT: ${AIVEN_CH_PORT:-8443}
+      CH_SSL: "true"
+      CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      CH_USER: ${AIVEN_CH_USER:-avnadmin}
+      CH_PASSWORD: ${AIVEN_CH_PASSWORD}
+      OTLP_METRICS_ENABLED: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
+      SERVER_PORT: "8090"
+    ports:
+      - "8090:8090"
+    depends_on:
+      - ingest-service
+      - otel-collector
+
+  otel-collector:
+    build:
+      context: ../../observability/otel-collector
+      dockerfile: Dockerfile
+    environment:
+      THANOS_REMOTE_WRITE_URI: ${THANOS_REMOTE_WRITE_URI}
+      THANOS_USER: ${THANOS_USER:-avnadmin}
+      THANOS_PASSWORD: ${THANOS_PASSWORD}
+    ports:
+      - "13133:13133"   # health probe
