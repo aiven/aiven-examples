@@ -7,6 +7,10 @@ spring:
   threads:
     virtual:
       enabled: true   # Java 25: no synchronized pinning (JEP 491); used by tier 3 + the REST receiver
+  mvc:
+    formcontent:
+      filter:
+        enabled: false  # per-request ceremony the ingest path never uses
 
 # CLI aliases: --tier=1..6 (ladder) or --tier=0 (buffered REST pipeline), --rows=N,
 # --concurrency=N (tier 3, default 80), --batch-size=N (tiers 4-6 and 0),
