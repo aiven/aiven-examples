@@ -59,12 +59,13 @@ public class LoadTestService {
     private static final int MAX_IN_FLIGHT = 8192;
     private static final int LATENCY_SAMPLE_EVERY = 64;
 
-    // HTTP/1.1 pinned: over TLS the client would negotiate HTTP/2, and load
-    // balancers rotating h2 connections (GOAWAY) fail every in-flight request
-    // on them - a steady error trickle from one high-rate client that has
-    // nothing to do with the target's capacity.
+    // HTTP/2 (the TLS default) is the right transport through an ingress:
+    // one client multiplexes over few connections. Its cost - the LB rotating
+    // h2 connections (GOAWAY) fails whatever is in flight on them - is
+    // handled by the bounded transport retry in post(). (Pinning HTTP/1.1
+    // instead makes it far worse: thousands of real TCP+TLS connections trip
+    // the ingress's handshake rate limits and the client thrashes.)
     private final HttpClient http = HttpClient.newBuilder()
-            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
