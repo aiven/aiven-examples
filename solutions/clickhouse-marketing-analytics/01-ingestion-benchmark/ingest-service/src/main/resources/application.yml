@@ -71,6 +71,12 @@ clickhouse:
 
 server:
   port: 8080
+  tomcat:
+    # Behind an ingress that rotates h2 connections, a killed client leaves
+    # the server holding a half-read request until this expires. Default-ish
+    # values (~20-60s) let such orphans pile up and poison latency stats;
+    # 5s bounds the damage (the client has long since retried).
+    connection-timeout: 5s
 
 management:
   endpoints:

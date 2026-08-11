@@ -35,7 +35,9 @@ services:
       AIVEN_CH_PASSWORD: ${AIVEN_CH_PASSWORD}
       AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
       INGEST_BUFFER: valkey
-      VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-4}
+      # 2 on a 2-vCPU container: flusher workers compete with the receiver
+      # for the same cores, and one worker alone drains 100k+ rows/s.
+      VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-2}
       # Valkey write semantics: ack sync|async, send direct|batched (see
       # ingest-service application.yml). Defaults = durable handshake.
       INGEST_VALKEY_ACK: ${INGEST_VALKEY_ACK:-sync}
