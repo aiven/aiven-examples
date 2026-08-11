@@ -59,7 +59,12 @@ public class LoadTestService {
     private static final int MAX_IN_FLIGHT = 8192;
     private static final int LATENCY_SAMPLE_EVERY = 64;
 
+    // HTTP/1.1 pinned: over TLS the client would negotiate HTTP/2, and load
+    // balancers rotating h2 connections (GOAWAY) fail every in-flight request
+    // on them - a steady error trickle from one high-rate client that has
+    // nothing to do with the target's capacity.
     private final HttpClient http = HttpClient.newBuilder()
+            .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(5))
             .build();
 
@@ -236,8 +241,17 @@ public class LoadTestService {
     private int post(LoadTestRun run, Params p, String body, int eventCount) {
         long t0 = System.nanoTime();
         try {
-            HttpResponse<Void> response = http.send(
-                    eventsRequest(p, body), HttpResponse.BodyHandlers.discarding());
+            HttpResponse<Void> response;
+            try {
+                response = http.send(eventsRequest(p, body), HttpResponse.BodyHandlers.discarding());
+            } catch (java.io.IOException connectionChurn) {
+                // One retry for transport-level failures only (connection
+                // rotated by an LB mid-flight). Never retries 429/5xx - those
+                // are the target speaking and must stay visible. The retry
+                // itself is counted, not hidden.
+                run.transportRetries.incrementAndGet();
+                response = http.send(eventsRequest(p, body), HttpResponse.BodyHandlers.discarding());
+            }
             long sent = run.requestsSent.incrementAndGet();
             long elapsedNanos = System.nanoTime() - t0;
             mRequest.record(java.time.Duration.ofNanos(elapsedNanos));

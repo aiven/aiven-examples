@@ -9,10 +9,15 @@ variable "project" {
   type        = string
 }
 
+# google-europe-west3: chosen for Aiven Apps availability (the app runtime is
+# in limited regions; the data services follow it so the benchmark stays
+# same-region). Any Aiven region works when Apps is not in the picture -
+# e.g. azure-indonesia-central / aws-ap-southeast-3 / google-asia-southeast2
+# for the in-country Jakarta options.
 variable "cloud_name" {
-  description = "Aiven cloud/region (shared by both services)"
+  description = "Aiven cloud/region (shared by all services)"
   type        = string
-  default     = "azure-indonesia-central"
+  default     = "google-europe-west3"
 }
 
 variable "clickhouse_plan" {
@@ -64,7 +69,7 @@ variable "thanos_service_name" {
 }
 
 variable "grafana_plan" {
-  description = "Aiven for Grafana plan (startup-1 is not offered in azure-indonesia-central; startup-8 is)"
+  description = "Aiven for Grafana plan (note: some regions only offer larger plans)"
   type        = string
   default     = "startup-8"
 }

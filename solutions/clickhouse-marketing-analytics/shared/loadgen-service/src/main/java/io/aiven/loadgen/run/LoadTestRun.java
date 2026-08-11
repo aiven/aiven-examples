@@ -30,6 +30,7 @@ public final class LoadTestRun {
     final AtomicLong eventsAccepted = new AtomicLong();
     final AtomicLong eventsRejected = new AtomicLong();
     final AtomicLong requestErrors = new AtomicLong();
+    final AtomicLong transportRetries = new AtomicLong();
     // Reservoir of request latencies (µs), sampled; enough for p50/p99.
     final ConcurrentLinkedQueue<Long> latenciesMicros = new ConcurrentLinkedQueue<>();
     final ConcurrentLinkedQueue<Long> probeLatenciesMs = new ConcurrentLinkedQueue<>();
@@ -104,6 +105,12 @@ public final class LoadTestRun {
     @JsonProperty("request_errors")
     public long requestErrors() {
         return requestErrors.get();
+    }
+
+    /** Transport-level failures that succeeded on the single retry (LB connection churn). */
+    @JsonProperty("transport_retries")
+    public long transportRetries() {
+        return transportRetries.get();
     }
 
     @JsonProperty("events_per_sec")

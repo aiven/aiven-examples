@@ -13,6 +13,7 @@ __pycache__/
 
 # secrets — never commit real credentials (template: .env.aiven.example)
 .env
+.env.*
 *.env
 .env.aiven*
 !.env.aiven.example
