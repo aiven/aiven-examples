@@ -1,0 +1,55 @@
+# ingest + loadgen COLOCATED in one container (one Aiven Apps app), because
+# Apps deploys each compose service as a separate app with no shared network -
+# the load path would otherwise go through the public ingress, whose h2
+# connection rotation is the measured bottleneck (~3.5k single-event req/s).
+# Here loadgen fires at http://localhost:8080.
+#
+# Point Aiven Apps at THIS file for the no-ingress benchmark variant; the
+# original three-app manifest in ../compose.yaml stays the through-ingress
+# variant. The otel-collector is NOT included - set OTEL_COLLECTOR_URL to the
+# already-deployed collector's URL (or leave metrics off).
+#
+# Fill in via the composer view (secrets marked):
+#   AIVEN_CH_HOST / AIVEN_CH_PORT (https port!) / AIVEN_CH_PASSWORD (secret)
+#   AIVEN_VALKEY_URI (secret)   INGEST_API_KEY (secret)
+#   LOADGEN_API_KEY (secret)    OTEL_COLLECTOR_URL
+#
+# Control plane once deployed (public URLs of the two ports):
+#   :8080 -> ingest  /benchmarks, /config, /stats, /events
+#   :8090 -> loadgen /loadtests
+
+services:
+  bench-combined:
+    build:
+      context: ../../..
+      dockerfile: deploy/aiven-apps/combined/Dockerfile
+    environment:
+      # --- ingest-service ---
+      SPRING_PROFILES_ACTIVE: aiven
+      AIVEN_CH_HOST: ${AIVEN_CH_HOST}
+      AIVEN_CH_PORT: ${AIVEN_CH_PORT:-8443}
+      AIVEN_CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      AIVEN_CH_USER: ${AIVEN_CH_USER:-avnadmin}
+      AIVEN_CH_PASSWORD: ${AIVEN_CH_PASSWORD}
+      AIVEN_VALKEY_URI: ${AIVEN_VALKEY_URI}
+      INGEST_BUFFER: ${INGEST_BUFFER:-valkey}
+      VALKEY_FLUSHERS: ${VALKEY_FLUSHERS:-2}
+      INGEST_VALKEY_ACK: ${INGEST_VALKEY_ACK:-sync}
+      INGEST_VALKEY_SEND: ${INGEST_VALKEY_SEND:-direct}
+      INGEST_API_KEY: ${INGEST_API_KEY}
+      # no SERVER_PORT: both JVMs share this env; ports are pinned in entrypoint.sh
+      # --- loadgen-service (TARGET_URL defaults to localhost in entrypoint.sh) ---
+      TARGET_API_KEY: ${INGEST_API_KEY}
+      LOADGEN_API_KEY: ${LOADGEN_API_KEY}
+      CH_HOST: ${AIVEN_CH_HOST}
+      CH_PORT: ${AIVEN_CH_PORT:-8443}
+      CH_SSL: "true"
+      CH_DATABASE: ${AIVEN_CH_DATABASE:-campaign_analytics}
+      CH_USER: ${AIVEN_CH_USER:-avnadmin}
+      CH_PASSWORD: ${AIVEN_CH_PASSWORD}
+      # --- shared telemetry (external collector; no localhost default here) ---
+      OTLP_METRICS_ENABLED: ${OTLP_METRICS_ENABLED:-false}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_COLLECTOR_URL:-http://localhost:4318}
+    ports:
+      - "8080:8080"
+      - "8090:8090"
