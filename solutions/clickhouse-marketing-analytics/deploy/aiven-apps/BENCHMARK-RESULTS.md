@@ -74,6 +74,14 @@ Findings:
 - **Open:** tier 3 dropped 8,881/100k inserts (~9%). The exception text is in
   the ingest-service Apps logs (2026-08-11 15:35–15:57 UTC); suspects are
   concurrent-query limits or Keeper/replication contention on insert commits.
+- **The end-to-end bottleneck is the loadgen → ingress → receiver leg, not
+  ingest → ClickHouse.** The ladder proves the write path has huge headroom
+  (282k rows/s in-container; the Valkey flushers held ~60k rows/s during the
+  burst with no backlog), while the HTTP delivery path caps at ~3.5k ev/s
+  single-event and was only exercised to ~60k ev/s batched — without ever
+  stressing the server (zero 429s). Pushing the demo further means pushing
+  delivery (more/bigger batches, multiple load sources, or bypassing the
+  ingress), not the database.
 - run-010 vs the 436k Phase-2 headline: half the app cores (2 vCPU vs 4) and
   writers 4→8 only bought 1.56× — the generator+writer threads are
   core-starved, so the app size, not the cluster, likely explains the gap.
