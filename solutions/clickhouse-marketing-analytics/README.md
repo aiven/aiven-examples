@@ -45,7 +45,10 @@ seeded data.
 Laptop → Aiven = same code over TLS/WAN (consumer uplink — those numbers mostly
 measure the uplink). **Same-region** = the service deployed on Aiven Apps next to
 the ClickHouse service (Startup-16), driven via the remote benchmark API; this is
-what production looks like, so these are the headline numbers.
+what production looks like, so these are the headline numbers. The same ladder
+re-run against a 3-node HA `business-16` plan is in
+[deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md)
+and summarized [below](#deployed-results-business-16-3-node-ha).
 
 | Tier | Technique | Reproduce with | Laptop → Aiven | **Aiven Apps (same-region)** | Local Docker |
 |---|---|---|---|---|---|
@@ -118,6 +121,33 @@ that idea is the post-ladder production architecture below.
    writers; production batch paths should set `async_insert=0` explicitly. The
    ladder table keeps server-default numbers (that's what an unmodified Aiven
    26.3 service runs).
+
+## Deployed results (business-16, 3-node HA)
+
+The canonical deployed numbers — measured 2026-08-12 on the combined Aiven Apps
+deployment (`deploy/aiven-apps/combined/`, ingest + loadgen colocated, no
+ingress in the load path; 4 vCPU / 8 GB app, Aiven for ClickHouse
+`business-16` 3-node HA, Aiven for Valkey `business-8`, same region). Full
+detail and run-by-run tables in
+[deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md).
+
+- **Batch headline: 327,862 rows/s, zero errors** (tier 6, 8 writers × 50k,
+  10M rows) — 75% of the 436k Startup-16 number on the same app size; the ~25%
+  delta is the isolated cost of 3-node replication on the batch path.
+- **Row-by-row is ~70 rows/s on the replicated plan** and concurrency does not
+  rescue it — batching is the difference between 70 and 328k rows/s.
+- **Tier-3 sender sweep (10 → 20 → 30 senders, 100k rows each): errors start
+  between 20 and 30 concurrent senders.** 10 senders → 201 rows/s clean; 20 →
+  188 clean; 30 → 94 rows/s with 10,355 of 100k rows dropped. Throughput decays
+  *within* a run before errors appear (210 → 94 rows/s), pointing at
+  server-side accumulation (async-insert buffer pressure / parts backlog)
+  rather than a hard concurrency limit; the exact mechanism is still open.
+- **Buffered `/events` pipeline: ~9,500 single events/s** with zero transport
+  errors when the producer path has no ingress. Through the public
+  `*.aiven.app` ingress, single-event traffic capped at ~3,500 ev/s with
+  transport errors (HTTP/2 GOAWAY from connection rotation) — **the end-to-end
+  bottleneck is the delivery leg, never ingest → ClickHouse**. Batching removes
+  it even through the ingress (60k ev/s × batch 200, zero errors).
 
 ## After the ladder: durable buffering with Valkey Streams
 
