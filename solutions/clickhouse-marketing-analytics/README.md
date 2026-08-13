@@ -7,9 +7,10 @@ generator, and a dashboard query suite with pre-aggregation optimizations.
 The origin story: a customer in the marketing business trialing ClickHouse hit a
 wall with data insertion — row-by-row JDBC inserts erroring out under load and
 topping out around 1,000 rows/s. They asked whether Aiven for ClickHouse could
-sustain 100,000 inserts/s. The answer, on a single-node Startup-16 plan, was
-**436,458 rows/s sustained with zero errors** — not from a bigger machine, but
-from the right insert pattern. This repo reproduces that journey.
+sustain 100,000 inserts/s. The answer, on a 3-node HA business-16 plan with
+replicated tables, was **327,862 rows/s sustained with zero errors** — not
+from a bigger machine, but from the right insert pattern. This repo reproduces
+that journey.
 
 The customer's brief was to mirror Tinybird's
 [real-time marketing dashboards on ClickHouse](https://www.tinybird.co/blog/clickhouse-marketing-dashboards)
@@ -44,22 +45,21 @@ seeded data.
 **Environments:** Local Docker = ClickHouse 26.3 on an M-series laptop.
 Laptop → Aiven = same code over TLS/WAN (consumer uplink — those numbers mostly
 measure the uplink). **Same-region** = the service deployed on Aiven Apps next
-to the ClickHouse service, driven via the remote benchmark API; this is what
-production looks like, so these are the headline numbers — two cluster
-topologies: the original single-node `Startup-16` run, and the **latest
-2026-08-12 run on 3-node HA `business-16`** (replicated tables; the ~25% tier-6
-delta is the replication cost). Full business-16 run-by-run tables in
+to the ClickHouse service (`business-16`, 3-node HA, replicated tables;
+measured 2026-08-12), driven via the remote benchmark API; this is what
+production looks like, so these are the headline numbers. Full run-by-run
+tables in
 [deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md),
 summarized [below](#deployed-results-business-16-3-node-ha).
 
-| Tier | Technique | Reproduce with | Laptop → Aiven | Same-region, Startup-16 | **Same-region, business-16 HA (latest)** | Local Docker |
-|---|---|---|---|---|---|---|
-| 1 | Row-by-row JDBC (the original code) | `--tier=1` | 25 | 85 (p50 10 ms/insert) | **72** | 226 |
-| 2 | `async_insert` tuned, sequential | `--tier=2` | 16 | 79 — same as tier 1, see finding 1 | **68** | 180 |
-| 3 | async_insert × 80 concurrent senders | `--tier=3` | 92 | 172 (p50 382 ms/insert!) | **120** (45% of rows dropped — see the [sender sweep](deploy/aiven-apps/BENCHMARK-RESULTS.md)) | 619 |
-| 4 | `jdbcTemplate.batchUpdate` @10k | `--tier=4` | 7,073 | 52,632 | **73,005** | 151,624 |
-| 5 | client-v2 RowBinary stream + LZ4 @10k | `--tier=5` | 9,231 | 66,521 | **70,250** | 92,573 (217k w/ `async_insert=0`, finding 8) |
-| 6 | Parallel native writers, 8 × @50k | `--tier=6 --writers=8 --batch-size=50000` | 37,595 (@10k) | 436,458 — 10M rows in 23 s | **327,862** — 10M rows in 30.5 s | 608,021 (324k @10k) |
+| Tier | Technique | Reproduce with | Laptop → Aiven | **Aiven Apps (same-region)** | Local Docker |
+|---|---|---|---|---|---|
+| 1 | Row-by-row JDBC (the original code) | `--tier=1` | 25 | **72** | 226 |
+| 2 | `async_insert` tuned, sequential | `--tier=2` | 16 | **68** — same as tier 1, see finding 1 | 180 |
+| 3 | async_insert × 80 concurrent senders | `--tier=3` | 92 | **120** (45% of rows dropped — see the [sender sweep](deploy/aiven-apps/BENCHMARK-RESULTS.md)) | 619 |
+| 4 | `jdbcTemplate.batchUpdate` @10k | `--tier=4` | 7,073 | **73,005** | 151,624 |
+| 5 | client-v2 RowBinary stream + LZ4 @10k | `--tier=5` | 9,231 | **70,250** | 92,573 (217k w/ `async_insert=0`, finding 8) |
+| 6 | Parallel native writers, 8 × @50k | `--tier=6 --writers=8 --batch-size=50000` | 37,595 (@10k) | **327,862** — 10M rows in 30.5 s | 608,021 (324k @10k) |
 
 Flags, the remote API's `tier` field, the CSV run labels, and the code
 packages all share this same 1–6 numbering (`--tier=0` is the off-ladder
@@ -71,11 +71,17 @@ and the same numbers are retrievable from a deployed service via
 Three additional runs sit outside the ladder — either a variant of a rung or
 not an insert technique at all:
 
-| Run | Why it's not a rung | Reproduce with | Laptop → Aiven | **Same-region** | Local Docker |
+| Run | Why it's not a rung | Reproduce with | Laptop → Aiven | Same-region¹ | Local Docker |
 |---|---|---|---|---|---|
-| JSONEachRow variant @10k | tier 5 with a different wire format (finding 5) | `--tier=5 --format=JSONEachRow` | 6,372 | **57,386** | 85,860 |
-| 4 parallel writers @10k | tier 6's intermediate step | `--tier=6 --writers=4` | 33,513 | **107,704** | 147,947 |
-| Buffered REST pipeline | an ingestion *service*, not an insert technique: REST endpoint → bounded in-memory queue → size-or-time flush → batch insert | `--tier=0` | 6,723 | **80,337** | 122,549 |
+| JSONEachRow variant @10k | tier 5 with a different wire format (finding 5) | `--tier=5 --format=JSONEachRow` | 6,372 | 57,386 | 85,860 |
+| 4 parallel writers @10k | tier 6's intermediate step | `--tier=6 --writers=4` | 33,513 | 107,704 | 147,947 |
+| Buffered REST pipeline | an ingestion *service*, not an insert technique: REST endpoint → bounded in-memory queue → size-or-time flush → batch insert | `--tier=0` | 6,723 | 80,337 | 122,549 |
+
+¹ These three same-region numbers predate the business-16 deployment (measured
+on an earlier single-node service) and have not been re-measured; the
+business-16 equivalent of "4 parallel writers" is 4 × @50k = 215,348 rows/s
+(run-006 in
+[deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md)).
 
 The buffered REST run deserves the longer note: it answers how single-event
 producers meet the batching requirement, and it preserves the batch economics
@@ -94,10 +100,14 @@ that idea is the post-ladder production architecture below.
 2. **Uncompressed batches are WAN-bound from a laptop.** A 10k-row batch is
    ~3 MB of VALUES text. With LZ4 request compression (`decompress=true` on the
    JDBC URL): 440 → **7,073 rows/s**, a 16x jump from one connection option.
-3. **Concurrency cannot rescue per-event inserts.** 80 concurrent senders buy
-   ~2x, not 80x: each replicated single-row INSERT costs ~380 ms p50
-   *server-side* under that concurrency, and each eats a concurrent-query slot.
-   Batching (tier 4) is a **306x** jump over that with ~20 lines of code.
+3. **Concurrency cannot rescue per-event inserts — it makes them worse.** 80
+   concurrent senders buy ~1.7x, not 80x, and on the replicated plan 45% of
+   the rows were dropped; the sender sweep in
+   [deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md)
+   puts the error onset between 20 and 30 senders, with throughput decaying
+   before the failures start. Each single-row INSERT eats a concurrent-query
+   slot. Batching (tier 4) is a **608x** jump over that with ~20 lines of
+   code.
 4. **A single laptop TLS stream tops out ~9–10k rows/s regardless of batch
    size** — bandwidth-bound, not round-trip-bound. Benchmark from where the app
    will actually run; colocate the ingestion service with the database in
@@ -112,9 +122,9 @@ that idea is the post-ladder production architecture below.
    [shared/schema/03_diagnostics.sql](shared/schema/03_diagnostics.sql)). One
    batch = one part makes the failure mode disappear at the source.
 7. **Parallel writers multiply until something else saturates.** Same-region:
-   4 writers @10k = 107.7k rows/s; 8 writers @50k = **436,458 rows/s — 10M rows
-   in 23 s, 0 errors**. The Startup-16 absorbed it with headroom; 436k is where
-   the benchmark stopped, not where ClickHouse stopped.
+   4 writers @50k = 215.3k rows/s; 8 writers @50k = **327,862 rows/s — 10M
+   rows in 30.5 s, 0 errors**. The business-16 absorbed it with headroom; 327k
+   is where the benchmark stopped, not where ClickHouse stopped.
 8. **ClickHouse 26.3's server-wide `async_insert=1` default silently slows
    batch inserts.** Body-separated client-v2 batches *do* engage it (unlike
    JDBC inline VALUES, finding 1) and wait in the async buffer. Pinning
@@ -134,8 +144,8 @@ detail and run-by-run tables in
 [deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md).
 
 - **Batch headline: 327,862 rows/s, zero errors** (tier 6, 8 writers × 50k,
-  10M rows) — 75% of the 436k Startup-16 number on the same app size; the ~25%
-  delta is the isolated cost of 3-node replication on the batch path.
+  10M rows) — with 3-node replication on every insert. 328× the customer's
+  1,000/s target.
 - **Row-by-row is ~70 rows/s on the replicated plan** and concurrency does not
   rescue it — batching is the difference between 70 and 328k rows/s.
 - **Tier-3 sender sweep (10 → 20 → 30 senders, 100k rows each): errors start
