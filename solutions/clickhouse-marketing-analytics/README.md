@@ -43,21 +43,23 @@ seeded data.
 
 **Environments:** Local Docker = ClickHouse 26.3 on an M-series laptop.
 Laptop → Aiven = same code over TLS/WAN (consumer uplink — those numbers mostly
-measure the uplink). **Same-region** = the service deployed on Aiven Apps next to
-the ClickHouse service (Startup-16), driven via the remote benchmark API; this is
-what production looks like, so these are the headline numbers. The same ladder
-re-run against a 3-node HA `business-16` plan is in
-[deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md)
-and summarized [below](#deployed-results-business-16-3-node-ha).
+measure the uplink). **Same-region** = the service deployed on Aiven Apps next
+to the ClickHouse service, driven via the remote benchmark API; this is what
+production looks like, so these are the headline numbers — two cluster
+topologies: the original single-node `Startup-16` run, and the **latest
+2026-08-12 run on 3-node HA `business-16`** (replicated tables; the ~25% tier-6
+delta is the replication cost). Full business-16 run-by-run tables in
+[deploy/aiven-apps/BENCHMARK-RESULTS.md](deploy/aiven-apps/BENCHMARK-RESULTS.md),
+summarized [below](#deployed-results-business-16-3-node-ha).
 
-| Tier | Technique | Reproduce with | Laptop → Aiven | **Aiven Apps (same-region)** | Local Docker |
-|---|---|---|---|---|---|
-| 1 | Row-by-row JDBC (the original code) | `--tier=1` | 25 | **85** (p50 10 ms/insert) | 226 |
-| 2 | `async_insert` tuned, sequential | `--tier=2` | 16 | **79** — same as tier 1, see finding 1 | 180 |
-| 3 | async_insert × 80 concurrent senders | `--tier=3` | 92 | **172** (p50 382 ms/insert!) | 619 |
-| 4 | `jdbcTemplate.batchUpdate` @10k | `--tier=4` | 7,073 | **52,632** | 151,624 |
-| 5 | client-v2 RowBinary stream + LZ4 @10k | `--tier=5` | 9,231 | **66,521** | 92,573 (217k w/ `async_insert=0`, finding 8) |
-| 6 | Parallel native writers, 8 × @50k | `--tier=6 --writers=8 --batch-size=50000` | 37,595 (@10k) | **436,458** — 10M rows in 23 s | 608,021 (324k @10k) |
+| Tier | Technique | Reproduce with | Laptop → Aiven | Same-region, Startup-16 | **Same-region, business-16 HA (latest)** | Local Docker |
+|---|---|---|---|---|---|---|
+| 1 | Row-by-row JDBC (the original code) | `--tier=1` | 25 | 85 (p50 10 ms/insert) | **72** | 226 |
+| 2 | `async_insert` tuned, sequential | `--tier=2` | 16 | 79 — same as tier 1, see finding 1 | **68** | 180 |
+| 3 | async_insert × 80 concurrent senders | `--tier=3` | 92 | 172 (p50 382 ms/insert!) | **120** (45% of rows dropped — see the [sender sweep](deploy/aiven-apps/BENCHMARK-RESULTS.md)) | 619 |
+| 4 | `jdbcTemplate.batchUpdate` @10k | `--tier=4` | 7,073 | 52,632 | **73,005** | 151,624 |
+| 5 | client-v2 RowBinary stream + LZ4 @10k | `--tier=5` | 9,231 | 66,521 | **70,250** | 92,573 (217k w/ `async_insert=0`, finding 8) |
+| 6 | Parallel native writers, 8 × @50k | `--tier=6 --writers=8 --batch-size=50000` | 37,595 (@10k) | 436,458 — 10M rows in 23 s | **327,862** — 10M rows in 30.5 s | 608,021 (324k @10k) |
 
 Flags, the remote API's `tier` field, the CSV run labels, and the code
 packages all share this same 1–6 numbering (`--tier=0` is the off-ladder
