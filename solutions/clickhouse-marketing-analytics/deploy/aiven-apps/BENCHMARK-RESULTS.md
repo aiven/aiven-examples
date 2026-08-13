@@ -43,10 +43,38 @@ Findings:
   accumulates until ClickHouse starts rejecting (async-insert buffer
   pressure, too-many-parts, or replication queue backlog). The exception
   text is in the ingest-service Apps logs (`run-003-tier3`); suspects above.
+  **Update:** the sender sweep (section 1b) localized the onset to between
+  20 and 30 concurrent senders.
 - Batch-tier numbers are sensitive to cluster state: the same ladder run a
   day earlier, minutes after 3.2M burst rows and a 20-minute tier-3 error
   grind, measured tiers 4/5 at 10k/15.7k rows/s — 4–7× below these. Let
   merges settle before quoting batch numbers.
+
+## 1b. Tier-3 sender sweep (2026-08-12 evening — localizing the tier-3 anomaly)
+
+Tier 3 re-run at increasing sender counts (100k rows, seed 42, same
+deployment), stepping by 10 until errors appeared:
+
+| Run | Senders | Inserted | Errors | Wall s | Rows/s |
+|---|---|---|---|---|---|
+| run-008 | 10 | 100,000 | 0 | 496.8 | 201 |
+| run-009 | 20 | 100,000 | 0 | 532.2 | 188 |
+| run-010 | 30 | 89,645 | **10,355** | 953.8 | 94 |
+| — | 40–80 | not run — threshold found | | | |
+
+- **Error onset is between 20 and 30 concurrent senders** — far below the 80
+  of run-003.
+- **Degradation precedes failure**: the 30-sender run started at ~210 rows/s
+  and decayed continuously (175 → 118 → 94) before errors appeared late in
+  the run — consistent with server-side accumulation (async-insert buffer
+  pressure / parts backlog / replication queue) rather than a hard
+  concurrency limit. The exact mechanism is still open; the exception text is
+  in the ingest-service Apps logs (`run-010-tier3`).
+- **Concurrency is strictly counterproductive on this path**: 10 senders →
+  201 rows/s clean; 20 → 188 clean; 30 → 94 with 10% dropped; 80 (run-003) →
+  120 with 45% dropped. The drop rate grows with sender count past the
+  threshold, and the row-by-row/async path tops out around ~200 rows/s
+  regardless.
 
 ## 2. Single-event `/events` ramp (loadgen → localhost, `batch_size=1`, 45 s/step)
 
