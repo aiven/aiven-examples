@@ -175,3 +175,6 @@ maven-wrapper.jar
 **.gradle/
 # Claude Code local config
 .claude/
+
+# report page screen captures - local only, never committed
+02-dashboard-mv/report/recordings/

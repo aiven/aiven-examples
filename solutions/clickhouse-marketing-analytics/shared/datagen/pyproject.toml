@@ -9,6 +9,7 @@ dependencies = [
     "pyarrow>=17.0",
     "PyYAML>=6.0",
     "google-cloud-storage>=2.18",
+    "redis>=5.0",
 ]
 
 [project.scripts]

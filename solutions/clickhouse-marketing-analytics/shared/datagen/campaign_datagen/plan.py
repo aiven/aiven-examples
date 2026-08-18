@@ -90,8 +90,9 @@ def build_plan(cfg, pop: Population, cat: Catalog, rng: np.random.Generator,
     purch_day = np.full(n_leads, -1, dtype=np.int32)
     purch_day[purch_rows] = np.minimum(trial_day[purch_rows] + rng.integers(0, 4, size=n_purch), end_ord)
 
-    ln_mu = np.log(cfg.purchases.value_median_idr)
-    purch_value = np.round(np.exp(rng.normal(ln_mu, cfg.purchases.value_sigma, size=n_purch)), -2)
+    ln_mu = np.log(cfg.purchases.value_median)
+    # Cents precision (USD); the old IDR config rounded to the nearest 100.
+    purch_value = np.round(np.exp(rng.normal(ln_mu, cfg.purchases.value_sigma, size=n_purch)), 2)
 
     # --- assemble funnel events: pv + click + lead (+ trial) (+ purchase) -----
     days, users, camps, etypes, fracs, values, sess = [], [], [], [], [], [], []

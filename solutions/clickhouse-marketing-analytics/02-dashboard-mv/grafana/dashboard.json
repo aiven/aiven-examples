@@ -1,0 +1,120 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_CLICKHOUSE",
+      "label": "ClickHouse",
+      "description": "Aiven for ClickHouse datasource (grafana-clickhouse-datasource)",
+      "type": "datasource",
+      "pluginId": "grafana-clickhouse-datasource",
+      "pluginName": "ClickHouse"
+    }
+  ],
+  "title": "Marketing analytics — live (rollup-backed)",
+  "description": "The important live panels only, all reading AggregatingMergeTree rollups maintained by MVs — refresh stays cheap while ingest runs at full speed. Heavy whole-history queries (attribution, cohort) deliberately excluded; they live in the report page.",
+  "tags": ["clickhouse", "marketing-analytics", "aiven"],
+  "timezone": "utc",
+  "refresh": "5s",
+  "time": { "from": "now-24h", "to": "now" },
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Revenue per channel (daily) — Q1 rollup",
+      "type": "timeseries",
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}" },
+      "gridPos": { "h": 9, "w": 14, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toDateTime(day) AS t, channel, sumMerge(revenue) AS revenue_usd FROM daily_campaign_rollup WHERE day >= today() - 30 GROUP BY t, channel ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 0, "pointSize": 1 }, "unit": "currencyUSD" },
+        "overrides": []
+      }
+    },
+    {
+      "id": 2,
+      "title": "Day-90 events (today, climbing live) — Q1 rollup",
+      "type": "stat",
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}" },
+      "gridPos": { "h": 9, "w": 10, "x": 14, "y": 0 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT sum(events) AS events_today, uniqMerge(users) AS users_today, sum(purchases) AS purchases_today FROM daily_campaign_rollup WHERE day = today()",
+          "format": 0
+        }
+      ],
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 3,
+      "title": "Conversion funnel, last 30d — Q4 rollup",
+      "type": "bargauge",
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}" },
+      "gridPos": { "h": 9, "w": 8, "x": 0, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT uniqMerge(users) AS visitors, uniqMergeIf(users, event_type = 'lead') AS leads, uniqMergeIf(users, event_type = 'trial_start') AS trials, uniqMergeIf(users, event_type = 'purchase') AS purchasers FROM funnel_rollup WHERE day >= today() - 30",
+          "format": 0
+        }
+      ],
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } }
+    },
+    {
+      "id": 4,
+      "title": "Email activity by hour, last 7d — Q7 (partition-pruned raw)",
+      "type": "timeseries",
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}" },
+      "gridPos": { "h": 9, "w": 8, "x": 8, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT toStartOfHour(event_time) AS t, countIf(event_type = 'email_send') AS sends, countIf(event_type = 'email_open') AS opens, countIf(event_type = 'email_click') AS clicks FROM campaign_events WHERE channel = 'email' AND event_time >= today() - 7 GROUP BY t ORDER BY t",
+          "format": 0
+        }
+      ],
+      "fieldConfig": {
+        "defaults": { "custom": { "lineWidth": 2, "fillOpacity": 0, "pointSize": 1 } },
+        "overrides": []
+      }
+    },
+    {
+      "id": 5,
+      "title": "List health per campaign — Q8 rollup (3 planted segments must alert)",
+      "type": "table",
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "${DS_CLICKHOUSE}" },
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 9 },
+      "targets": [
+        {
+          "refId": "A",
+          "rawSql": "SELECT campaign_id, sumIf(events, event_type = 'email_send') AS sends, round(sumIf(events, event_type = 'unsubscribe') / nullIf(sends, 0) * 100, 2) AS unsub_pct, round(sumIf(events, event_type = 'bounce') / nullIf(sends, 0) * 100, 2) AS bounce_pct FROM email_health_rollup GROUP BY campaign_id HAVING sends > 0 ORDER BY bounce_pct DESC LIMIT 15",
+          "format": 1
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "bounce_pct" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "transparent", "value": null }, { "color": "red", "value": 2 } ] } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "unsub_pct" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "thresholds", "value": { "mode": "absolute", "steps": [ { "color": "transparent", "value": null }, { "color": "red", "value": 0.5 } ] } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

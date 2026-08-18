@@ -1,0 +1,2 @@
+target_rate,achieved_rate,q1,q2,q3,q4,q5,q6,q7,q8,worst_vs_idle,verdict
+5000,4964,1.985,0.974,7.93,1.567,338.111,0.53,0.248,0.007,5.83,degraded

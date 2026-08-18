@@ -1,12 +1,24 @@
-# datagen — synthetic backfill generator
+# datagen — synthetic backfill generator + day-90 live streamer
 
-Generates the ≥100M-row `campaign_events` backfill (journey-based, not uniform
-noise) as monthly Parquet file-sets, publishes them to a public-read GCS
-bucket, and validates the data against its built-in validation gates.
+Generates the ~500M-row `campaign_events` backfill (journey-based, not uniform
+noise) as monthly Parquet file-sets, streams "day 90" live into the Post 1
+Valkey pipeline, and validates the data against its built-in gates.
 
-Python + numpy/polars. Deterministic: everything derives from `seed` in
-`config.yaml`; each day is generated with `rng([seed, day_ordinal])`, so any
-day/month is reproducible in isolation (demo-morning catch-up is idempotent).
+The horizon is **anchored**: "now = day 90" is `horizon.anchor` (override with
+`--anchor`); the batch run writes days 1–89 behind it, `live` streams the
+anchor day onward. Python + numpy/polars. Deterministic per (seed, anchor,
+day): each day is generated with `rng([seed, day_ordinal])`, so any day is
+reproducible in isolation. Note: the naive query suite uses `today()`-relative
+windows, so keep the anchor equal to the wall-clock date of the benchmark run
+(regenerate or `--anchor` when the demo moves to a new day).
+
+```sh
+# Day-90 live stream at ~100k events/s into Valkey Streams (Post 1 pipeline)
+.venv/bin/campaign-datagen live --rate 100000 --valkey-url redis://localhost:6379/0
+
+# Dry run (no Valkey): measures achievable generation+pacing rate
+.venv/bin/campaign-datagen -c config-smoke.yaml live --dry-run
+```
 
 ## Setup
 
@@ -35,6 +47,13 @@ python3 -m venv .venv
 # Publish to GCS (public-read, NYC-taxi style; prints the s3(... NOSIGN) INSERT)
 .venv/bin/campaign-datagen upload --bucket <bucket>
 ```
+
+**Files are NOT partition-aligned.** A `month=YYYY-MM` file set contains rows
+timestamped in the *previous* calendar month (journey touches are planned up
+to 14 days before their purchase, email opens trail sends across midnight),
+so `ALTER TABLE ... DROP PARTITION` + re-ingesting that month's files
+double-counts the spill. To repair a botched load, TRUNCATE and reload all
+parts — the row-count check against the manifest is the arbiter.
 
 Output layout: `out/campaign_events/month=YYYY-MM/part-NNN.parquet`
 (~5M rows/part, zstd) plus a sha256 `_manifest.json` per month and at the root.

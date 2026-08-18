@@ -47,7 +47,7 @@ class Catalog:
     # email sends: one row per scheduled send
     send_campaign: np.ndarray = field(default=None)   # (s,) int campaign index
     send_day: np.ndarray = field(default=None)        # (s,) int day-ordinal
-    send_hour: np.ndarray = field(default=None)       # (s,) int hour (WIB)
+    send_hour: np.ndarray = field(default=None)       # (s,) int hour (local clock)
     send_audience: np.ndarray = field(default=None)   # (s,) int
     send_unsub_rate: np.ndarray = field(default=None)
     send_bounce_rate: np.ndarray = field(default=None)

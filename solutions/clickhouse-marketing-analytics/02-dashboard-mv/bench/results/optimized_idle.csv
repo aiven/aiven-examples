@@ -1,0 +1,9 @@
+query,track,label,runs,median_s,min_s,max_s,server_ms,read_rows,read_bytes,memory_usage,result_rows
+q1_campaign_performance,optimized,idle,3,0.841,0.841,1.416,835,75112,10541356,680038848,5309
+q2_keyword_paid_search,optimized,idle,3,0.826,0.824,0.978,823,215827,26767909,292452087,100
+q3_multi_touch_attribution,optimized,idle,3,5.04,4.432,7.264,5042,582508566,12323785641,3562189865,218
+q4_conversion_funnel,optimized,idle,3,0.831,0.717,1.121,829,42529,3990341,753571531,210
+q5_cohort_retention,optimized,idle,3,104.875,93.807,110.385,105037,679357898,13637286104,7303441353,450
+q6_landing_page_seo,optimized,idle,3,0.248,0.226,0.319,246,8575,2985788,237085751,525
+q7_email_hourly,optimized,idle,3,0.135,0.116,0.202,131,19587072,391528203,41697947,5946
+q8_email_list_health,optimized,idle,3,0.009,0.005,0.01,7,3633,43968,5679334,14

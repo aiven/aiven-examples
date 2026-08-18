@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marketing report — builds itself, one query at a time</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --surface-0: #f4f4f2; --surface-1: #fcfcfb; --border: #e3e2de;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #8a887f;
+    --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
+    --series-4: #eda100; --series-5: #e87ba4;
+    --status-critical: #e34948; --status-good: #008300;
+    --badge-bg: #eef4fc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-0: #111110; --surface-1: #1a1a19; --border: #34332f;
+      --text-primary: #ffffff; --text-secondary: #c3c2b7; --text-muted: #8a887f;
+      --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
+      --series-4: #c98500; --series-5: #d55181;
+      --status-critical: #e66767; --status-good: #4caf50;
+      --badge-bg: #1d2735;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px; background: var(--surface-0);
+    color: var(--text-primary);
+    font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  header { max-width: 1160px; margin: 0 auto 20px; }
+  header h1 { font-size: 20px; margin: 0 0 4px; }
+  header p  { margin: 0; color: var(--text-secondary); }
+  header .track { color: var(--text-muted); font-size: 12px; }
+  .grid {
+    max-width: 1160px; margin: 0 auto; display: grid; gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  }
+  .panel {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px 16px 16px; min-height: 240px;
+    opacity: .45; transition: opacity .35s ease;
+  }
+  .panel.revealed { opacity: 1; }
+  .panel h2 { font-size: 14px; margin: 0 0 2px; }
+  .panel .sub { color: var(--text-secondary); font-size: 12px; margin: 0 0 10px; }
+  .badge {
+    float: right; font-size: 11px; padding: 2px 8px; border-radius: 999px;
+    background: var(--badge-bg); color: var(--text-secondary); white-space: nowrap;
+  }
+  .badge b { color: var(--text-primary); }
+  .skeleton { color: var(--text-muted); font-size: 12px; padding: 60px 0; text-align: center; }
+  .skeleton .spin {
+    display: inline-block; width: 14px; height: 14px; vertical-align: -2px;
+    border: 2px solid var(--border); border-top-color: var(--series-1);
+    border-radius: 50%; animation: spin .8s linear infinite; margin-right: 8px;
+  }
+  @keyframes spin { to { transform: rotate(1turn); } }
+  .plot { position: relative; height: 190px; }
+  .panel table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .panel th { text-align: left; color: var(--text-secondary); font-weight: 500;
+              border-bottom: 1px solid var(--border); padding: 3px 6px; }
+  .panel td { padding: 3px 6px; border-bottom: 1px solid var(--border); }
+  .panel td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .alert { color: var(--status-critical); font-weight: 600; }
+  .ok    { color: var(--status-good); }
+  .heat { display: grid; gap: 2px; font-size: 10px; }
+  .heat .cell { border-radius: 3px; text-align: center; padding: 3px 0;
+                color: var(--text-primary); }
+  .heat .rowlab { color: var(--text-secondary); padding-right: 4px;
+                  text-align: right; line-height: 1.9; }
+  .err { color: var(--status-critical); font-size: 12px; padding: 40px 10px; }
+  footer { max-width: 1160px; margin: 18px auto 0; color: var(--text-muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Marketing report — assembling live from ClickHouse</h1>
+  <p>Each panel reveals when its query returns; the badge is that run's measured time and rows read.</p>
+  <p class="track" id="trackinfo"></p>
+</header>
+<div class="grid" id="grid"></div>
+<footer>
+  Queries: <code>02-dashboard-mv/queries/</code> — same files the benchmark harness runs.
+  Add <code>?track=naive</code> to watch the unoptimized suite build the same report.
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
