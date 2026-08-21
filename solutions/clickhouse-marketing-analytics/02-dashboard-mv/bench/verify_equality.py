@@ -67,8 +67,15 @@ def compare(name: str, naive: list[dict], opt: list[dict]) -> list[str]:
         # on only one side when they sit at the approximate HAVING cut, and
         # fail on any other one-sided row.
         col, cut = ov["having"]
-        key = lambda r: tuple(str(v) for k, v in sorted(r.items())
-                              if not isinstance(v, (int, float)))
+        # "dimension" = not parseable as a number: JSON quotes UInt64s as
+        # strings, so an isinstance check would let the uniq counts into the key
+        def _dim(v):
+            try:
+                float(v)
+                return False
+            except (TypeError, ValueError):
+                return v is not None
+        key = lambda r: tuple(str(v) for k, v in sorted(r.items()) if _dim(v))
         nk = {key(r): r for r in naive}
         ok = {key(r): r for r in opt}
         for k in nk.keys() ^ ok.keys():
