@@ -90,10 +90,16 @@ def _emit(client, payloads: list[bytes], rate: int, stream: str,
 
 def _day_payloads(df) -> list[bytes]:
     """Serialize one generated day to JSON-line payloads, event_time dropped,
-    ordered by event_time so the replay preserves the day's natural order."""
+    ordered by event_time so the replay preserves the day's natural order.
+
+    Chunked: one write_ndjson() of a full day is ~GBs, and with the encoded
+    copy alive at the same time the peak is 2x the day — enough to OOM-kill
+    an 8 GB Aiven Apps container. Slices bound the transient to one chunk."""
     df = df.sort("event_time").drop("event_time")
-    out = df.write_ndjson()
-    return [line.encode() for line in out.splitlines() if line]
+    out: list[bytes] = []
+    for chunk in df.iter_slices(200_000):
+        out.extend(line.encode() for line in chunk.write_ndjson().splitlines() if line)
+    return out
 
 
 def stream_live(cfg, anchor_override: str | None, *, rate: int, valkey_url: str,
@@ -136,6 +142,7 @@ def stream_live(cfg, anchor_override: str | None, *, rate: int, valkey_url: str,
         # point: sustained insert pressure for the under-load benchmarks.
         df = generate_day(cfg, pop, cat, plan, lookups, anchor.toordinal(), carryover, cfg.seed)
         payloads = _day_payloads(df)
+        df = None  # replay only needs the payloads; free the frame before the long hold
         print(f"  loop mode: replaying {len(payloads):,} day-90 events at {rate:,}/s", flush=True)
         _emit(client, payloads, rate, stream, pipeline_size, max_stream_len,
               forever=True, rate_file=rate_file)
