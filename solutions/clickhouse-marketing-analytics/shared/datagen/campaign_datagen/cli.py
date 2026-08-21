@@ -128,6 +128,12 @@ def cmd_live(args) -> None:
                 loop=args.loop, rate_file=args.rate_file)
 
 
+def cmd_serve(args) -> None:
+    from .serve import serve  # stdlib-only; keeps import cost off other commands
+
+    serve(args)
+
+
 def cmd_upload(args) -> None:
     from .upload import upload  # deferred: needs google-cloud-storage + ADC
 
@@ -189,6 +195,29 @@ def main() -> None:
 
     v = sub.add_parser("validate", help="check generated data against the validation gates")
     v.set_defaults(fn=cmd_validate)
+
+    # serve: `live --loop` under an HTTP remote control (rate/start/stop/status)
+    # for terminal-less deploys (Aiven Apps). Shares live's knobs; --dry-run and
+    # --loop are implied (loop) or meaningless (dry-run) under a supervisor.
+    s = sub.add_parser("serve", help="run live --loop as a child process behind an "
+                                     "HTTP control API (POST /rate, /start, /stop)")
+    s.add_argument("--anchor", help="'now = day 90' date (YYYY-MM-DD); overrides horizon.anchor")
+    s.add_argument("--rate", type=int, default=5_000,
+                   help="initial target events/s (default 5000; change via POST /rate)")
+    s.add_argument("--valkey-url", default="redis://localhost:6379/0",
+                   help="Valkey/Redis URL incl. rediss:// (default redis://localhost:6379/0)")
+    s.add_argument("--stream", default="ingest:events", help="stream key (default ingest:events)")
+    s.add_argument("--pipeline", type=int, default=1000, help="XADDs per pipeline round trip")
+    s.add_argument("--days", type=int, default=1,
+                   help="days from the anchor the child may replay (default 1)")
+    s.add_argument("--max-stream-len", type=int, default=1_000_000,
+                   help="pause XADD while XLEN exceeds this (default 1000000)")
+    s.add_argument("--rate-file", default="/tmp/livegen-rate",
+                   help="rate file shared with the child (default /tmp/livegen-rate)")
+    s.add_argument("--port", type=int, default=8095, help="control API port (default 8095)")
+    s.add_argument("--api-key", help="X-API-Key required by the control API "
+                                     "(default: LIVEGEN_API_KEY env; unset = no auth, local only)")
+    s.set_defaults(fn=cmd_serve)
 
     args = p.parse_args()
     args.fn(args)

@@ -18,6 +18,12 @@ windows, so keep the anchor equal to the wall-clock date of the benchmark run
 
 # Dry run (no Valkey): measures achievable generation+pacing rate
 .venv/bin/campaign-datagen -c config-smoke.yaml live --dry-run
+
+# live --loop behind an HTTP remote control, for terminal-less deploys
+# (Aiven Apps): POST /rate {"rate":30000}, /start, /stop, GET /status —
+# X-API-Key = LIVEGEN_API_KEY. bench/rate_sweep.py --rate-url drives it.
+# Deploy recipe: ../../deploy/aiven-apps/livegen/
+LIVEGEN_API_KEY=... .venv/bin/campaign-datagen serve --valkey-url rediss://...
 ```
 
 ## Setup

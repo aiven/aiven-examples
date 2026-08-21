@@ -1,0 +1,43 @@
+# livegen-as-a-service for the Post 2 rate sweep. Point Aiven Apps at THIS
+# file; it deploys one app whose public URL is the control plane:
+#
+#   curl -s -H "X-API-Key: $LIVEGEN_API_KEY" $LIVEGEN/status
+#   curl -s -X POST -H "X-API-Key: $LIVEGEN_API_KEY" \
+#        -d '{"rate":30000}' $LIVEGEN/rate
+#
+# The sweep harness drives it remotely:
+#   LIVEGEN_API_KEY=... python3 rate_sweep.py --rate-url https://<app-url> ...
+#
+# Fill in via the composer view (secrets marked):
+#   VALKEY_URI (secret)  — rediss://... of the ingest buffer; livegen XADDs
+#                          into the same stream the ingest-service flushers
+#                          consume, so the ingest app must be deployed and
+#                          running for rows to reach ClickHouse.
+#   LIVEGEN_API_KEY (secret) — **always set it: an unauthenticated load
+#                          generator is a DoS tool.**
+#   LIVEGEN_ANCHOR       — pin to the dataset anchor (e.g. 2026-08-18) so the
+#                          replayed day 90 matches the backfill's population.
+#   LIVEGEN_RATE         — initial events/s before the first POST /rate.
+#
+# Sizing: the child builds the full day-90 plan and pre-serializes ~7.5M
+# events in memory (several GiB) — use at least a 4 vCPU / 8 GB app size.
+# Startup is not instant: expect minutes of plan build before /status shows
+# streaming output.
+
+services:
+  livegen:
+    build:
+      context: ../../..
+      dockerfile: deploy/aiven-apps/livegen/Dockerfile
+    environment:
+      VALKEY_URI: ${VALKEY_URI}
+      LIVEGEN_API_KEY: ${LIVEGEN_API_KEY}
+      LIVEGEN_RATE: ${LIVEGEN_RATE:-5000}
+      LIVEGEN_STREAM: ${LIVEGEN_STREAM:-ingest:events}
+      LIVEGEN_PIPELINE: ${LIVEGEN_PIPELINE:-1000}
+      LIVEGEN_DAYS: ${LIVEGEN_DAYS:-1}
+      LIVEGEN_MAX_STREAM_LEN: ${LIVEGEN_MAX_STREAM_LEN:-1000000}
+      LIVEGEN_ANCHOR: ${LIVEGEN_ANCHOR:-}
+      LIVEGEN_PORT: "8095"
+    ports:
+      - "8095:8095"

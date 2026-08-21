@@ -2,8 +2,11 @@
 """Read-latency vs ingest-rate sweep — "how fast can the stream run before
 the dashboard feels it?" (the read-side twin of Post 1's sender sweep).
 
-Requires livegen running in loop mode with --rate-file:
+Requires livegen running in loop mode, either colocated with --rate-file:
   campaign-datagen live --rate <start> --loop --rate-file /tmp/livegen-rate
+or remote behind its control API (campaign-datagen serve, e.g. on Aiven
+Apps), driven with --rate-url + LIVEGEN_API_KEY env:
+  LIVEGEN_API_KEY=... python3 rate_sweep.py --rate-url https://<livegen-app>
 
 Per rate rung: write the target to the rate file, hold WARMUP_S for steady
 state, measure the ACHIEVED insert rate from the raw table's row count, then
@@ -46,10 +49,37 @@ def row_count(ch: ClickHouse) -> int:
     return int(ch.json("SELECT count() AS c FROM campaign_events")["data"][0]["c"])
 
 
+def set_rate(args, rate: int) -> None:
+    """Point the generator at a new target: POST to the livegen control API
+    (campaign-datagen serve) when --rate-url is given, else the local rate
+    file a colocated `live --loop --rate-file` polls."""
+    if not args.rate_url:
+        Path(args.rate_file).write_text(str(rate))
+        return
+    import json
+    import os
+    import urllib.request
+    req = urllib.request.Request(
+        f"{args.rate_url.rstrip('/')}/rate",
+        data=json.dumps({"rate": rate}).encode(),
+        headers={"Content-Type": "application/json",
+                 "X-API-Key": os.environ.get("LIVEGEN_API_KEY", "")},
+        method="POST")
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        body = json.load(resp)
+    if body.get("state") != "running":
+        raise SystemExit(f"livegen is not running behind {args.rate_url} "
+                         f"(state={body.get('state')!r}) — POST /start it first")
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--rates", default="5000..60000..5000")
     p.add_argument("--rate-file", default="/tmp/livegen-rate")
+    p.add_argument("--rate-url",
+                   help="livegen control API base URL (campaign-datagen serve), e.g. "
+                        "https://livegen.example.aiven.app — rate changes go to POST "
+                        "/rate instead of --rate-file; auth via LIVEGEN_API_KEY env")
     p.add_argument("--idle", default=str(HERE / "results" / "optimized_idle.csv"),
                    help="idle baseline CSV for the verdicts")
     p.add_argument("--out", default=str(HERE / "results" / "rate_sweep.csv"))
@@ -78,7 +108,7 @@ def main() -> None:
     rows_out = []
     try:
         for rate in parse_rates(args.rates):
-            Path(args.rate_file).write_text(str(rate))
+            set_rate(args, rate)
             live_reset.reset(ch, baseline)
             print(f"\n=== target {rate:,}/s: warmup {WARMUP_S}s ===", flush=True)
             time.sleep(WARMUP_S / 2)
