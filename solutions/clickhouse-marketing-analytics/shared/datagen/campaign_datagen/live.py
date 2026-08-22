@@ -25,6 +25,7 @@ from __future__ import annotations
 import json
 import time
 from datetime import timedelta
+from pathlib import Path
 
 import numpy as np
 
@@ -37,10 +38,33 @@ WARM_UP_DAYS = 3
 XLEN_CHECK_EVERY = 20  # pipeline batches between XLEN checks
 
 
-def _emit(client, payloads: list[bytes], rate: int, stream: str,
+def _rss_gb() -> float:
+    """Peak RSS in GB (ru_maxrss: bytes on macOS, KB on Linux)."""
+    import resource
+    import sys
+    r = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+    return r / 1e9 if sys.platform == "darwin" else r / 1e6
+
+
+def _chunks(it, n: int):
+    buf = []
+    for x in it:
+        buf.append(x)
+        if len(buf) == n:
+            yield buf
+            buf = []
+    if buf:
+        yield buf
+
+
+def _emit(client, source, rate: int, stream: str,
           pipeline_size: int, max_stream_len: int, forever: bool = False,
           rate_file: str | None = None) -> None:
     """Pace payloads out at `rate`/s via pipelined XADD; loop when forever.
+
+    source: callable returning a fresh iterable of payload bytes per pass —
+    a list for the one-shot day path, a spill-file line reader in loop mode
+    (holding a full day in RAM OOM-killed 8 GB containers).
 
     rate_file: path polled every report interval for a new target rate (one
     integer). Lets a sweep harness change the rate at runtime without
@@ -54,8 +78,7 @@ def _emit(client, payloads: list[bytes], rate: int, stream: str,
     # doesn't distort the new rate.
     win0, win_sent = wall0, 0
     while True:
-        for i in range(0, len(payloads), pipeline_size):
-            chunk = payloads[i:i + pipeline_size]
+        for chunk in _chunks(source(), pipeline_size):
             if client is not None:
                 pipe = client.pipeline(transaction=False)
                 for line in chunk:
@@ -126,13 +149,15 @@ def stream_live(cfg, anchor_override: str | None, *, rate: int, valkey_url: str,
     plan = build_plan(cfg, pop, cat, rng0, start, plan_end, target)
     lookups = build_lookups(cfg, cat, pop, rng0)
     print(f"plan built in {time.time() - t0:.0f}s; streaming {anchor}..{last} "
-          f"at {rate:,}/s -> {'(dry run)' if dry_run else stream}")
+          f"at {rate:,}/s -> {'(dry run)' if dry_run else stream} "
+          f"[peak rss {_rss_gb():.1f}G]", flush=True)
 
     # Warm up so cross-day email carryover into day 90 is reproduced exactly.
     carryover: dict = {}
     d = anchor - timedelta(days=WARM_UP_DAYS)
     while d < anchor:
         generate_day(cfg, pop, cat, plan, lookups, d.toordinal(), carryover, cfg.seed)
+        print(f"  warmup {d} done [peak rss {_rss_gb():.1f}G]", flush=True)
         d += timedelta(days=1)
 
     if loop:
@@ -140,11 +165,31 @@ def stream_live(cfg, anchor_override: str | None, *, rate: int, valkey_url: str,
         # forever at the target rate — no plan-rebuild gaps between passes.
         # Replayed events land as new rows (arrival timestamps), which is the
         # point: sustained insert pressure for the under-load benchmarks.
+        # The day is spilled to disk and replayed from there: the serialized
+        # day is ~5 GB, and holding it for the whole run OOM-killed 8 GB
+        # containers. The page cache keeps the hot rungs fast anyway.
+        import tempfile
         df = generate_day(cfg, pop, cat, plan, lookups, anchor.toordinal(), carryover, cfg.seed)
-        payloads = _day_payloads(df)
-        df = None  # replay only needs the payloads; free the frame before the long hold
-        print(f"  loop mode: replaying {len(payloads):,} day-90 events at {rate:,}/s", flush=True)
-        _emit(client, payloads, rate, stream, pipeline_size, max_stream_len,
+        print(f"  day-90 generated: {len(df):,} rows [peak rss {_rss_gb():.1f}G]", flush=True)
+        df = df.sort("event_time").drop("event_time")
+        spill = Path(tempfile.gettempdir()) / "livegen-day90.ndjson"
+        n = len(df)
+        with open(spill, "wb") as f:
+            for chunk in df.iter_slices(200_000):
+                f.write(chunk.write_ndjson().encode())
+        df = None  # replay reads the spill file; free the frame before the long hold
+        print(f"  loop mode: replaying {n:,} day-90 events at {rate:,}/s from "
+              f"{spill} ({spill.stat().st_size / 1e9:.1f}G) [peak rss {_rss_gb():.1f}G]",
+              flush=True)
+
+        def source():
+            with open(spill, "rb") as f:
+                for line in f:
+                    line = line.rstrip(b"\n")
+                    if line:
+                        yield line
+
+        _emit(client, source, rate, stream, pipeline_size, max_stream_len,
               forever=True, rate_file=rate_file)
         return
 
