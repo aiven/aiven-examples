@@ -28,6 +28,7 @@ terraform.tfvars
 shared/datagen/.venv/
 shared/datagen/out/
 shared/datagen/out-smoke/
+shared/datagen/out-anchor-*/
 shared/datagen/config-smoke.yaml
 
 # valkey-bench run artifacts
