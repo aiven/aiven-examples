@@ -26,7 +26,7 @@ live_reset.ensure_backup(ch, partition)
 # fragmented baseline stays fragmented forever once merges stop — measured as
 # a false 5x "degradation" of the rollup reads at a trivial 5k/s.
 for t in [live_reset.RAW] + live_reset.ROLLUPS:
-    ch.raw(f"SYSTEM START MERGES {t}")
+    live_reset._merges(ch, "START", t)
     ch.raw(f"OPTIMIZE TABLE {t} PARTITION {partition}", timeout=1800)
 live_reset.stop_rollup_merges(ch)
 base = live_reset.snapshot(ch, partition)

@@ -46,7 +46,8 @@ def parse_rates(spec: str) -> list[int]:
 
 
 def row_count(ch: ClickHouse) -> int:
-    return int(ch.json("SELECT count() AS c FROM campaign_events")["data"][0]["c"])
+    return int(ch.json("SELECT count() AS c FROM campaign_events",
+                       timeout=120)["data"][0]["c"])
 
 
 def set_rate(args, rate: int) -> None:

@@ -17,6 +17,7 @@ import json
 import os
 import ssl
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
@@ -45,8 +46,25 @@ class ClickHouse:
             headers={"X-ClickHouse-User": self.user,
                      "X-ClickHouse-Key": self.password},
             method="POST")
-        with urllib.request.urlopen(req, timeout=timeout, context=self._ctx) as resp:
-            return resp.read()
+        # Transient-network retry: a multi-hour benchmark makes hundreds of
+        # sequential WAN calls, and one silently dropped connection used to
+        # hang or kill the whole run. HTTP errors (server responded) are
+        # never retried; neither are calls pinned to a query_id — the server
+        # may still be running that id, so the CALLER owns the retry with a
+        # fresh id (see run_measured).
+        attempts = 1 if query_id else 3
+        for attempt in range(1, attempts + 1):
+            try:
+                with urllib.request.urlopen(req, timeout=timeout, context=self._ctx) as resp:
+                    return resp.read()
+            except urllib.error.HTTPError:
+                raise
+            except (TimeoutError, OSError) as e:
+                if attempt == attempts:
+                    raise
+                print(f"    (retry {attempt}/{attempts - 1}: {type(e).__name__} "
+                      f"on {sql[:50]!r})", flush=True)
+                time.sleep(2 * attempt)
 
     def json(self, sql: str, **kw) -> dict:
         return json.loads(self.raw(sql, fmt="JSON", **kw))
@@ -56,9 +74,22 @@ class ClickHouse:
         query_log record (duration, read_rows/bytes, peak memory).
         keep_result=True also returns the parsed rows (the report page's
         proxy uses this so the chart and its badge come from ONE run)."""
-        qid = f"{tag}-{uuid.uuid4().hex[:12]}"
-        t0 = time.perf_counter()
-        body = self.raw(sql, fmt="JSON", query_id=qid)
+        # Measurement retry: on a transient network error the whole attempt
+        # restarts under a FRESH query_id and a fresh clock — a half-measured
+        # sample must never leak into the medians.
+        for attempt in range(2):
+            qid = f"{tag}-{uuid.uuid4().hex[:12]}"
+            t0 = time.perf_counter()
+            try:
+                body = self.raw(sql, fmt="JSON", query_id=qid, timeout=600)
+                break
+            except urllib.error.HTTPError:
+                raise                    # server answered; not a network flake
+            except (TimeoutError, OSError) as e:
+                if attempt == 1:
+                    raise
+                print(f"    (re-measuring {tag}: {type(e).__name__})", flush=True)
+                time.sleep(3)
         wall_s = time.perf_counter() - t0
         parsed = json.loads(body)
         result_rows = parsed.get("rows", None)
