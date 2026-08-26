@@ -1,9 +1,9 @@
 query,track,label,runs,median_s,min_s,max_s,server_ms,read_rows,read_bytes,memory_usage,result_rows
-q1_campaign_performance,optimized,idle_sweep,5,1.606,1.565,1.674,1597,82004,11502847,572963201,5313
-q2_keyword_paid_search,optimized,idle_sweep,5,0.376,0.369,0.394,368,316547,39568375,298764007,100
-q3_multi_touch_attribution,optimized,idle_sweep,5,8.287,6.863,11.508,8282,584870586,12368568067,3532800633,217
-q4_conversion_funnel,optimized,idle_sweep,5,1.462,1.444,2.179,1453,32594,3032073,392074115,210
-q5_cohort_retention,optimized,idle_sweep,5,42.111,38.836,44.286,42239,678931380,13628682120,4867594772,450
-q6_landing_page_seo,optimized,idle_sweep,5,0.446,0.421,0.74,437,6757,2339881,159149954,525
-q7_email_hourly,optimized,idle_sweep,5,0.264,0.257,0.415,254,19603456,391978901,26683061,5951
-q8_email_list_health,optimized,idle_sweep,5,0.014,0.014,0.027,5,3643,44149,4241416,14
+q1_campaign_performance,optimized,idle_sweep,5,1.692,1.646,2.442,1676,82004,11510227,744266836,5313
+q2_keyword_paid_search,optimized,idle_sweep,5,0.376,0.373,0.69,370,316547,39568375,298764087,100
+q3_multi_touch_attribution,optimized,idle_sweep,5,6.46,6.097,6.672,6450,584894580,12359261194,3501072984,217
+q4_conversion_funnel,optimized,idle_sweep,5,1.449,1.421,2.231,1438,32594,3039426,876764483,210
+q5_cohort_retention,optimized,idle_sweep,5,39.708,38.786,40.867,39771,678943377,13628923106,5123011774,450
+q6_landing_page_seo,optimized,idle_sweep,5,0.448,0.421,0.778,438,6757,2340725,158246282,525
+q7_email_hourly,optimized,idle_sweep,5,0.259,0.259,0.297,248,19695335,393708117,24251654,5985
+q8_email_list_health,optimized,idle_sweep,5,0.012,0.012,0.018,5,3643,44149,4244592,14
