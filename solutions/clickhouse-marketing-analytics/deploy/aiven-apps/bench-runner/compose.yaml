@@ -1,0 +1,39 @@
+# bench-runner — the sweep/benchmark driver as an Aiven Apps app.
+# Point Aiven Apps at THIS file. Control it from anywhere:
+#
+#   curl -s -H "X-API-Key: $BENCH_API_KEY" $BENCH/status
+#   curl -s -X POST -H "X-API-Key: $BENCH_API_KEY" \
+#        -d '{"kind":"campaign"}' $BENCH/jobs      # baseline -> idle -> sweep
+#   curl -s -H "X-API-Key: $BENCH_API_KEY" $BENCH/results/rate_sweep_aiven.csv
+#
+# A sweep job starts/awaits/stops livegen itself through LIVEGEN_URL, so a
+# single POST runs the whole campaign unattended and can never leave the
+# generator streaming after the driver dies.
+#
+# Fill in via the composer view (secrets marked):
+#   CH_URL              https://<ch-host>:<https-port>
+#   CH_PASSWORD (secret)   CH_USER/CH_DATABASE have defaults below
+#   LIVEGEN_URL         the livegen app's public URL
+#   LIVEGEN_API_KEY (secret)
+#   BENCH_API_KEY (secret) — **always set: this API can drop data parts.**
+#
+# Sizing: tiny — it only orchestrates HTTP calls and subprocess scripts;
+# the smallest app size is fine. Results live on the container filesystem:
+# fetch CSVs via GET /results/<name> BEFORE redeploying or powering off.
+
+services:
+  bench-runner:
+    build:
+      context: ../../..
+      dockerfile: deploy/aiven-apps/bench-runner/Dockerfile
+    environment:
+      CH_URL: ${CH_URL}
+      CH_USER: ${CH_USER:-avnadmin}
+      CH_PASSWORD: ${CH_PASSWORD}
+      CH_DATABASE: ${CH_DATABASE:-campaign_analytics}
+      LIVEGEN_URL: ${LIVEGEN_URL}
+      LIVEGEN_API_KEY: ${LIVEGEN_API_KEY}
+      BENCH_API_KEY: ${BENCH_API_KEY}
+      BENCH_PORT: "8100"
+    ports:
+      - "8100:8100"
