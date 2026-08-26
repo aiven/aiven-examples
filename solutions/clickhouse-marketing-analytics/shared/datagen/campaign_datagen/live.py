@@ -90,9 +90,25 @@ def _emit(client, source, rate: int, stream: str,
                         time.sleep(1)
             sent += len(chunk)
             win_sent += len(chunk)
+            # Sliced pacing sleep, polling the rate file each slice: at very
+            # low rates the pacing debt of ONE pipeline chunk is huge (rate 1
+            # x chunk 1000 = a ~17-minute sleep), and a monolithic sleep made
+            # the generator deaf to the sweep harness raising the rate again
+            # — a whole rung measured an idle table before this was caught.
             ahead = win_sent / rate - (time.perf_counter() - win0)
-            if ahead > 0:
-                time.sleep(ahead)
+            while ahead > 0:
+                time.sleep(min(ahead, 5))
+                if rate_file:
+                    try:
+                        new = int(open(rate_file).read().strip())
+                    except (OSError, ValueError):
+                        new = rate
+                    if new > 0 and new != rate:
+                        print(f"    rate change: {rate:,} -> {new:,}/s", flush=True)
+                        rate = new
+                        win0, win_sent = time.perf_counter(), 0
+                        break
+                ahead = win_sent / rate - (time.perf_counter() - win0)
             now = time.perf_counter()
             if now - last_report >= 5:
                 print(f"    {sent:,} sent, {(sent - report_sent) / (now - last_report):,.0f}/s "
