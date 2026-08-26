@@ -195,7 +195,14 @@ def serve(args) -> None:
         child_argv += ["--anchor", args.anchor]
 
     sup = LivegenSupervisor(child_argv, args.rate_file, args.rate)
-    sup.start()
+    # LIVEGEN_AUTOSTART=false: boot idle and wait for POST /start. The right
+    # mode when a harness owns the lifecycle — the platform restarts
+    # containers at will, and an auto-started generator poured 3M unwanted
+    # rows into a freshly-loaded canonical table before anyone noticed.
+    if os.environ.get("LIVEGEN_AUTOSTART", "true").lower() != "false":
+        sup.start()
+    else:
+        print("[serve] LIVEGEN_AUTOSTART=false — idle until POST /start", flush=True)
     threading.Thread(target=sup.watchdog, daemon=True).start()
 
     server = ThreadingHTTPServer(("0.0.0.0", args.port), _make_handler(sup, api_key))

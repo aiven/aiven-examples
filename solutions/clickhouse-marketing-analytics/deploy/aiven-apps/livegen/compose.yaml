@@ -38,6 +38,10 @@ services:
       LIVEGEN_DAYS: ${LIVEGEN_DAYS:-1}
       LIVEGEN_MAX_STREAM_LEN: ${LIVEGEN_MAX_STREAM_LEN:-1000000}
       LIVEGEN_ANCHOR: ${LIVEGEN_ANCHOR:-}
+      # false = boot idle, stream only on POST /start. Keep false when the
+      # bench-runner owns the lifecycle: Apps restarts containers at will,
+      # and an auto-started generator pollutes a quiesced table unattended.
+      LIVEGEN_AUTOSTART: ${LIVEGEN_AUTOSTART:-false}
       LIVEGEN_PORT: "8095"
     ports:
       - "8095:8095"
