@@ -5,6 +5,7 @@ tables are canonical and the stream is quiesced (no livegen, backlog drained).
   python3 snapshot_baseline.py [partition] [out.json]
 """
 
+import os
 import sys
 
 import live_reset
@@ -13,7 +14,9 @@ from bench_lib import ClickHouse
 partition = sys.argv[1] if len(sys.argv) > 1 else "202608"
 out = sys.argv[2] if len(sys.argv) > 2 else "/tmp/live_baseline.json"
 
-EXPECTED = 679_357_898
+# The dataset's manifest total. Override when the anchor moves and the
+# dataset is regenerated (each anchor produces a different total).
+EXPECTED = int(os.environ.get("CANONICAL_ROWS", 679_357_898))
 
 ch = ClickHouse()
 got = int(ch.json("SELECT count() AS c FROM campaign_events")["data"][0]["c"])

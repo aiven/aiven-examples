@@ -34,6 +34,8 @@ services:
       LIVEGEN_URL: ${LIVEGEN_URL}
       LIVEGEN_API_KEY: ${LIVEGEN_API_KEY}
       BENCH_API_KEY: ${BENCH_API_KEY}
+      # Manifest total of the loaded dataset (changes with every anchor).
+      CANONICAL_ROWS: ${CANONICAL_ROWS:-679357898}
       BENCH_PORT: "8100"
     ports:
       - "8100:8100"

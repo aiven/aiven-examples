@@ -145,6 +145,23 @@ def _rebuild_rollup(ch, t: str, partition: str, baseline: dict) -> None:
     baseline[t] = max((int(p["hi"]) for p in _parts(ch, t, partition)), default=0)
 
 
+def restore_from_backup(ch, partition: str) -> None:
+    """Rebuild the anchor-month partition everywhere from the canonical raw
+    backup (MVs re-fire and rebuild the rollups). The managed-ClickHouse
+    reset: per-part DROP PART fights the merge scheduler on a replicated
+    cluster (drops block behind merges of the very parts being dropped —
+    measured 120s+ per part under a live stream), so under-load protocols
+    restore per RUNG with this instead of resetting per query."""
+    ensure_backup(ch, partition)
+    for t in [RAW] + ROLLUPS:
+        ch.raw(f"ALTER TABLE {t} DROP PARTITION {partition}", timeout=300)
+    ch.raw(f"INSERT INTO {RAW} SELECT * FROM {BACKUP}",
+           query_id=f"restore-{int(time.time())}",
+           settings={"max_execution_time": 3600, "max_insert_threads": 4,
+                     "async_insert": 0},
+           timeout=3600)
+
+
 def reset(ch, baseline: dict) -> None:
     part = baseline["__partition__"]
     for t in [RAW] + ROLLUPS:

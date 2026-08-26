@@ -90,6 +90,14 @@ def main() -> None:
     p.add_argument("--stop-when-degraded", action="store_true",
                    help="end the sweep at the first rung whose worst query exceeds "
                         f"{ACCEPTABLE}x idle — the answer is the last 'unchanged' rung")
+    p.add_argument("--reset-mode", choices=["per-rung", "per-query"], default="per-rung",
+                   help="per-rung (default): rebuild the anchor-month partition from "
+                        "the canonical backup at each rung start (the managed-"
+                        "ClickHouse protocol — per-part drops fight the merge "
+                        "scheduler there); per-query: the original block-lineage "
+                        "reset before every query (local single-node only)")
+    p.add_argument("--partition", default="202608",
+                   help="anchor-month partition for per-rung restores")
     args = p.parse_args()
 
     idle = {}
@@ -101,16 +109,32 @@ def main() -> None:
 
     ch = ClickHouse()
     import live_reset
-    baseline = live_reset.load(args.baseline_file)
-    live_reset.ensure_backup(ch, baseline["__partition__"])
-    live_reset.stop_rollup_merges(ch)
+    per_query = args.reset_mode == "per-query"
+    if per_query:
+        baseline = live_reset.load(args.baseline_file)
+        partition = baseline["__partition__"]
+        live_reset.stop_rollup_merges(ch)
+    else:
+        baseline, partition = None, args.partition
+    live_reset.ensure_backup(ch, partition)
+
+    def rung_reset() -> None:
+        if per_query:
+            live_reset.reset(ch, baseline)
+        else:
+            # Idle the stream (rate 1) so the restore isn't racing inserts,
+            # then rebuild canonical. "Canonical at rung start" is the
+            # contract; within-rung growth is the point of the experiment.
+            set_rate(args, 1)
+            print("    restoring canonical partition...", flush=True)
+            live_reset.restore_from_backup(ch, partition)
 
     sql = {q: next(QUERIES.glob(f"{q}_*.sql")).read_text() for q in SWEEP_QUERIES}
     rows_out = []
     try:
         for rate in parse_rates(args.rates):
+            rung_reset()
             set_rate(args, rate)
-            live_reset.reset(ch, baseline)
             print(f"\n=== target {rate:,}/s: warmup {WARMUP_S}s ===", flush=True)
             time.sleep(WARMUP_S / 2)
             c0, t0 = row_count(ch), time.time()
@@ -119,7 +143,8 @@ def main() -> None:
             rec = {"target_rate": rate, "achieved_rate": achieved}
             worst = 0.0
             for q in SWEEP_QUERIES:
-                live_reset.reset(ch, baseline)   # every query starts canonical
+                if per_query:
+                    live_reset.reset(ch, baseline)   # every query starts canonical
                 walls = sorted(ch.run_measured(sql[q], tag=f"sweep-{rate}-{q}")["wall_s"]
                                for _ in range(RUNS))
                 med = statistics.median(walls)
@@ -137,8 +162,15 @@ def main() -> None:
                 print("    degraded — stopping the sweep here", flush=True)
                 break
     finally:
-        live_reset.reset(ch, baseline)
-        live_reset.start_merges(ch)
+        if per_query:
+            live_reset.reset(ch, baseline)
+            live_reset.start_merges(ch)
+        else:
+            try:
+                set_rate(args, 1)
+            except SystemExit:
+                pass                     # livegen already stopped — fine
+            live_reset.restore_from_backup(ch, partition)
 
     with open(args.out, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=rows_out[0].keys())

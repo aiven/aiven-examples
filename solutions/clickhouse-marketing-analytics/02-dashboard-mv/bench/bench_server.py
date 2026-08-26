@@ -13,11 +13,14 @@ API (X-API-Key = BENCH_API_KEY on everything but /healthz):
   GET  /healthz            liveness (no auth)
   GET  /status             active/last job: state, args, uptime, recent output
   POST /jobs               start a job; 409 while one is active. Body:
+    {"kind": "verify"}     equality gate, all 8 pairs (q5 via spill)
+    {"kind": "backup", "partition": "202608"}    canonical backup tables
     {"kind": "baseline", "partition": "202608"}
     {"kind": "idle", "track": "optimized", "label": "idle_sweep", "runs": 5}
-    {"kind": "sweep", "rates": "5000..60000..5000",
+    {"kind": "sweep", "rates": "5000..60000..5000", "reset_mode": "per-rung",
      "stop_when_degraded": true, "idle": "results/optimized_idle_sweep.csv"}
-    {"kind": "campaign"}   baseline -> idle -> sweep, one unattended run
+    {"kind": "campaign"}   backup -> baseline -> idle -> sweep, unattended
+  Set CANONICAL_ROWS when the dataset's manifest total isn't the default.
   POST /stop               terminate the active job (livegen stopped too)
   GET  /results            list files under results/
   GET  /results/<name>     raw file (CSV / job log)
@@ -58,8 +61,12 @@ BASELINE_FILE = "/tmp/live_baseline.json"
 
 def _steps(kind: str, body: dict) -> list[list[str]]:
     py = sys.executable
-    baseline = [py, "-u", "snapshot_baseline.py",
-                str(body.get("partition", "202608")), BASELINE_FILE]
+    partition = str(body.get("partition", "202608"))
+    verify = [py, "-u", "verify_equality.py",
+              "q1", "q2", "q3", "q4", "q6", "q7", "q8"]  # q5 gate needs spill:
+    verify_q5 = [py, "-u", "verify_q5_spill.py"]
+    backup = [py, "-u", "make_backups.py", partition]
+    baseline = [py, "-u", "snapshot_baseline.py", partition, BASELINE_FILE]
     idle = [py, "-u", "run_suite.py",
             "--track", str(body.get("track", "optimized")),
             "--label", str(body.get("label", "idle_sweep")),
@@ -68,13 +75,18 @@ def _steps(kind: str, body: dict) -> list[list[str]]:
              "--rates", str(body.get("rates", "5000..60000..5000")),
              "--rate-url", os.environ["LIVEGEN_URL"],
              "--idle", str(body.get("idle", "results/optimized_idle_sweep.csv")),
+             "--reset-mode", str(body.get("reset_mode", "per-rung")),
+             "--partition", partition,
              "--baseline-file", BASELINE_FILE,
              "--out", str(body.get("out", "results/rate_sweep_aiven.csv"))] + \
             (["--stop-when-degraded"] if body.get("stop_when_degraded", True) else [])
-    return {"baseline": [baseline],
+    return {"verify": [verify, verify_q5],
+            "backup": [backup],
+            "baseline": [baseline],
             "idle": [idle],
             "sweep": [sweep],
-            "campaign": [baseline, idle, sweep]}[kind]
+            # backup before baseline: snapshot_baseline's ensure_backup gate
+            "campaign": [backup, baseline, idle, sweep]}[kind]
 
 
 def _needs_livegen(argv: list[str]) -> bool:
@@ -233,8 +245,8 @@ def _make_handler(runner: JobRunner, api_key: str | None):
                     kind = body.pop("kind")
                     _steps(kind, body)  # validates kind and arg shapes
                 except (KeyError, json.JSONDecodeError):
-                    return self._send(400, {"error": 'body needs {"kind": '
-                                            '"baseline"|"idle"|"sweep"|"campaign", ...}'})
+                    return self._send(400, {"error": 'body needs {"kind": "verify"|'
+                                            '"backup"|"baseline"|"idle"|"sweep"|"campaign", ...}'})
                 job = runner.start(kind, body)
                 if not job:
                     return self._send(409, runner.status())
