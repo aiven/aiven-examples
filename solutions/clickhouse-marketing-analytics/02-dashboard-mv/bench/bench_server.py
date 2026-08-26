@@ -70,7 +70,8 @@ def _steps(kind: str, body: dict) -> list[list[str]]:
     idle = [py, "-u", "run_suite.py",
             "--track", str(body.get("track", "optimized")),
             "--label", str(body.get("label", "idle_sweep")),
-            "--runs", str(body.get("runs", 5))]
+            "--runs", str(body.get("runs", 5)),
+            "--skip", str(body.get("skip", ""))]
     sweep = [py, "-u", "rate_sweep.py",
              "--rates", str(body.get("rates", "5000..60000..5000")),
              "--rate-url", os.environ["LIVEGEN_URL"],

@@ -139,8 +139,7 @@ def main() -> None:
             time.sleep(WARMUP_S / 2)
             c0, t0 = row_count(ch), time.time()
             time.sleep(WARMUP_S / 2)
-            achieved = int((row_count(ch) - c0) / (time.time() - t0))
-            rec = {"target_rate": rate, "achieved_rate": achieved}
+            rec = {"target_rate": rate}
             worst = 0.0
             for q in SWEEP_QUERIES:
                 if per_query:
@@ -151,6 +150,11 @@ def main() -> None:
                 rec[q] = round(med, 3)
                 if q in idle and idle[q] > 0.05:  # sub-50ms queries are all noise
                     worst = max(worst, med / idle[q])
+            # Achieved rate over the WHOLE rung (warmup midpoint -> last
+            # query): a 30s two-sample window loses to replica-convergence
+            # jitter right after the per-rung 169M-row restore; minutes of
+            # accumulation swamp it.
+            rec["achieved_rate"] = int((row_count(ch) - c0) / (time.time() - t0))
             rec["worst_vs_idle"] = round(worst, 2)
             rec["verdict"] = ("unchanged" if worst <= UNCHANGED else
                               "acceptable" if worst <= ACCEPTABLE else "degraded")

@@ -28,8 +28,12 @@ QUERIES = HERE.parent / "queries"
 
 
 def run_track(ch: ClickHouse, track: str, label: str, runs: int, out_dir: Path,
-              baseline: dict | None = None) -> None:
+              baseline: dict | None = None, skip: set[str] | None = None) -> None:
     files = sorted((QUERIES / track).glob("q*.sql"))
+    if skip:
+        # e.g. naive q5 cannot execute on business-16 (MEMORY_LIMIT_EXCEEDED
+        # at the ~10 GiB cap) — that DNF is recorded prose, not a median.
+        files = [f for f in files if f.stem.split("_")[0] not in skip]
     if not files:
         sys.exit(f"no queries under {QUERIES / track}")
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -76,6 +80,9 @@ def main() -> None:
     p.add_argument("--baseline-file", default=None,
                    help="under-load mode: reset live rows before each query using this "
                         "baseline JSON (write it QUIESCED with snapshot_baseline.py)")
+    p.add_argument("--skip", default="",
+                   help="comma-separated query prefixes to leave out, e.g. 'q5' for "
+                        "the naive track on memory-capped managed plans")
     args = p.parse_args()
 
     ch = ClickHouse()
@@ -94,8 +101,9 @@ def main() -> None:
 
     tracks = ["naive", "optimized"] if args.track == "both" else [args.track]
     try:
+        skip = {s.strip() for s in args.skip.split(",") if s.strip()}
         for t in tracks:
-            run_track(ch, t, args.label, args.runs, out_dir, baseline)
+            run_track(ch, t, args.label, args.runs, out_dir, baseline, skip)
     finally:
         if baseline is not None:
             import live_reset
