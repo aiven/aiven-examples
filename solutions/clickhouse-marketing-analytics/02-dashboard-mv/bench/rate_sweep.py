@@ -159,7 +159,7 @@ def main() -> None:
             rec["verdict"] = ("unchanged" if worst <= UNCHANGED else
                               "acceptable" if worst <= ACCEPTABLE else "degraded")
             rows_out.append(rec)
-            print(f"    achieved {achieved:,}/s | " +
+            print(f"    achieved {rec['achieved_rate']:,}/s | " +
                   " ".join(f"{q}={rec[q]}s" for q in SWEEP_QUERIES) +
                   f" | worst {rec['worst_vs_idle']}x -> {rec['verdict']}", flush=True)
             if args.stop_when_degraded and rec["verdict"] == "degraded":
